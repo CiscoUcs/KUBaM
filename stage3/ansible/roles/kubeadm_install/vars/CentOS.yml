@@ -1,0 +1,13 @@
+---
+
+kubeadm_packages: 
+  - ntpdate
+  #- docker
+  #- kubelet-1.5.4-0
+  #- kubeadm
+  #- kubectl-1.5.4-0
+  #- kubernetes-cni
+
+kubeadm_services:
+  - docker
+  - kubelet

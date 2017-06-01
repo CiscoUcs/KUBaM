@@ -1,0 +1,5 @@
+[local]
+baseurl = http://172.28.225.80/kubam/rh7.3
+enabled = 1
+gpgcheck = 0
+name = Local

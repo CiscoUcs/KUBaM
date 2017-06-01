@@ -1,0 +1,5 @@
+- name: Ensure bin_dir exists
+  file: path={{ bin_dir }} recurse=yes state=directory
+
+- include: download_bins.yml
+

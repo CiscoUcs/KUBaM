@@ -1,0 +1,32 @@
+#
+# Example Inventory file to describe/configure a Kubernetes cluster via kubeadm
+#
+
+[cluster]
+
+[cluster:children]
+master
+nodes
+#
+# The cluster group contains two subgroups: master and nodes
+#
+
+[cluster:vars]
+cluster_name=kubeadm_1
+#
+# cluster_name is used to store and retrieve the admission_token
+#
+
+[master]
+kube01
+#
+# The master group should have only ONE FQDN defined/specified
+#
+
+[master:vars]
+
+[nodes]
+kube02
+kube03
+
+[nodes:vars]

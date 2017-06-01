@@ -1,0 +1,69 @@
+---
+
+# Implements the CentOS portion of Step 1 of http://kubernetes.io/docs/getting-started-guides/kubeadm/
+
+- name: Add Kubernetes yum repo
+  yum_repository:
+    name: Kubernetes
+    description: Kubernetes
+    file: kubernetes
+    baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
+    enabled: true
+    gpgcakey: https://packages.cloud.google.com/yum/doc/yum-key.gpg
+    gpgkey: https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg  
+    gpgcheck: true
+    state: present
+
+- name: Add Docker yum repo
+  yum_repository: 
+    name: Docker
+    description: Docker Community Edition
+    baseurl: https://download.docker.com/linux/centos/7/x86_64/stable
+    enabled: true
+    gpgcheck: false
+    state: present
+
+- name: Workaround to https://github.com/kubernetes/kubernetes/pull/33555
+  command: setenforce 0
+  ignore_errors: true
+
+- name: shutdown firewalld service
+  service: 
+    name: firewalld 
+    state: stopped
+
+- name: Check to see if CNI tools have been installed. 
+  stat:
+    path: /opt/cni/bin/cnitool
+  register: stat_result
+
+- name: Install other kubeadm packages
+  yum:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+    validate_certs: no
+  with_items:
+    - docker-ce
+    - ebtables
+    - https://fedorapeople.org/groups/kolla/kubeadm-1.6.0-0.alpha.0.2074.a092d8e0f95f52.x86_64.rpm
+    - https://fedorapeople.org/groups/kolla/kubectl-1.5.4-0.x86_64.rpm
+    - https://fedorapeople.org/groups/kolla/kubelet-1.5.4-0.x86_64.rpm
+    - https://fedorapeople.org/groups/kolla/kubernetes-cni-0.3.0.1-0.07a8a2.x86_64.rpm
+    - ntpdate
+  environment: 
+    https_proxy: "{{ https_proxy }}"
+  when: stat_result.stat.exists == False
+    
+
+
+- name: synctime to NTP server
+  command: ntpdate -s {{ ntp_server }}
+  ignore_errors: true
+
+- name: Enable and start kubeadm services
+  service:
+    name: '{{ item }}'
+    enabled: true
+    state: started
+  with_items: '{{ kubeadm_services }}'

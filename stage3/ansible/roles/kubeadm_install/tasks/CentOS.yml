@@ -1,0 +1,82 @@
+#
+---
+
+# Implements the CentOS portion of Step 1 of http://kubernetes.io/docs/getting-started-guides/kubeadm/
+
+# cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+# [kubernetes]
+# name=Kubernetes
+# baseurl=http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
+# enabled=1
+# gpgcheck=1
+# repo_gpgcheck=1
+# gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
+#        https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+# EOF
+
+# setenforce 0
+# yum install -y docker kubelet kubeadm kubectl kubernetes-cni
+# systemctl enable docker && systemctl start docker
+# systemctl enable kubelet && systemctl start kubelet
+
+- name: Add Kubernetes yum repo
+  yum_repository:
+    name: Kubernetes
+    description: Kubernetes
+    file: kubernetes
+    baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
+    enabled: true
+    gpgcakey: https://packages.cloud.google.com/yum/doc/yum-key.gpg
+    gpgkey: https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg  
+    gpgcheck: true
+    state: present
+
+- name: Workaround to https://github.com/kubernetes/kubernetes/pull/33555
+  command: setenforce 0
+  ignore_errors: true
+
+#bob add
+- name: shutdown firewalld service
+  service: 
+    name: firewalld 
+    state: stopped
+
+- name: checkmaster
+  command: hostname {{ master }}
+  when:  ansible_default_ipv4.address   == "{{ master_ip }}"
+  ignore_errors: true
+
+- name: checkworker1
+  command: hostname {{ worker1 }}
+  when: ansible_default_ipv4.address  == "{{ worker1_ip }}"
+  ignore_errors: true
+
+- name: checkworker2
+  command: hostname {{ worker2 }}
+  when:  ansible_default_ipv4.address == "{{ worker2_ip }}"
+  ignore_errors: true
+
+- name: checkworker3
+  command: hostname {{ worker3 }}
+  when:  ansible_default_ipv4.address  == "{{ worker3_ip }}"
+  ignore_errors: true
+
+#add end
+#
+
+- name: Install kubeadm packages
+  yum:
+    name: '{{ kubeadm_packages | list }}'
+    state: latest
+    update_cache: true
+
+- name: synctime to NTP server
+  command: ntpdate -s time.nist.gov
+  ignore_errors: true
+
+- name: Enable and start kubeadm services
+  service:
+    name: '{{ item }}'
+    enabled: true
+    state: started
+  with_items: '{{ kubeadm_services }}'
