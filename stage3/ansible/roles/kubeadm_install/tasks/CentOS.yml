@@ -1,23 +1,6 @@
-#
 ---
 
 # Implements the CentOS portion of Step 1 of http://kubernetes.io/docs/getting-started-guides/kubeadm/
-
-# cat <<EOF > /etc/yum.repos.d/kubernetes.repo
-# [kubernetes]
-# name=Kubernetes
-# baseurl=http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
-# enabled=1
-# gpgcheck=1
-# repo_gpgcheck=1
-# gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
-#        https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-# EOF
-
-# setenforce 0
-# yum install -y docker kubelet kubeadm kubectl kubernetes-cni
-# systemctl enable docker && systemctl start docker
-# systemctl enable kubelet && systemctl start kubelet
 
 - name: Add Kubernetes yum repo
   yum_repository:
@@ -31,47 +14,51 @@
     gpgcheck: true
     state: present
 
+- name: Add Docker yum repo
+  yum_repository: 
+    name: Docker
+    description: Docker Community Edition
+    baseurl: https://download.docker.com/linux/centos/7/x86_64/stable
+    enabled: true
+    gpgcheck: false
+    state: present
+
 - name: Workaround to https://github.com/kubernetes/kubernetes/pull/33555
   command: setenforce 0
   ignore_errors: true
 
-#bob add
 - name: shutdown firewalld service
   service: 
     name: firewalld 
     state: stopped
 
-- name: checkmaster
-  command: hostname {{ master }}
-  when:  ansible_default_ipv4.address   == "{{ master_ip }}"
-  ignore_errors: true
+- name: Check to see if CNI tools have been installed. 
+  stat:
+    path: /opt/cni/bin/cnitool
+  register: stat_result
 
-- name: checkworker1
-  command: hostname {{ worker1 }}
-  when: ansible_default_ipv4.address  == "{{ worker1_ip }}"
-  ignore_errors: true
-
-- name: checkworker2
-  command: hostname {{ worker2 }}
-  when:  ansible_default_ipv4.address == "{{ worker2_ip }}"
-  ignore_errors: true
-
-- name: checkworker3
-  command: hostname {{ worker3 }}
-  when:  ansible_default_ipv4.address  == "{{ worker3_ip }}"
-  ignore_errors: true
-
-#add end
-#
-
-- name: Install kubeadm packages
+- name: Install other kubeadm packages
   yum:
-    name: '{{ kubeadm_packages | list }}'
-    state: latest
+    name: "{{ item }}"
+    state: present
     update_cache: true
+    validate_certs: no
+  with_items:
+    - docker-ce
+    - ebtables
+    - https://fedorapeople.org/groups/kolla/kubeadm-1.6.0-0.alpha.0.2074.a092d8e0f95f52.x86_64.rpm
+    - https://fedorapeople.org/groups/kolla/kubectl-1.5.4-0.x86_64.rpm
+    - https://fedorapeople.org/groups/kolla/kubelet-1.5.4-0.x86_64.rpm
+    - https://fedorapeople.org/groups/kolla/kubernetes-cni-0.3.0.1-0.07a8a2.x86_64.rpm
+    - ntpdate
+  environment: 
+    https_proxy: "{{ https_proxy }}"
+  when: stat_result.stat.exists == False
+    
+
 
 - name: synctime to NTP server
-  command: ntpdate -s time.nist.gov
+  command: ntpdate -s {{ ntp_server }}
   ignore_errors: true
 
 - name: Enable and start kubeadm services

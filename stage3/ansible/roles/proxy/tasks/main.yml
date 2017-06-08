@@ -3,11 +3,11 @@
 - name: Add yum proxy info
   lineinfile:
     destfile: /etc/yum.conf
-    line: "proxy=http://proxy-wsa.esl.cisco.com:80"
+    line: "proxy={{ https_proxy }}"
 
 - name: Add local repo
-  copy: 
-    src: ../files/local.repo
+  template:
+    src: ../templates/local.repo.j2
     dest: /etc/yum.repos.d
 
 - name: make Docker services directory for proxy

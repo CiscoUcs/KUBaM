@@ -1,6 +1,6 @@
 #SSH username/password
-ansible_ssh_user: root
-ansible_ssh_pass: cisco123
+#ansible_ssh_user: root
+#ansible_ssh_pass: cisco123
 
 #contiv version
 contiv_ver: 1.0.0
@@ -9,6 +9,9 @@ ntp_server: ntp.cisco.com
 # proxy info
 http_proxy: http://proxy-wsa.esl.cisco.com:80
 https_proxy: http://proxy-wsa.esl.cisco.com:80
-no_proxy: localhost,127.0.0.1
-master_ip_address_configured: 172.28.225.86
-master_ip_address: 172.28.225.86
+no_proxy: localhost,127.0.0.1,10.61.124.120
+master_ip_address_configured: 10.61.124.170
+master_ip_address: 10.61.124.170
+
+# yum repository
+local_repo: http://10.61.124.120/kubam/centos7.3/
