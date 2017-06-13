@@ -8,7 +8,7 @@
 - name: Add local repo
   template:
     src: ../templates/local.repo.j2
-    dest: /etc/yum.repos.d
+    dest: /etc/yum.repos.d/local.repo
 
 - name: make Docker services directory for proxy
   file: 
