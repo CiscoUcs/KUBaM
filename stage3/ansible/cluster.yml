@@ -150,7 +150,7 @@
     - name: setup Kubernetes Dashboard
       command: "{{ item }}"
       with_items:
-        - kubectl delete deployment/kube-dns -n kube-system
+        #- kubectl delete deployment/kube-dns -n kube-system
         - kubectl create -f ./kubernetes-dashboard.yaml
       register: kube_dashboard
       ignore_errors: True
