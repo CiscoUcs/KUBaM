@@ -1,10 +1,15 @@
-# Ansible playbook and roles to create a simple Kubernetes cluster with kubeadm and Contiv
+# Ansible playbook and roles to create a Kubernetes cluster with kubeadm and Contiv
 
 ## Credit
-This work was built upon by [@iceworld](https://github.com/iceworld/)
+This work was built upon by [@iceworld](https://github.com/iceworld/) and [@sjenning](https://github.com/sjenning/kubeadm-playbook)
+
 
 ## Support
 Right now this works with RedHat 7.3 & CentOS 7.3
+
+* Kubernetes version 1.6.5
+* Docker-CE 17.03.2
+* Contiv 1.0
 
 Please open an issue if you have problems.
 
@@ -40,10 +45,15 @@ In ```group_vars/all.yml``` you need to change the following:
 
 
 ```
-ansible-playboook cluster.yml
+ansible-playboook site.yml
 ```
 This will go through and install your nodes. 
 
+If you need to start over you can run: 
+
+```
+ansible-playbook reset.yml
+```
 
 ## Notes
 

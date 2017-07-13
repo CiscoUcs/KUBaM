@@ -14,4 +14,4 @@
     creates: /etc/kubernetes/pki
   register: master_init
 - debug:
-    var: master_init_stdout_lines
+    var: master_init.stdout_lines

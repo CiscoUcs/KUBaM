@@ -21,6 +21,8 @@
     - /etc/kubernetes/kubeadm-master.config
     - /etc/kubernetes/kubeadm-master.conf
     - /etc/kubernetes/cloud-config
+    - /etc/kubernetes/pki
+    - /etc/systemd/system/kubelet.service.d
     tags:
     - reset
 
@@ -98,6 +100,16 @@
     tags:
     - uninstall
     - reset
+
+  - name: remove RPMs
+    yum: 
+      name: "{{ item }}"
+      state: absent
+    with_items:
+      - kubelet
+      - kubeadm
+      - kubectl
+      - kubernetes-cni
 
   #- name: restart kubelet for cleanup activities
   #  systemd: name={{ item }} state=restarted

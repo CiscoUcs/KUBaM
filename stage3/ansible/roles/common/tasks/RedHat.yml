@@ -76,6 +76,12 @@
     regexp: '^Environment="KUBELET_EXTRA_ARGS'
     state: absent
 
+- name: Remove existing kubelet args from drop-in unit
+  lineinfile:
+    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    regexp: '^Environment="KUBELET_CGROUP_ARGS'
+    state: absent
+
 - name: Use systemd kubelet cgroup driver
   lineinfile:
     dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
