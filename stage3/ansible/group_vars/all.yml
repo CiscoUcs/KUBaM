@@ -1,10 +1,12 @@
-#SSH username/password
-#ansible_ssh_user: root
-#ansible_ssh_pass: cisco123
+# kubernetes version
+kubernetes_version: v1.6.7
+# you can define your own token or let the system
+# automatically generate one for you. 
+#kubeadm_token: 6323d4.d85d129e07132217
 
 #contiv version
 contiv_ver: 1.0.0
-ntp_server: ntp.cisco.com
+ntp_server: ntp.esl.cisco.com
 
 # proxy info
 http_proxy: http://proxy-wsa.esl.cisco.com:80
