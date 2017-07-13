@@ -1,0 +1,17 @@
+--- 
+
+- name: Generate cluster token
+  command: /usr/bin/kubeadm token generate
+  register: kubeadm_token_generate
+  when: kubeadm_token is not defined
+
+- set_fact: kubeadm_token={{ kubeadm_token_generate.stdout }}
+  when: kubeadm_token is not defined
+
+- name: Initialize Master
+  command: kubeadm init --token {{ kubeadm_token }} --skip-preflight-checks=true --kubernetes-version {{ kubernetes_version }} 
+  args: 
+    creates: /etc/kubernetes/pki
+  register: master_init
+- debug:
+    var: master_init_stdout_lines
