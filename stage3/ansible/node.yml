@@ -1,0 +1,5 @@
+---
+- hosts: node
+  become: true
+  roles: 
+    - role: node

@@ -23,6 +23,7 @@
     - /etc/kubernetes/cloud-config
     - /etc/kubernetes/pki
     - /etc/systemd/system/kubelet.service.d
+    - /var/contiv
     tags:
     - reset
 

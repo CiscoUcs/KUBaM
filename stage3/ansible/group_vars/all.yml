@@ -1,11 +1,11 @@
 # kubernetes version
-kubernetes_version: v1.6.7
+kubernetes_version: v1.6.5
 # you can define your own token or let the system
 # automatically generate one for you. 
-#kubeadm_token: 6323d4.d85d129e07132217
+kubeadm_token: 62af06.d28bf88c95be9639
 
 #contiv version
-contiv_ver: 1.0.0
+contiv_version: 1.0.3
 ntp_server: ntp.esl.cisco.com
 
 # proxy info

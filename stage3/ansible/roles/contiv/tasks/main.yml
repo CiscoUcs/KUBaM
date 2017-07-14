@@ -1,0 +1,55 @@
+---
+
+- name: See if Private key has already been generated? 
+  stat: path=/var/contiv/auth_proxy_key.pem
+  register: proxy_key
+
+- name: Create Contiv Private Key
+  command: openssl genrsa -out /var/contiv/auth_proxy_key.pem 2048 
+  when: proxy_key.stat.exists == False
+
+- name: Check that Certificate has been created
+  stat: path=/var/contiv/auth_proxy_cert.pem
+  register: proxy_cert 
+
+- name: Create Contiv Certificate 
+  command: |
+    openssl req -new -x509 -sha256 -days 3650 
+    -key /var/contiv/auth_proxy_key.pem
+    -out /var/contiv/auth_proxy_cert.pem
+    -subj "/C=US/ST=CA/L=San Jose/O=CPSG/OU=IT Department/CN=auth-local.cisco.com"
+  when: proxy_cert.stat.exists == False
+
+- name: Copy YAML file 
+  template: 
+    src: contiv.yaml.j2
+    dest: /tmp/contiv.yaml
+  register: yaml
+
+- name: Apply YAML configuration
+  command: kubectl apply -f /tmp/contiv.yaml
+  when: yaml|changed
+
+- name: Copy over netctl command
+  copy:
+    src: netctl
+    dest: /usr/bin/
+  register: netctlcp
+
+- name: Make netctl executable
+  file: dest=/usr/bin/netctl mode=a+x
+
+- name: Ensure there is a netmaster entry in /etc/hosts for this machine. Otherwise netctl doesn't work.  
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ hostvars[groups['master'][0]]['ansible_default_ipv4']['address'] }} netmaster"
+
+- name: Create Routing 
+  command: netctl global set --fwd-mode routing 
+  when: netctlcp|changed
+
+- name: Ensure contivh1 network is created. 
+  command: netctl net ls -q | grep -q -w "contivh1"
+  register: contivh1
+
+- debug: var=contivh1

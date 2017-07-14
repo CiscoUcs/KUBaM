@@ -6,9 +6,9 @@
 
 [cluster:children]
 master
-nodes
+node
 #
-# The cluster group contains two subgroups: master and nodes
+# The cluster group contains two subgroups: master and node
 #
 
 [cluster:vars]
@@ -25,8 +25,8 @@ kube01
 
 [master:vars]
 
-[nodes]
+[node]
 kube02
 kube03
 
-[nodes:vars]
+[node:vars]

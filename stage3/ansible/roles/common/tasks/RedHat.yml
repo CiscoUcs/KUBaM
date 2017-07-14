@@ -42,6 +42,9 @@
 - name: Install Docker
   command: yum -y install install -y --setopt=obsoletes=0 docker-ce-17.03.2.ce-1.el7.centos.x86_64 docker-ce-selinux-17.03.2.ce-1.el7.centos.noarch
 
+- name: clean the metadata
+  command: yum --enablerepo=Kubernetes clean metadata
+
 - name: Install Kubeadm and Dependencies
   yum:
     name: "{{ item }}"
@@ -51,9 +54,9 @@
   with_items:
     - ntp
     - ntpdate
-    - kubelet
-    - kubeadm
-    - kubectl
+    - kubelet-1.6.5
+    - kubeadm-1.6.5
+    - kubectl-1.6.5
     - kubernetes-cni
   environment: 
     https_proxy: "{{ https_proxy }}"
