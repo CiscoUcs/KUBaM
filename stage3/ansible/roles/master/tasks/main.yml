@@ -17,10 +17,10 @@
     var: master_init.stdout_lines
 
 - name: Create the .kube directory
-  file: name=/home/root/.kube  state=directory
+  file: name=/root/.kube  state=directory
 
 - name: Copy the admin.conf to .kube/config
   copy:
     remote_src: True
     src: /etc/kubernetes/admin.conf
-    dest: /home/root/.kube/config
+    dest: /root/.kube/config

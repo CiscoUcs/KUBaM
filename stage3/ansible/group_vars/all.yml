@@ -5,8 +5,13 @@ kubernetes_version: v1.6.5
 kubeadm_token: 62af06.d28bf88c95be9639
 
 #contiv version
-contiv_version: 1.0.3
+contiv_version: v1.0.3
 ntp_server: ntp.esl.cisco.com
+
+#contiv etcd information
+contiv_etcd_version: 3.0.17
+contiv_etcd_advertise_port: 6667
+contiv_etcd_listen_port: 6666
 
 # proxy info
 http_proxy: http://proxy-wsa.esl.cisco.com:80

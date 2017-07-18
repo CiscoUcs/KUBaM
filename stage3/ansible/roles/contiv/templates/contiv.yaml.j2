@@ -89,7 +89,7 @@ metadata:
   name: contiv-config
   namespace: kube-system
 data:
-  cluster_store: "etcd://localhost:2379"
+  cluster_store: "etcd://{{ hostvars[groups['master'][0]]['ansible_default_ipv4']['address'] }}:{{ contiv_etcd_listen_port }}"
   vlan_if: "vxlan"
   # The CNI network configuration to install on each node.
   cni_config: |-

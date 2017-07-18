@@ -1,5 +1,8 @@
 ---
 
+- name: Ensure /var/contiv directory exists
+  file: name=/var/contiv/ state=directory
+
 - name: See if Private key has already been generated? 
   stat: path=/var/contiv/auth_proxy_key.pem
   register: proxy_key
@@ -12,6 +15,7 @@
   stat: path=/var/contiv/auth_proxy_cert.pem
   register: proxy_cert 
 
+
 - name: Create Contiv Certificate 
   command: |
     openssl req -new -x509 -sha256 -days 3650 
@@ -20,15 +24,21 @@
     -subj "/C=US/ST=CA/L=San Jose/O=CPSG/OU=IT Department/CN=auth-local.cisco.com"
   when: proxy_cert.stat.exists == False
 
-- name: Copy YAML file 
+- name: Copy contiv etc YAML file 
+  template: 
+    src: etcd.yaml.j2
+    dest: /tmp/etcd.yaml
+
+- name: Copy contiv YAML file 
   template: 
     src: contiv.yaml.j2
     dest: /tmp/contiv.yaml
-  register: yaml
 
-- name: Apply YAML configuration
+- name: Apply etcd YAML configuration
+  command: kubectl apply -f /tmp/etcd.yaml
+
+- name: Apply contiv YAML configuration
   command: kubectl apply -f /tmp/contiv.yaml
-  when: yaml|changed
 
 - name: Copy over netctl command
   copy:
@@ -44,12 +54,20 @@
     dest: /etc/hosts
     line: "{{ hostvars[groups['master'][0]]['ansible_default_ipv4']['address'] }} netmaster"
 
+# routing is the default mode. 
 - name: Create Routing 
   command: netctl global set --fwd-mode routing 
   when: netctlcp|changed
+
+- name: Wait for contiv to become active
+  wait_for:
+    port: 9999
+    delay: 10 
 
 - name: Ensure contivh1 network is created. 
   command: netctl net ls -q | grep -q -w "contivh1"
   register: contivh1
 
 - debug: var=contivh1
+# netctl global set --fwd-mode routing
+# netctl net create -t default --subnet=10.99.0.0/16 -g 10.99.0.1 default-net
