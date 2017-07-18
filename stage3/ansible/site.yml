@@ -3,4 +3,5 @@
 - include: proxy.yml
 - include: common.yml
 - include: master.yml
+- include: contiv.yml
 - include: node.yml

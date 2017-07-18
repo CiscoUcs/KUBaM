@@ -70,4 +70,6 @@
 
 - debug: var=contivh1
 # netctl global set --fwd-mode routing
+# netctl net create -n infra -s 132.1.1.0/24 -g 132.1.1.1 contivh1
 # netctl net create -t default --subnet=10.99.0.0/16 -g 10.99.0.1 default-net
+# netctl group create -t default default-net default-epg
