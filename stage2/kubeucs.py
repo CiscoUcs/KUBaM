@@ -5,6 +5,7 @@ from ucsmsdk.ucsexception import UcsException
 from urllib2 import HTTPError
 from network import UCSNet
 from server import UCSServer
+from util import UCSUtil
 import argparse
 import os, sys
 
@@ -28,7 +29,7 @@ def ucs_logout(handle):
 
 def main():
     global handle
-    parser = argparse.ArgumentParser(description="Connect to UCS and create Kubernetes Infrastructure.  We will create several resources on your UCS domain that will help us install Kubernetes.  This is safe to run on production systems.")
+    parser = argparse.ArgumentParser(description="Connect to UCS and create Kubernetes Infrastructure.  We will create several resources on your UCS domain that will help us install Kubernetes.")
     parser.add_argument("user", help='The user account to log into UCS: e.g.: admin') 
     parser.add_argument("password", help='The password to connect to UCS: e.g.: cisco123') 
     parser.add_argument("server", help='UCS Manager: e.g: 192.168.3.1') 
@@ -40,7 +41,17 @@ def main():
         
     args = parser.parse_args()
     org = args.org
+    # loging
     handle = ucs_login(args.user, args.password, args.server)
+    # see what's up with the org.
+    if org == "":
+        org = "org-root"
+    else: 
+        # verify org exists. 
+        if UCSUtil.query_org(handle, org) == False:
+            UCSUtil.create_org(handle, org)
+        org = "org-root/org-" + org
+
     if args.delete == False:
         UCSNet.createKubeNetworking(handle, org)
         UCSServer.createKubeServers(handle, org)

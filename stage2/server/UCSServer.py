@@ -48,7 +48,7 @@ def select_kube_servers(handle):
                 return k8servers
 
     
-def createKubeBootPolicy(handle):
+def createKubeBootPolicy(handle, org):
     print "Creating Kube Boot Policy"
     from ucsmsdk.mometa.lsboot.LsbootPolicy import LsbootPolicy
     from ucsmsdk.mometa.lsboot.LsbootVirtualMedia import LsbootVirtualMedia
@@ -56,7 +56,7 @@ def createKubeBootPolicy(handle):
     from ucsmsdk.mometa.lsboot.LsbootLocalStorage import LsbootLocalStorage
     from ucsmsdk.mometa.lsboot.LsbootDefaultLocalImage import LsbootDefaultLocalImage
 
-    mo = LsbootPolicy(parent_mo_or_dn="org-root", name="kube", descr="Kuberenetes", reboot_on_update="yes", policy_owner="local", enforce_vnic_name="yes", boot_mode="legacy")
+    mo = LsbootPolicy(parent_mo_or_dn=org, name="kube", descr="Kuberenetes", reboot_on_update="yes", policy_owner="local", enforce_vnic_name="yes", boot_mode="legacy")
     mo_1 = LsbootVirtualMedia(parent_mo_or_dn=mo, access="read-only-remote-cimc", lun_id="0", order="2")
     mo_2 = LsbootStorage(parent_mo_or_dn=mo, order="1")
     mo_2_1 = LsbootLocalStorage(parent_mo_or_dn=mo_2, )
@@ -69,19 +69,19 @@ def createKubeBootPolicy(handle):
         if err.error_code == "103":
             print "\talready exists"
 
-def deleteKubeBootPolicy(handle):
-    mo = handle.query_dn("org-root/boot-policy-kube")
+def deleteKubeBootPolicy(handle, org):
+    mo = handle.query_dn(org + "/boot-policy-kube")
     try:
         handle.remove_mo(mo)
         handle.commit()
     except AttributeError:
         print "\talready deleted"
 
-def createKubeLocalDiskPolicy(handle):
+def createKubeLocalDiskPolicy(handle, org):
     print "Creating Kube Local Disk Policy"
     from ucsmsdk.mometa.storage.StorageLocalDiskConfigPolicy import StorageLocalDiskConfigPolicy
 
-    mo = StorageLocalDiskConfigPolicy(parent_mo_or_dn="org-root", protect_config="no", name="kube", descr="Kubernetes", flex_flash_raid_reporting_state="disable", flex_flash_state="disable", policy_owner="local", mode="raid-mirrored")
+    mo = StorageLocalDiskConfigPolicy(parent_mo_or_dn=org, protect_config="no", name="kube", descr="Kubernetes", flex_flash_raid_reporting_state="disable", flex_flash_state="disable", policy_owner="local", mode="raid-mirrored")
     handle.add_mo(mo)
     try: 
         handle.commit()
@@ -89,20 +89,20 @@ def createKubeLocalDiskPolicy(handle):
         if err.error_code == "103":
             print "\talready exists"
 
-def deleteKubeLocalDiskPolicy(handle):
+def deleteKubeLocalDiskPolicy(handle, org):
     print "Deleting Kube Local Disk Policy"
-    mo = handle.query_dn("org-root/local-disk-config-kube")
+    mo = handle.query_dn(org + "/local-disk-config-kube")
     try:
         handle.remove_mo(mo)
         handle.commit()
     except AttributeError:
         print "\talready deleted"
 
-def createKubeUUIDPools(handle):
+def createKubeUUIDPools(handle, org):
     print "Creating Kube UUID Pools"
     from ucsmsdk.mometa.uuidpool.UuidpoolPool import UuidpoolPool
     from ucsmsdk.mometa.uuidpool.UuidpoolBlock import UuidpoolBlock
-    mo = UuidpoolPool(parent_mo_or_dn="org-root", policy_owner="local", prefix="derived", descr="Kubernetes Pool", assignment_order="default", name="kube")
+    mo = UuidpoolPool(parent_mo_or_dn=org, policy_owner="local", prefix="derived", descr="Kubernetes Pool", assignment_order="default", name="kube")
     mo_1 = UuidpoolBlock(parent_mo_or_dn=mo, to="C888-888888888100", r_from="C888-888888888001")
     handle.add_mo(mo)
     try: 
@@ -111,19 +111,19 @@ def createKubeUUIDPools(handle):
         if err.error_code == "103":
             print "\talready exists"
 
-def deleteKubeUUIDPools(handle):
+def deleteKubeUUIDPools(handle, org):
     print "Deleting Kube UUID Pool"
-    mo = handle.query_dn("org-root/uuid-pool-kube")
+    mo = handle.query_dn(org + "/uuid-pool-kube")
     try:
         handle.remove_mo(mo)
         handle.commit()
     except AttributeError:
         print "\talready deleted"
 
-def createKubeServerPool(handle):
+def createKubeServerPool(handle, org):
     print "Creating Kubernetes Compute Pool"
     from ucsmsdk.mometa.compute.ComputePool import ComputePool
-    mo = ComputePool(parent_mo_or_dn="org-root", policy_owner="local", name="Kubernetes", descr="")
+    mo = ComputePool(parent_mo_or_dn=org, policy_owner="local", name="Kubernetes", descr="")
     handle.add_mo(mo)
     try: 
         handle.commit()
@@ -131,14 +131,14 @@ def createKubeServerPool(handle):
         if err.error_code == "103":
             print "\talready exists"
 
-def addServersToKubePool(handle, servers):
+def addServersToKubePool(handle, servers, org):
     print "Adding servers to Kubernetes Pool"
     from ucsmsdk.mometa.compute.ComputePool import ComputePool
     from ucsmsdk.mometa.compute.ComputePooledSlot import ComputePooledSlot
     from ucsmsdk.mometa.compute.ComputePooledRackUnit import ComputePooledRackUnit
     from ucsmsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
     from ucsmsdk.mometa.fabric.FabricComputeSlotEp import FabricComputeSlotEp
-    mo = ComputePool(parent_mo_or_dn="org-root", policy_owner="local", name="Kubernetes", descr="")
+    mo = ComputePool(parent_mo_or_dn=org, policy_owner="local", name="Kubernetes", descr="")
     for s in servers: 
         if type(s) is FabricComputeSlotEp:
             ComputePooledSlot(parent_mo_or_dn=mo, slot_id=re.sub("slot-","", s.slot_id), chassis_id=str(s.chassis_id))
@@ -152,9 +152,9 @@ def addServersToKubePool(handle, servers):
             print "\talready exists"
 
 
-def deleteKubeServerPool(handle):
+def deleteKubeServerPool(handle, org):
     print "Deleting Kubernetes Compute Pool"
-    mo = handle.query_dn("org-root/compute-pool-Kubernetes")
+    mo = handle.query_dn(org + "/compute-pool-Kubernetes")
     try:
         handle.remove_mo(mo)
         handle.commit()
@@ -163,13 +163,13 @@ def deleteKubeServerPool(handle):
 
 
 
-def createServiceProfileTemplate(handle):
+def createServiceProfileTemplate(handle, org):
     print "Creating Kubernetes Service Profile Template"
     from ucsmsdk.mometa.ls.LsServer import LsServer
     from ucsmsdk.mometa.vnic.VnicConnDef import VnicConnDef
     from ucsmsdk.mometa.ls.LsRequirement import LsRequirement
     from ucsmsdk.mometa.lstorage.LstorageProfileBinding import LstorageProfileBinding
-    mo = LsServer(parent_mo_or_dn="org-root", 
+    mo = LsServer(parent_mo_or_dn=org, 
         policy_owner="local", 
         name="Kubernetes", 
         descr="Kubernetes Service Profile",
@@ -207,10 +207,10 @@ def createServiceProfileTemplate(handle):
 
 
 
-def deleteServiceProfileTemplate(handle):
+def deleteServiceProfileTemplate(handle, org):
     print "Deleting Kubernetes Service Profile Template"
     print "Deleting Kubernetes Compute Pool"
-    mo = handle.query_dn("org-root/ls-Kubernetes")
+    mo = handle.query_dn(org + "/ls-Kubernetes")
     try:
         handle.remove_mo(mo)
         handle.commit()
@@ -218,7 +218,7 @@ def deleteServiceProfileTemplate(handle):
         print "\talready deleted"
 
 
-def createServers(handle, servers):
+def createServers(handle, servers, org):
     print "Creating Kubernetes Service Profiles"
     from ucsmsdk.ucsmethodfactory import ls_instantiate_n_named_template
     from ucsmsdk.ucsbasetype import DnSet, Dn
@@ -230,10 +230,10 @@ def createServers(handle, servers):
         dn.attr_set("value",sp_name)
         dn_set.child_add(dn)
         elem = ls_instantiate_n_named_template(cookie=handle.cookie, 
-            dn="org-root/ls-Kubernetes", 
+            dn=org + "/ls-Kubernetes", 
             in_error_on_existing="true", 
             in_name_set=dn_set,     
-            in_target_org="org-root", 
+            in_target_org=org, 
             in_hierarchical="false")
         try:
             mo_list = handle.process_xml_elem(elem)
@@ -257,7 +257,7 @@ def deleteServers(handle):
         except UcsException as err:
             print "\t"+ k.name + ": " + err.error_descr
 
-def createKubeVirtualMedia(handle):
+def createKubeVirtualMedia(handle, org):
     print "Adding Virtual Media Policy"
     from urlparse import urlparse
     import os.path
@@ -285,7 +285,7 @@ def createKubeVirtualMedia(handle):
     from ucsmsdk.mometa.cimcvmedia.CimcvmediaConfigMountEntry import CimcvmediaConfigMountEntry
     mo = CimcvmediaMountConfigPolicy(name="kube",
         retry_on_mount_fail="yes",
-        parent_mo_or_dn="org-root",
+        parent_mo_or_dn=org, 
         policy_owner="local",
         descr="Kubernetes Boot Media")
 
@@ -312,9 +312,9 @@ def createKubeVirtualMedia(handle):
         if err.error_code == "103":
             print "\talready exists"
     
-def deleteVirtualMedia(handle):
+def deleteVirtualMedia(handle, org):
     print "Deleting Kubernetes Virtual Media Policy"
-    mo = handle.query_dn("org-root/mnt-cfg-policy-kube")
+    mo = handle.query_dn(org + "/mnt-cfg-policy-kube")
     try:
         handle.remove_mo(mo)
         handle.commit()
@@ -322,10 +322,10 @@ def deleteVirtualMedia(handle):
         print "\talready deleted"
 
 
-def createScrubPolicy(handle):
+def createScrubPolicy(handle, org):
     from ucsmsdk.mometa.compute.ComputeScrubPolicy import ComputeScrubPolicy
     mo = ComputeScrubPolicy(flex_flash_scrub="no",
-      parent_mo_or_dn="org-root",
+      parent_mo_or_dn=org, 
       name="kube",
       disk_scrub="yes",
       bios_settings_scrub="no",
@@ -338,39 +338,39 @@ def createScrubPolicy(handle):
             print "\talready exists"
 
 
-def deleteScrubPolicy(handle):
+def deleteScrubPolicy(handle, org):
     print "Deleting Kubernetes Scrub Policy"
-    mo = handle.query_dn("org-root/scrub-kube")
+    mo = handle.query_dn(org + "/scrub-kube")
     try:
         handle.remove_mo(mo)
         handle.commit()
     except AttributeError:
         print "\talready deleted"
 
-def deleteDiskGroupConfig(handle):
+def deleteDiskGroupConfig(handle, org):
     print "Deleting Disk Group config"
-    mo = handle.query_dn("org-root/disk-group-config-Kube_Boot")
+    mo = handle.query_dn(org + "/disk-group-config-Kube_Boot")
     try:
         handle.remove_mo(mo)
         handle.commit()
     except AttributeError:
         print "\talready deleted"
 
-def deleteStorageProfile(handle):
+def deleteStorageProfile(handle, org):
     print "Deleting Storage Profile"
-    mo = handle.query_dn("org-root/profile-kube")
+    mo = handle.query_dn(org + "/profile-kube")
     try:
         handle.remove_mo(mo)
         handle.commit()
     except AttributeError:
         print "\talready deleted"
 
-def createDiskGroupConfig(handle):
+def createDiskGroupConfig(handle, org):
     print "Adding Disk Group Config"
     from ucsmsdk.mometa.lstorage.LstorageDiskGroupConfigPolicy import LstorageDiskGroupConfigPolicy
     from ucsmsdk.mometa.lstorage.LstorageDiskGroupQualifier import LstorageDiskGroupQualifier
     from ucsmsdk.mometa.lstorage.LstorageVirtualDriveDef import LstorageVirtualDriveDef
-    mo = LstorageDiskGroupConfigPolicy(parent_mo_or_dn="org-root",
+    mo = LstorageDiskGroupConfigPolicy(parent_mo_or_dn=org, 
         policy_owner="local",
         name="kube_boot",
         descr="Kubernetes Boot Disk",
@@ -395,10 +395,10 @@ def createDiskGroupConfig(handle):
         if err.error_code == "103":
             print "\talready exists"
 
-def createStorageProfile(handle):
+def createStorageProfile(handle, org):
     from ucsmsdk.mometa.lstorage.LstorageProfile import LstorageProfile 
     from ucsmsdk.mometa.lstorage.LstorageDasScsiLun import LstorageDasScsiLun
-    mo = LstorageProfile(parent_mo_or_dn="org-root", 
+    mo = LstorageProfile(parent_mo_or_dn=org, 
         policy_owner="local",
         name="kube",
         descr="Kubernetes Storage Profile")
@@ -421,28 +421,28 @@ def createStorageProfile(handle):
             print "\talready exists"
 
 def createKubeServers(handle, org):
-    createKubeBootPolicy(handle)
-    #createKubeLocalDiskPolicy(handle)
-    createDiskGroupConfig(handle)
-    createStorageProfile(handle)
-    createScrubPolicy(handle)
-    createKubeUUIDPools(handle)
-    createKubeServerPool(handle)
-    createKubeVirtualMedia(handle)
+    createKubeBootPolicy(handle, org)
+    #createKubeLocalDiskPolicy(handle, org)
+    createDiskGroupConfig(handle, org)
+    createStorageProfile(handle, org)
+    createScrubPolicy(handle, org)
+    createKubeUUIDPools(handle, org)
+    createKubeServerPool(handle, org)
+    createKubeVirtualMedia(handle, org)
     servers = select_kube_servers(handle) 
-    addServersToKubePool(handle, servers)
-    createServiceProfileTemplate(handle)
-    createServers(handle, servers)
+    addServersToKubePool(handle, servers, org)
+    createServiceProfileTemplate(handle, org)
+    createServers(handle, servers, org)
 
 def deleteKubeServers(handle, org):
-    deleteServers(handle)
-    deleteServiceProfileTemplate(handle)
-    deleteKubeServerPool(handle)
-    deleteVirtualMedia(handle)
-    deleteScrubPolicy(handle)
-    deleteKubeBootPolicy(handle)
-    deleteStorageProfile(handle)
-    deleteDiskGroupConfig(handle)
-    #deleteKubeLocalDiskPolicy(handle)
-    deleteKubeUUIDPools(handle)
+    deleteServers(handle, org)
+    deleteServiceProfileTemplate(handle, org)
+    deleteKubeServerPool(handle, org)
+    deleteVirtualMedia(handle, org)
+    deleteScrubPolicy(handle, org)
+    deleteKubeBootPolicy(handle, org)
+    deleteStorageProfile(handle, org)
+    deleteDiskGroupConfig(handle, org)
+    #deleteKubeLocalDiskPolicy(handle, org)
+    deleteKubeUUIDPools(handle, org)
     
