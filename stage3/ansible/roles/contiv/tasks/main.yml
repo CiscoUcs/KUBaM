@@ -65,10 +65,23 @@
     delay: 10 
 
 - name: Ensure contivh1 network is created. 
-  command: netctl net ls -q | grep -q -w "contivh1"
+  command: netctl net ls -q 
   register: contivh1
 
 - debug: var=contivh1
+
+- name: Set Contiv fwd-mode routing
+  command: netctl global set --fwd-mode routing
+  when: contivh1.stdout == ""
+
+- name: Create Contiv infrastructure network
+  command: netctl net create -n infra -s 132.1.1.0/24 -g 132.1.1.1 contivh1
+  when: contivh1.stdout == ""
+
+- name: Create Contiv Default Network
+  command: netctl net create -t default --subnet=10.99.0.0/16 -g 10.99.0.1 default-net
+  when: contivh1.stdout == ""
+
 # netctl global set --fwd-mode routing
 # netctl net create -n infra -s 132.1.1.0/24 -g 132.1.1.1 contivh1
 # netctl net create -t default --subnet=10.99.0.0/16 -g 10.99.0.1 default-net

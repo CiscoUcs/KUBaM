@@ -5,7 +5,7 @@ kubernetes_version: v1.6.5
 kubeadm_token: 62af06.d28bf88c95be9639
 
 #contiv version
-contiv_version: v1.0.3
+contiv_version: 1.1.0
 ntp_server: ntp.esl.cisco.com
 
 #contiv etcd information
@@ -16,9 +16,7 @@ contiv_etcd_listen_port: 6666
 # proxy info
 http_proxy: http://proxy-wsa.esl.cisco.com:80
 https_proxy: http://proxy-wsa.esl.cisco.com:80
-no_proxy: localhost,127.0.0.1,10.61.124.120
-master_ip_address_configured: 10.61.124.170
-master_ip_address: 10.61.124.170
+no_proxy: localhost,127.0.0.1,172.28.225.135
 
 # yum repository
-local_repo: http://10.61.124.120/kubam/centos7.3/
+local_repo: http://172.28.225.135/kubam/centos7.3/
