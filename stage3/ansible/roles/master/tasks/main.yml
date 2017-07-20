@@ -9,7 +9,7 @@
   when: kubeadm_token is not defined
 
 - name: Initialize Master
-  command: kubeadm init --token {{ kubeadm_token }} --skip-preflight-checks=true --kubernetes-version {{ kubernetes_version }} 
+  command: kubeadm init --token {{ kubeadm_token }} --skip-preflight-checks=true --kubernetes-version v{{ kubernetes_version }} 
   args: 
     creates: /etc/kubernetes/pki
   register: master_init

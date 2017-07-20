@@ -24,7 +24,9 @@
     - /etc/kubernetes/pki
     - /etc/systemd/system/kubelet.service.d
     - /var/contiv
+    - /var/etcd/contiv-data
     - /tmp/contiv.yaml
+    - /tmp/etcd.yaml
     - /root/.kube
     tags:
     - reset

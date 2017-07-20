@@ -1,5 +1,5 @@
 # kubernetes version
-kubernetes_version: v1.6.5
+kubernetes_version: 1.7.1
 # you can define your own token or let the system
 # automatically generate one for you. 
 kubeadm_token: 62af06.d28bf88c95be9639

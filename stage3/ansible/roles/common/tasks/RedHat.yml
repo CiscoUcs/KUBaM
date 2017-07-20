@@ -53,7 +53,7 @@
 - name: clean the metadata
   command: yum --enablerepo=Kubernetes clean metadata
 
-- name: Install Kubeadm and Dependencies
+- name: Ensure NTP is installed
   yum:
     name: "{{ item }}"
     state: present
@@ -62,10 +62,17 @@
   with_items:
     - ntp
     - ntpdate
-    - kubelet-1.6.5
-    - kubeadm-1.6.5
-    - kubectl-1.6.5
-    - kubernetes-cni
+
+- name: Install Kubeadm and Dependencies
+  yum:
+    name: "{{ item }}-{{ kubernetes_version }} "
+    state: present
+    update_cache: true
+    validate_certs: no
+  with_items:
+    - kubelet
+    - kubeadm
+    - kubectl
   environment: 
     https_proxy: "{{ https_proxy }}"
   when: stat_result.stat.exists == False
