@@ -243,7 +243,7 @@ def createServers(handle, servers, org):
             else:
                 print err
 
-def deleteServers(handle):
+def deleteServers(handle, org):
     print "Deleting Kubernetes Nodes"
     filter_string = '(dn, "ls-kube[0-9]+", type="re")'
     kube = handle.query_classid("lsServer", filter_string)
