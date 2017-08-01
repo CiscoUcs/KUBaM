@@ -54,10 +54,6 @@
     dest: /etc/hosts
     line: "{{ hostvars[groups['master'][0]]['ansible_default_ipv4']['address'] }} netmaster"
 
-# routing is the default mode. 
-- name: Create Routing 
-  command: netctl global set --fwd-mode routing 
-  when: netctlcp|changed
 
 - name: Wait for contiv to become active
   wait_for:
@@ -68,7 +64,10 @@
   command: netctl net ls -q 
   register: contivh1
 
-- debug: var=contivh1
+# routing is the default mode. 
+- name: Create Routing 
+  command: netctl global set --fwd-mode routing 
+  when: contivh1.stdout == ""
 
 - name: Set Contiv fwd-mode routing
   command: netctl global set --fwd-mode routing
@@ -81,6 +80,12 @@
 - name: Create Contiv Default Network
   command: netctl net create -t default --subnet=172.16.0.0/16 -g 172.16.0.1 default-net
   when: contivh1.stdout == ""
+
+- name: Delete Daemon set to allow fwdMode change
+  command: kubectl -n kube-system delete daemonset contiv-netplugin 
+
+- name: Restart Daemonset in fwdMode routing
+  command: kubectl apply -f /tmp/contiv.yaml
 
 # netctl global set --fwd-mode routing
 # netctl net create -n infra -s 132.1.1.0/24 -g 132.1.1.1 contivh1

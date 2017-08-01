@@ -186,7 +186,7 @@ def createServiceProfileTemplate(handle, org):
         #local_disk_policy_name="kube",
         #storage_profile_name="kube",
         # virtual media policy
-        vmedia_policy_name="kube"
+        vmedia_policy_name="org-" + org + "/kube"
         )
     # create vNIC Connection Policy
     VnicConnDef(parent_mo_or_dn=mo,
