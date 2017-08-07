@@ -39,7 +39,7 @@ def select_kube_servers(handle):
             print "Install Kubernetes on the following servers:"
             for s in k8servers:
                 if type(s) is FabricComputeSlotEp:
-                    print "\tBlade %s/%s type %s" % (s.chassis_id, s.rn, s.model)
+                    print "\tChassis %s/%s type %s" % (s.chassis_id, s.rn, s.model)
                 if type(s) is ComputeRackUnit:
                     print "\tServer %s type %s" % (s.rn, s.model)
 
@@ -47,6 +47,52 @@ def select_kube_servers(handle):
             if yn == "y" or yn == "Y":
                 return k8servers
 
+def list_disks(handle, server):
+    from ucsmsdk.mometa.storage.StorageLocalDisk import StorageLocalDisk
+    from ucsmsdk.mometa.storage.StorageController import StorageController
+    from ucsmsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
+    from ucsmsdk.mometa.fabric.FabricComputeSlotEp import FabricComputeSlotEp
+    # get each controller of the server.
+    if type(server) is FabricComputeSlotEp:
+        cquery = '(dn, "sys/chassis-%s/blade-%s/board.*", type="re")' % (server.chassis_id, server.slot_id)
+    else: 
+        # don't do anything. 
+        return
+    all_disks = []
+    controllers = handle.query_classid("StorageController", cquery)
+    # get the disks of each controller. 
+    for c in controllers:
+        # get the disks: 
+        # c.dn: sys/chassis-1/blade-8/board/storage-SAS-1
+        dquery = '(dn, "%s", type="re")' % c.dn
+        disks = handle.query_classid("StorageLocalDisk", dquery)
+        for d in disks: 
+            all_disks.append(d)
+    return all_disks
+
+# reset the disks of a specific server to unconfigured good so we can 
+# use them!
+def reset_disks(handle, server):
+    from ucsmsdk.mometa.storage.StorageLocalDisk import StorageLocalDisk
+    disks = list_disks(handle, server)
+    for d in disks:
+        if d.disk_state == "jbod":
+ 	    # get the first part of the dn which is the storage controller: 
+            parent = "/".join(d.dn.split("/")[:-1])
+            mo = StorageLocalDisk(parent_mo_or_dn=parent, id=str(d.id),
+               admin_action="unconfigured-good",
+               admin_action_trigger="triggered")
+            handle.add_mo(mo)
+    try:
+        handle.commit()
+    except UcsException as err:
+        if err.error_code == "103":
+           return
+           print "\talready set to unconfigured-good."
+        else: 
+           print "error code: %s" % err.error_code
+           print "error: %s" % err
+    
     
 def createKubeBootPolicy(handle, org):
     print "Creating Kube Boot Policy"
@@ -140,6 +186,7 @@ def addServersToKubePool(handle, servers, org):
     from ucsmsdk.mometa.fabric.FabricComputeSlotEp import FabricComputeSlotEp
     mo = ComputePool(parent_mo_or_dn=org, policy_owner="local", name="Kubernetes", descr="")
     for s in servers: 
+        reset_disks(handle, s)
         if type(s) is FabricComputeSlotEp:
             ComputePooledSlot(parent_mo_or_dn=mo, slot_id=re.sub("slot-","", s.slot_id), chassis_id=str(s.chassis_id))
         if type(s) is ComputeRackUnit:
