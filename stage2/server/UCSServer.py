@@ -186,7 +186,7 @@ def createServiceProfileTemplate(handle, org):
         #local_disk_policy_name="kube",
         #storage_profile_name="kube",
         # virtual media policy
-        vmedia_policy_name="org-" + org + "/kube"
+        vmedia_policy_name="kube"
         )
     # create vNIC Connection Policy
     VnicConnDef(parent_mo_or_dn=mo,
@@ -245,7 +245,8 @@ def createServers(handle, servers, org):
 
 def deleteServers(handle, org):
     print "Deleting Kubernetes Nodes"
-    filter_string = '(dn, "ls-kube[0-9]+", type="re")'
+
+    filter_string = '(dn, "%s/ls-kube[0-9]+", type="re")' % org
     kube = handle.query_classid("lsServer", filter_string)
     for k in kube:
         print "Deleting " + k.name
