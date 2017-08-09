@@ -121,6 +121,37 @@ def createKubeBootPolicy(handle, org):
         if err.error_code == "103":
             print "\talready exists"
 
+def createBiosPolicy(handle, org):
+    print "Creating Kube Bios policy"
+    from ucsmsdk.mometa.bios.BiosVProfile import BiosVProfile
+    from ucsmsdk.mometa.bios.BiosVfConsistentDeviceNameControl import BiosVfConsistentDeviceNameControl
+    from ucsmsdk.mometa.bios.BiosVfFrontPanelLockout import BiosVfFrontPanelLockout
+    from ucsmsdk.mometa.bios.BiosVfPOSTErrorPause import BiosVfPOSTErrorPause
+    from ucsmsdk.mometa.bios.BiosVfQuietBoot import BiosVfQuietBoot
+    from ucsmsdk.mometa.bios.BiosVfResumeOnACPowerLoss import BiosVfResumeOnACPowerLoss
+    mo = BiosVProfile(parent_mo_or_dn=org, policy_owner="local", name="kube", descr="KUBaM Bios settings", reboot_on_update="yes")
+    mo_1 = BiosVfConsistentDeviceNameControl(parent_mo_or_dn=mo, vp_cdn_control="enabled")
+    mo_2 = BiosVfFrontPanelLockout(parent_mo_or_dn=mo, vp_front_panel_lockout="platform-default")
+    mo_3 = BiosVfPOSTErrorPause(parent_mo_or_dn=mo, vp_post_error_pause="platform-default")
+    mo_4 = BiosVfQuietBoot(parent_mo_or_dn=mo, vp_quiet_boot="platform-default")
+    mo_5 = BiosVfResumeOnACPowerLoss(parent_mo_or_dn=mo, vp_resume_on_ac_power_loss="last-state")
+    handle.add_mo(mo, modify_present=True)
+    try: 
+        handle.commit()
+    except UcsException as err:
+        if err.error_code == "103":
+            print "\talready exists"
+
+def deleteBiosPolicy(handle, org):
+    print "Deleting Kubernetes Bios Policy"
+    mo = handle.query_dn(org + "/bios-prof-kube")
+    try:
+        handle.remove_mo(mo)
+        handle.commit()
+    except AttributeError:
+        print "\talready deleted"
+
+
 def deleteKubeBootPolicy(handle, org):
     mo = handle.query_dn(org + "/boot-policy-kube")
     try:
@@ -233,6 +264,8 @@ def createServiceProfileTemplate(handle, org):
         maint_policy_name="default",
         # scrub policy
         scrub_policy_name="kube",
+        # Bios Policy
+        bios_profile_name="kube",
         # UUID Pool
         ident_pool_name="kube",
         # disks we use. 
@@ -477,6 +510,7 @@ def createStorageProfile(handle, org):
 def createKubeServers(handle, org):
     createKubeBootPolicy(handle, org)
     #createKubeLocalDiskPolicy(handle, org)
+    createBiosPolicy(handle, org)
     createDiskGroupConfig(handle, org)
     createStorageProfile(handle, org)
     createScrubPolicy(handle, org)
@@ -496,6 +530,7 @@ def deleteKubeServers(handle, org):
     deleteScrubPolicy(handle, org)
     deleteKubeBootPolicy(handle, org)
     deleteStorageProfile(handle, org)
+    deleteBiosPolicy(handle,org)
     deleteDiskGroupConfig(handle, org)
     #deleteKubeLocalDiskPolicy(handle, org)
     deleteKubeUUIDPools(handle, org)
