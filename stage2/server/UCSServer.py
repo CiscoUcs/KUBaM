@@ -76,22 +76,28 @@ def reset_disks(handle, server):
     from ucsmsdk.mometa.storage.StorageLocalDisk import StorageLocalDisk
     disks = list_disks(handle, server)
     for d in disks:
+	#print "changing disk: %s" % d.dn
+        #print "disk state: %s" % d.disk_state
+        #print "disk id: %s" % str(d.id)
+
         if d.disk_state == "jbod":
+            print "setting to unconfigured good." 
  	    # get the first part of the dn which is the storage controller: 
             parent = "/".join(d.dn.split("/")[:-1])
+            #print "parent is: %s" % parent
             mo = StorageLocalDisk(parent_mo_or_dn=parent, id=str(d.id),
                admin_action="unconfigured-good",
+               admin_virtual_drive_id="unspecified",
                admin_action_trigger="triggered")
-            handle.add_mo(mo)
-    try:
-        handle.commit()
-    except UcsException as err:
-        if err.error_code == "103":
-           return
-           print "\talready set to unconfigured-good."
-        else: 
-           print "error code: %s" % err.error_code
-           print "error: %s" % err
+            handle.add_mo(mo, True)
+            try:
+               handle.commit()
+            except UcsException as err:
+               if err.error_code == "103":
+                   print "\talready set to unconfigured-good."
+               else: 
+                   print "error code: %s" % err.error_code
+                   print "error: %s" % err
     
     
 def createKubeBootPolicy(handle, org):

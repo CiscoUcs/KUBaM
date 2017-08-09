@@ -1,5 +1,5 @@
 # KUBaM!
-__(K)__ubernetes on __(U)__CS __(Ba)__re __(M)__etal(!)
+__K__ubernetes on __U__CS __Ba__re __M__etal
 
 ## Introduction
 You believe the hype: Kubernetes is the future.  Containers are where its at and you're ready to tear everything down and go all in with Kube.  Great, so how do you get that kubernetes goodness working on your shiny UCS platform?  And more important: How do you automate that so it works every time?  We want infrastructure as code right?  Isn't that the future as well (even though its actually the past and present as well?)
