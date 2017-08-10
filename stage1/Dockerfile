@@ -12,6 +12,7 @@ RUN ln -sf /dev/stderr /var/log/nginx/error.log
 ADD files/default.conf /etc/nginx/conf.d
 # turn daemon off of default nginx server.
 ADD files/nginx.conf /etc/nginx/nginx.conf 
+ADD files/stage1 /usr/share/kubam/stage1
 ADD scripts/* /usr/bin/
 EXPOSE 80
 CMD ["/bin/bash", "/usr/bin/init.sh"]
