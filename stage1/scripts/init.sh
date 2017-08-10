@@ -7,7 +7,8 @@ if [ ! -d /kubam ]; then
 fi
 
 echo "Looking for the ISO file to extract."
-if [ ! -e /kubam/*.iso ]; then
+F=$(ls /kubam/*.iso 2>/dev/null | head -1)
+if [[ F = "" ]]; then
   echo "No ISO file found.  Please add a Linux ISO file to your directory."
   echo "The suffix of the file should be .iso"
   exit 1

@@ -8,8 +8,8 @@ from socket import inet_aton, error as Serror
 from jinja2 import Environment, FileSystemLoader
 
 # constants.  
-TEMPLATE_DIR="../templates"
-KUBAM_DIR="../test"
+TEMPLATE_DIR="/usr/share/kubam/templates"
+KUBAM_DIR="/kubam/"
 TEMPLATE_FILE="centos7-ks.tmpl"
 
 # takes in a hash of configuration data and validates to make sure
@@ -99,14 +99,14 @@ def build_template(node, j2_env, config):
     
 # build the kickstart images
 def build_boot_image(node, template):
-    k_dir = KUBAM_DIR + "/" + node["name"]
+    k_dir = KUBAM_DIR + node["name"]
     if not os.path.exists(k_dir):
         os.makedirs(k_dir)
     with open(k_dir + "/ks.cfg", "w") as f:
         f.write(template)
     f.close()   
 
-config = parse_config("../stage1.yaml")
+config = parse_config(KUBAM_DIR + "stage1.yaml")
 if config == "":
     exit(1)
 

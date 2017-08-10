@@ -23,3 +23,23 @@ docker run -d -p 80:80 \
 Note that before running the image, you should ensure that you have an ISO linux of CentOS 7 Minimal in your directory.  You can get that image [here](http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1611.iso)
 
 Running ```docker logs stage1-server``` will allow you to see what is happening as the server builds. 
+
+## Testing and Development
+
+On your local development system (Mac) Go to the directory where the ISO image is: 
+
+```
+cd ~/Downloads/kubam/
+```
+Here you should place a CentOS 7 image: 
+
+```
+ls 
+CentOS-7-x86_64-Minimal-1611.iso
+```
+Now we can run: 
+
+```
+docker run -it -p 80:80 -v `pwd`:/kubam --name kubam1 --rm --device /dev/fuse --cap-add SYS_ADMIN kubam/stage1-server /bin/bash
+```
+Note that we add the fuse and cap-add lines so we can create kickstart images for the servers. 
