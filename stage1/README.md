@@ -1,4 +1,6 @@
-#KUBaM stage 1
+# KUBaM stage 1
+
+Stage 1 is the first part of installing Kubernetes on UCS.  In this stage we build the web server that will be used to automate the installation. 
 
 To automate the installation of UCS nodes we require an automated web server.  The web server is built with a container image.  Because we aren't allowed to distribute a Linux Image, we ask that the user point us to media as part of the installation process.  
 
