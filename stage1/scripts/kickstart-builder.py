@@ -6,10 +6,13 @@
 import os
 from socket import inet_aton, error as Serror
 from jinja2 import Environment, FileSystemLoader
+from subprocess import call
 
 # constants.  
-TEMPLATE_DIR="/usr/share/kubam/templates"
 KUBAM_DIR="/kubam/"
+KUBAM_SHARE_DIR="/usr/share/kubam/"
+BASE_IMG=KUBAM_SHARE_DIR+"/stage1/ks.img"
+TEMPLATE_DIR=KUBAM_SHARE_DIR+"/templates/"
 TEMPLATE_FILE="centos7-ks.tmpl"
 
 # takes in a hash of configuration data and validates to make sure
@@ -99,12 +102,44 @@ def build_template(node, j2_env, config):
     
 # build the kickstart images
 def build_boot_image(node, template):
-    k_dir = KUBAM_DIR + node["name"]
-    if not os.path.exists(k_dir):
-        os.makedirs(k_dir)
-    with open(k_dir + "/ks.cfg", "w") as f:
-        f.write(template)
-    f.close()   
+    new_image_name = KUBAM_DIR + node["name"] + ".img"
+    new_image_dir = KUBAM_DIR + node["name"] 
+    # cp the file to the directory. 
+    o = call(["cp" , "-f", 
+                BASE_IMG,
+                new_image_name])
+    if not o == 0: 
+        return 1 
+    # create mount point. 
+    o = call(["mkdir" , "-p", new_image_dir])
+    if not o == 0: 
+        return 1 
+    # use fuse to mount the image. 
+    # e.g: fuseext2 kube01.img kube01 -o rw+,nonempty
+    o = call(["fuseext2", "-o", "rw+,nonempty",
+                new_image_name, new_image_dir,])
+    if not o == 0:
+        return 1
+    
+    # write the file over the existing file if it exists. 
+    try: 
+        with open(new_image_dir + "/ks.cfg", "w") as f:
+            f.write(template)
+        f.close()   
+    except IOError as err:
+        print file_name, err.strerror
+        return 1
+
+    # unmount the filesystem. 
+    o = call(["umount", new_image_dir])            
+    if not o == 0:
+        return 1
+    # remove mount directory
+    o = call(["rm", "-rf", new_image_dir])
+    if not o == 0:
+        return 1
+    return 0
+    
 
 config = parse_config(KUBAM_DIR + "stage1.yaml")
 if config == "":
@@ -114,13 +149,6 @@ j2_env = Environment(loader=FileSystemLoader(TEMPLATE_DIR),
                      trim_blocks=True)
 for node in config["nodes"]:
     template = build_template(node, j2_env, config)
-    build_boot_image(node, template)
-
-# parse the configuration. 
-# take care of idempodence.  Do not touch something if already
-# created and if already in place. 
-# for each node, 
-#   get the template
-#   substitute values
-#   place file in build directory. 
-#   build an image 
+    rc = build_boot_image(node, template)
+    if rc == 1:
+        break

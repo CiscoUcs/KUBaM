@@ -53,6 +53,15 @@ then
   -boot-load-size 4 -boot-info-table -r -J -v -T stage1/isolinux
 fi
 
+# look for config file. 
+if [ -e stage1.yaml ]
+then 
+  echo "Generating kickstart files."
+  kickstart-builder.py
+else
+  echo "no stage1.yaml file found.  Kickstart files won't be generated."
+  echo "see documentation at http://kubam.io"
+fi
 
 # run the installation script on the ISO file and start the web server. 
 # start nginx  
