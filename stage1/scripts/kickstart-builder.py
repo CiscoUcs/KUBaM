@@ -122,12 +122,19 @@ def build_boot_image(node, template):
         return 1
     
     # write the file over the existing file if it exists. 
+    # hack to over write file 
+    fw = new_image_dir + "/ks1.cfg"
+    fw_real = new_image_dir + "/ks.cfg"
     try: 
-        with open(new_image_dir + "/ks.cfg", "w") as f:
+        with open(fw, 'w') as f:
             f.write(template)
-        f.close()   
     except IOError as err:
         print file_name, err.strerror
+        return 1
+
+    # mv this file to ks.cfg
+    o = call(["mv", fw, fw_real])            
+    if not o == 0:
         return 1
 
     # unmount the filesystem. 
