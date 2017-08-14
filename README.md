@@ -7,7 +7,7 @@ You believe the hype: Kubernetes is the future.  Containers are where its at and
 That is where KUBaM comes in.  We want to guide you through the 4 stages of Kubernetes.
 
 ## Stage 1 - Prepare
-You need an OS on your UCS system.  We propopse you use [PXEless automated installs](https://communities.cisco.com/community/technology/datacenter/compute-and-storage/ucs_management/blog/2017/04/25/pxe-less-automated-installation-of-centosredhat-on-ucs). This is something UCS can do that no other server can.  Aren't you glad you got UCS? 
+You need an OS on your UCS system.  We propose you use [PXEless automated installs](https://communities.cisco.com/community/technology/datacenter/compute-and-storage/ucs_management/blog/2017/04/25/pxe-less-automated-installation-of-centosredhat-on-ucs). This is something UCS can do that no other server can.  Aren't you glad you got UCS? 
 
 ## Stage 2 - UCS Bare Metal Deployment
 You need automated UCS configuration.  There are several ways to do this.  Using the UCS Python SDK is the way to go at the present.  But be on the lookout for us to release Terraform and Ansible installers for this stage.  Once past this stage, you have your Operating system deployed. 
