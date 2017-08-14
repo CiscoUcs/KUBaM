@@ -15,7 +15,7 @@ You need automated UCS configuration.  There are several ways to do this.  Using
 ## Stage 3 - Kubernetes Installation
 Once the vanilla OS is up, its time to get Kubernetes going!  How to do that?  Configuration management tools.  Currently we use Ansible for this stage. 
 
-## Stage 4 - Kubernetes Client
-You're up and running!  At this point, just configure your ```kubectl``` command to make this work.  
+## Stage 4 - Day 2+ Operations
+You're up and running!  At this point, just configure your ```kubectl``` command to make this work.  Get a dashbaord, setup some monitoring and it's on!
 
 Ready to begin?  Then [get started with the official documentation](https://ciscoucs.github.io/kubam/)
