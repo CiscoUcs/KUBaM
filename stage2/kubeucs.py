@@ -5,27 +5,10 @@ from ucsmsdk.ucsexception import UcsException
 from urllib2 import HTTPError
 from network import UCSNet
 from server import UCSServer
+from session import UCSSession
 from util import UCSUtil
 import argparse
 import os, sys
-
-def ucs_login(username, password, server):
-    handle = UcsHandle(server, username, password)
-    try:
-        handle.login()
-    except UcsException as err:  
-        print "Login Error: " + err.error_descr
-        sys.exit()
-    except HTTPError as err:
-        print "Connection Error: Bad UCSM? " + err.reason
-        sys.exit()
-    except:
-        print "Issue logging in.  Please check that all parameters are correct"
-        sys.exit()
-    return handle
-
-def ucs_logout(handle):
-    handle.logout()
 
 def main():
     global handle
@@ -42,7 +25,7 @@ def main():
     args = parser.parse_args()
     org = args.org
     # loging
-    handle = ucs_login(args.user, args.password, args.server)
+    handle = UCSSession.login(args.user, args.password, args.server)
     # see what's up with the org.
     if org == "":
         org = "org-root"
@@ -68,7 +51,7 @@ def main():
         else:
             print "cool.  No harm done."
 
-    ucs_logout(handle)
+    UCSSession.logout(handle)
 
 if __name__ == '__main__':
     main()
