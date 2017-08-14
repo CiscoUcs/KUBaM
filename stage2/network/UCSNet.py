@@ -5,7 +5,11 @@ def listVLANs(handle):
     # get only VLANs not appliance port vlans
     filter_string = '(dn, "fabric/lan/net-[A-Za-z0-9]+", type="re")'
     vlans = handle.query_classid("fabricVlan", filter_string)
+    return vlans
     #vlans = handle.query_classid("fabricVlan")
+        
+def selectVLAN(handle):
+    vlans = listVLANs(handle)
     val = -1
     while val < 0 or val > len(vlans):
         for i, vlan in enumerate(vlans):
@@ -15,8 +19,6 @@ def listVLANs(handle):
         val = int(val)  
     val = val - 1
     return vlans[val]
-        
-
 
 def createKubeMacs(handle, org):
     print "Creating Kubernetes MAC Pools"
@@ -101,7 +103,7 @@ def deleteLanConnPolicy(handle, org):
         print "\talready deleted"
 
 def createKubeNetworking(handle, org):
-    vlan = listVLANs(handle) 
+    vlan = selectVLAN(handle) 
     createKubeMacs(handle, org)
     createVNICTemplates(handle, vlan.name, org)
     createLanConnPolicy(handle, org)

@@ -9,13 +9,13 @@ def login(username, password, server):
         handle.login()
     except UcsException as err:
         print "Login Error: " + err.error_descr
-        sys.exit()
+        return ""
     except HTTPError as err:
         print "Connection Error: Bad UCSM? " + err.reason
-        sys.exit()
+        return ""
     except:
         print "Issue logging in.  Please check that all parameters are correct"
-        sys.exit()
+        return ""
     return handle
 
 def logout(handle):

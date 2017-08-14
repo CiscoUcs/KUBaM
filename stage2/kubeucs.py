@@ -26,6 +26,8 @@ def main():
     org = args.org
     # loging
     handle = UCSSession.login(args.user, args.password, args.server)
+    if handle == "":
+        sys.exit(1)
     # see what's up with the org.
     if org == "":
         org = "org-root"
