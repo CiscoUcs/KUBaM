@@ -5,6 +5,7 @@ def listVLANs(handle):
     # get only VLANs not appliance port vlans
     filter_string = '(dn, "fabric/lan/net-[A-Za-z0-9]+", type="re")'
     vlans = handle.query_classid("fabricVlan", filter_string)
+    print vlans[1]
     return vlans
     #vlans = handle.query_classid("fabricVlan")
         
