@@ -88,15 +88,15 @@ You should be logged in before using this method. Returns the names of the VLANs
 200
 {
   "vlans": [
-    "default",
-    "hx-inband-mgmt",
-    "hx-vmotion",
-    "hx-data",
-    "Docker-Data",
-    "Docker-storage",
-    "hx-storage-data",
-    "vm-network"
-  ]
+    {
+      "name": "default",
+      "vlan-id": "3095"
+    },
+    {
+      "name": "hx-inband-mgmt",
+      "vlan-id": "1"
+    },
+    ...
 }
 ```
 
@@ -107,4 +107,42 @@ Or
 {
   "error": "not logged in to UCS"
 }
+```
+
+### UCS Servers
+
+```
+curl -i -X GET -H "Content-Type: application/json"  localhost:5000/api/v1/servers
+```
+
+Output:
+
+Gives you the list of servers in the system: 
+
+```
+{
+  "servers": [
+    {
+      "chassis_id": "1",
+      "model": "UCSB-B200-M4",
+      "slot": "slot-1",
+      "type": "blade"
+    },
+    {
+      "chassis_id": "1",
+      "model": "UCSB-B200-M3",
+      "slot": "slot-3",
+      "type": "blade"
+    },
+    ...
+	]
+}
+```
+
+### Deploy KUBAM
+
+Given that we have the servers we want as well as the network that we want to use, we can deploy with KUBAM with the following: 
+
+```
+
 ```
