@@ -57,7 +57,7 @@
   yum:
     name: "{{ item }}"
     state: present
-    update_cache: true
+    update_cache: false
     validate_certs: no
   with_items:
     - ntp
@@ -73,8 +73,6 @@
     - kubelet
     - kubeadm
     - kubectl
-  environment: 
-    https_proxy: "{{ https_proxy }}"
   when: stat_result.stat.exists == False
 
 - name: Copy ntp configuration

@@ -2,6 +2,20 @@
 
 The API server aims to consolidate the work on stage1 and stage2 into an automated API. 
 
+## Running in a Container
+
+```
+mkdir ~/kubam
+cd ~/kubam
+wget <latest ISO image>
+docker run -p 80:80 -d -v `pwd`:/kubam \
+	--device /dev/fuse \
+	--cap-add SYS_ADMIN \
+	--name kubam \
+	kubam/kubam
+```
+Notice that the docker command will mount the current directory where the ISO is.  This makes it so we can run and start the ISO file. 
+
 ## To start the API server:
 
 ```
@@ -145,4 +159,13 @@ Given that we have the servers we want as well as the network that we want to us
 
 ```
 
+```
+
+## Running Test Cases
+
+See this [post for help](https://stackoverflow.com/questions/1896918/running-unittest-with-typical-test-directory-structure)
+
+```
+cd app
+python -m unittest discover
 ```

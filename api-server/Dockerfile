@@ -10,7 +10,12 @@ RUN yum -y install  xorriso \
                     PyYAML \
                     fuseext2 \
                     nginx \
-                    mkisofs
+                    mkisofs \
+                    python-flask
+
+RUN curl https://bootstrap.pypa.io/get-pip.py | python - && \
+    pip install ucsmsdk
+
 # make output of nginx logs go to stdout so we see in docker.
 RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -23,5 +28,6 @@ ADD files/stage1 /usr/share/kubam/stage1
 ADD templates /usr/share/kubam/templates
 # get our scripts installed. 
 ADD scripts/* /usr/bin/
+ADD app /app
 EXPOSE 80
 CMD ["/bin/bash", "/usr/bin/init.sh"]
