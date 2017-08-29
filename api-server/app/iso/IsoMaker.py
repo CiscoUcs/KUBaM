@@ -52,12 +52,13 @@ def extract_iso(iso, mnt_dir):
 
 # cd into the OS directory and determine what OS it actually is. 
 def get_os(os_dir):
-    for os, odic in os_dict.iteritems():
-        fname = osdir + "/" + odic["key_file"]
+    for o, odic in os_dict.iteritems():
+        fname = os_dir + "/" + odic["key_file"]
         if os.path.isfile(fname):
-            f = open(os.path.isfile(fname), 'r')
+            f = open(fname, 'r')
             for line in f:
                 if re.search(odic["key_string"], line):
+                    print "match: " , odic["key_string"]
                     return odic
     return {}
 
@@ -71,10 +72,10 @@ def mkboot_centos(version):
     o = call(["mkdir", "-p", stage_dir])
     if not o == 0:
         return 1, "Unable to make directory " + stage_dir
-    o = call(["cp", "-a", stage_dir + "/isolinux", stage_dir])
-    o = call(["cp", "-a", stage_dir + "/.discinfo", stage_dir + "/isolinux/"])
-    o = call(["cp", "-a", stage_dir + "/LiveOS", stage_dir + "/isolinux/"])
-    o = call(["cp", "-a", stage_dir + "/images/", stage_dir + "/isolinux/"])
+    o = call(["cp", "-a", os_dir + "/isolinux", stage_dir])
+    o = call(["cp", "-a", os_dir + "/.discinfo", stage_dir + "/isolinux/"])
+    o = call(["cp", "-a", os_dir + "/LiveOS", stage_dir + "/isolinux/"])
+    o = call(["cp", "-a", os_dir + "/images/", stage_dir + "/isolinux/"])
     o = call(["cp", "-a", 
                 "/usr/share/kubam/stage1/centos7.3/isolinux.cfg", 
                 stage_dir + "/isolinux/"])
@@ -87,7 +88,7 @@ def mkboot_centos(version):
                 "-boot-info-table", "-r", "-J", "-v", 
                 "-T", stage_dir + "/isolinux"])
     os.chdir(cwd)
-    return 0
+    return 0, "success"
     
 def mkboot_esxi(version):
     return 0 
@@ -96,30 +97,30 @@ def mkboot_esxi(version):
 
 def mkboot(os):
     if os == "centos7.3":
-        mkboot_centos("7.3")
+        return mkboot_centos("7.3")
     if os == "esxi6.5":
-        mkboot_esxi("6.5")
+        return mkboot_esxi("6.5")
     
 # determine version of OS and make boot dir. 
 # success:  return 0 and status message.
 # failure:  return 1 and error message.
 def mkboot_iso(iso):
     iso = "/kubam/" + iso
-    tmp_dir = "/kubam/tmp/" + ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))
-    err_msg, err = extract_iso(iso, tmp_dir)
+    # create random tmp directory
+    tmp_dir = "/kubam/tmp/" + ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+    err, err_msg = extract_iso(iso, tmp_dir)
     if err != 0:
         return err_msg, err
-    os = get_os(tmp_dir)
-    if not os:
+    o = get_os(tmp_dir)
+    if not o:
         return 1, "OS could not be determined with ISO image.  Perhaps this is not a supported OS?"
     # if the directory is already there, we don't touch it. 
-    print os["dir"]
-    if os.isdir("/kubam/" + os["dir"]):
+    if os.path.isdir("/kubam/" + o["dir"]):
         print "removing temp"
         rmtree(tmp_dir) 
     else:
-        print "creating " + os["dir"]
-        os.rename(tmp_dir, "/kubam/" + os["dir"])
+        print "creating " + o["dir"]
+        os.rename(tmp_dir, "/kubam/" + o["dir"])
     # now that we have tree, get boot media ready. 
-    err, msg = mkboot(os["dir"])
+    err, msg = mkboot(o["dir"])
     return err, msg
