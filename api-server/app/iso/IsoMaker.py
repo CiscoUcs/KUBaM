@@ -1,6 +1,23 @@
 #!/usr/bin/env python
 import os, re
 from subprocess import call
+from shutil import rmtree
+import random
+import string
+
+# dictionary of supported OSes
+os_dict = {
+    "centos7.3": {
+        "key_file": ".discinfo",
+        "key_string": "7.3",
+        "dir": "centos7.3"
+    },
+    "esxi6.5" : {
+        "key_file": "VMWARE-ESX-BASE-OSL.TXT",
+        "key_string": "ESXi v6.5",
+        "dir": "esxi6.5"
+    }
+}
 
 # takes in a hash of configuration data and validates to make sure
 # it has the stuff we need in it. 
@@ -35,16 +52,74 @@ def extract_iso(iso, mnt_dir):
 
 # cd into the OS directory and determine what OS it actually is. 
 def get_os(os_dir):
-    return 0    
+    for os, odic in os_dict.iteritems():
+        fname = osdir + "/" + odic["key_file"]
+        if os.path.isfile(fname):
+            f = open(os.path.isfile(fname), 'r')
+            for line in f:
+                if re.search(odic["key_string"], line):
+                    return odic
+    return {}
 
-# determine version of OS. 
-def get_os_from_iso(iso):
-    tmp_dir = "/tmp/" + ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(N))
+# mkboot for centos 7.3
+def mkboot_centos(version):
+    boot_iso = "/kubam/centos7.3-boot.iso"
+    if os.path.isfile(boot_iso):
+        return 0, "boot iso was already created"
+    os_dir = "kubam/centos7.3"
+    stage_dir = "/kubam/tmp/" + ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))
+    o = call(["mkdir", "-p", stage_dir])
+    if not o == 0:
+        return 1, "Unable to make directory " + stage_dir
+    o = call(["cp", "-a", stage_dir + "/isolinux", stage_dir])
+    o = call(["cp", "-a", stage_dir + "/.discinfo", stage_dir + "/isolinux/"])
+    o = call(["cp", "-a", stage_dir + "/LiveOS", stage_dir + "/isolinux/"])
+    o = call(["cp", "-a", stage_dir + "/images/", stage_dir + "/isolinux/"])
+    o = call(["cp", "-a", 
+                "/usr/share/kubam/stage1/centos7.3/isolinux.cfg", 
+                stage_dir + "/isolinux/"])
+
+    cwd = os.getcwd()
+    os.chdir("/kubam")
+    o = call(["mkisofs", "-o", boot_iso, "-b", "isolinux.bin",
+                "-c", "boot.cat", "-no-emul-boot", "-V",
+                "CentOS 7 x86_64", "-boot-load-size" , "4", 
+                "-boot-info-table", "-r", "-J", "-v", 
+                "-T", stage_dir + "/isolinux"])
+    os.chdir(cwd)
+    return 0
+    
+def mkboot_esxi(version):
+    return 0 
+
+
+
+def mkboot(os):
+    if os == "centos7.3":
+        mkboot_centos("7.3")
+    if os == "esxi6.5":
+        mkboot_esxi("6.5")
+    
+# determine version of OS and make boot dir. 
+# success:  return 0 and status message.
+# failure:  return 1 and error message.
+def mkboot_iso(iso):
+    iso = "/kubam/" + iso
+    tmp_dir = "/kubam/tmp/" + ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))
     err_msg, err = extract_iso(iso, tmp_dir)
     if err != 0:
         return err_msg, err
-    get_os(tmp_dir)
-    
-     
-
-   
+    os = get_os(tmp_dir)
+    if not os:
+        return 1, "OS could not be determined with ISO image.  Perhaps this is not a supported OS?"
+    # if the directory is already there, we don't touch it. 
+    print os["dir"]
+    if os.isdir("/kubam/" + os["dir"]):
+        print "removing temp"
+        rmtree(tmp_dir) 
+    else:
+        print "creating " + os["dir"]
+        os.rename(tmp_dir, "/kubam/" + os["dir"])
+    # now that we have tree, get boot media ready. 
+    err, msg = mkboot(os["dir"])
+    return err, msg

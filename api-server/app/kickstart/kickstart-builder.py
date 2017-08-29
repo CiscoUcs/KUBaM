@@ -3,7 +3,6 @@
 # 1.  Read in a configuration file. 
 # 2.  Create a kickstart file based on a template
 # 3.  Create an image from that kickstart file to be used to boot a UCS.
-import os
 from socket import inet_aton, error as Serror
 from jinja2 import Environment, FileSystemLoader
 from subprocess import call

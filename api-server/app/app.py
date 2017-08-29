@@ -85,11 +85,11 @@ def get_isos():
         return jsonify({'error': isos})
     return jsonify({'isos': isos}), 200
 
-# extract an ISO image.
+# extract an ISO image. This probably isn't used as the /isos/boot does this for you as part of the 
+# creation process. 
 # curl -H "Content-Type: application/json" -X POST -d '{"iso" : "Vmware-ESXi-6.5.0-4564106-Custom-Cisco-6.5.0.2.iso", "os": "esxi6.5" }' http://localhost/api/v1/isos/extract
 @app.route(API_ROOT + "/isos/extract", methods=['POST'])
 def extract_iso():
-    print request.json
     if not request.json:
         return jsonify({'error': 'expected iso hash'}), 400
     iso = request.json['iso']
@@ -99,6 +99,19 @@ def extract_iso():
         return jsonify({"error": msg}), 500
     return jsonify({"status": "ok"}), 201
 
+# make the boot ISO image of an ISO
+# curl -H "Content-Type: application/json" -X POST -d '{"iso" : "Vmware-ESXi-6.5.0-4564106-Custom-Cisco-6.5.0.2.iso" }' http://localhost/api/v1/isos/boot
+# curl -H "Content-Type: application/json" -X POST -d '{"iso" : "CentOS-7-x86_64-Minimal-1611.iso" }' http://localhost/api/v1/isos/boot
+@app.route(API_ROOT + "/isos/boot", methods=['POST'])
+def mkboot_iso():
+    if not request.json:
+        return jsonify({'error': 'expected iso hash'}), 400
+    iso = request.json['iso']
+    err, msg = IsoMaker.mkboot_iso(iso)
+    if not err == 0:
+        return jsonify({"error": msg}), 500
+    return jsonify({"status": "ok"}), 201
+    
 
 # deploy the UCS
 @app.route(API_ROOT + "/deploy", methods=['POST'])
