@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os, re
+from subprocess import call
 
 # takes in a hash of configuration data and validates to make sure
 # it has the stuff we need in it. 
@@ -8,6 +9,7 @@ def list_isos(directory):
     # get all ISOs in a directory
     r = re.compile("iso$", re.IGNORECASE)
     files = []
+    
     try:
         files = os.listdir(directory)
     except OSError as err:
@@ -16,10 +18,20 @@ def list_isos(directory):
     return 0, list_of_isos
    
 #  extract the ISO file into a directory 
+#  call with iso file and directory to mount in:
+#   iso: /kubam/CentOS-7-x86_64-Minimal-1611.iso 
+#   mnt_dir: /kubam/centos7.3 
+
 def extract_iso(iso, mnt_dir):
     err = 0
-    os.mkdir(mnt_dir)
-    return "", err
+    if os.path.isdir(mnt_dir):
+        return 1, mnt_dir + " directory already exists."
+    # osirrox -prog kubam -indev ./*.iso -extract . centos7.3
+    o = call(["osirrox", "-prog", "kubam", "-indev", iso, "-extract",
+                ".", mnt_dir])
+    if not o == 0:
+        return 1, "error extracting ISO file.  Bad ISO file?"
+    return err, "success"
 
 # cd into the OS directory and determine what OS it actually is. 
 def get_os(os_dir):

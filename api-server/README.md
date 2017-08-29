@@ -16,6 +16,20 @@ docker run -p 80:80 -d -v `pwd`:/kubam \
 ```
 Notice that the docker command will mount the current directory where the ISO is.  This makes it so we can run and start the ISO file. 
 
+If you want to change the code while developing run it as follows: 
+
+
+```
+export KUBAM_DIR=~/Downloads/kubam
+export APP_DIR=~/Code/KUBaM/api-server/app
+docker run -p 80:80 -d -v $KUBAM_DIR:/kubam \
+   -v $APP_DIR:/app \
+	--device /dev/fuse \
+	--cap-add SYS_ADMIN \
+	--name kubam \
+	kubam/kubam
+```
+
 ## To start the API server:
 
 ```

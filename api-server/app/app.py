@@ -3,6 +3,7 @@ from network import UCSNet
 from server import UCSServer
 from session import UCSSession
 from util import UCSUtil
+from iso import IsoMaker
 
 app = Flask(__name__)
 
@@ -29,7 +30,7 @@ def get_creds():
     return jsonify({'credentials': c})
 
 
-# test with: curl -H "Content-Type: application/json" -X POST -d '{"credentials": {"user" : "admin", "password" : "cisco123", "server" : "172.28.225.163"}}' localhost:5000/api/v1/credentials}}
+# test with: curl -H "Content-Type: application/json" -X POST -d '{"credentials": {"user" : "admin", "password" : "cisco123", "server" : "172.28.225.163"}}' http://localhost/api/v1/credentials
 
 @app.route(API_ROOT + "/session", methods=['POST'])
 def create_creds():
@@ -37,7 +38,6 @@ def create_creds():
     if not request.json:
         return jsonify({'error': 'expected credentials hash'}), 400
    
-    print request.json['credentials'] 
     credentials['user'] = request.json['credentials']['user']
     credentials['password'] = request.json['credentials']['password']
     credentials['server'] = request.json['credentials']['server']
@@ -76,6 +76,29 @@ def get_servers():
         return not_logged_in() 
     servers = UCSServer.list_servers(handle) 
     return jsonify({'servers': servers}), 200
+
+# list ISO images.
+@app.route(API_ROOT + "/isos", methods=['GET'])
+def get_isos():
+    err, isos = IsoMaker.list_isos("/kubam")    
+    if err != 0:
+        return jsonify({'error': isos})
+    return jsonify({'isos': isos}), 200
+
+# extract an ISO image.
+# curl -H "Content-Type: application/json" -X POST -d '{"iso" : "Vmware-ESXi-6.5.0-4564106-Custom-Cisco-6.5.0.2.iso", "os": "esxi6.5" }' http://localhost/api/v1/isos/extract
+@app.route(API_ROOT + "/isos/extract", methods=['POST'])
+def extract_iso():
+    print request.json
+    if not request.json:
+        return jsonify({'error': 'expected iso hash'}), 400
+    iso = request.json['iso']
+    os = request.json['os']
+    err, msg = IsoMaker.extract_iso("/kubam/" + iso, "/kubam/" + os) 
+    if not err == 0:
+        return jsonify({"error": msg}), 500
+    return jsonify({"status": "ok"}), 201
+
 
 # deploy the UCS
 @app.route(API_ROOT + "/deploy", methods=['POST'])
