@@ -23,3 +23,6 @@ curl -X GET -H "Content-Type: application/json"  http://localhost/api/v1/isos
 
 # Test ISO extract
 curl -H "Content-Type: application/json" -X POST -d '{"iso" : "Vmware-ESXi-6.5.0-4564106-Custom-Cisco-6.5.0.2.iso", "os": "esxi6.5" }' http://localhost/api/v1/isos/extract
+
+# Test Make BOOt ISO
+curl -H "Content-Type: application/json" -XPOST -d '{"iso" : "CentOS-7-x86_64-Minimal-1611.iso" }' http://localhost/api/v1/isos/boot
