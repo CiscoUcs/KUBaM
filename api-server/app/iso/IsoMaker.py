@@ -13,8 +13,8 @@ os_dict = {
         "dir": "centos7.3"
     },
     "esxi6.5" : {
-        "key_file": "VMWARE-ESX-BASE-OSL.TXT",
-        "key_string": "ESXi v6.5",
+        "key_file": ".DISCINFO",
+        "key_string": "ESXi",
         "dir": "esxi6.5"
     }
 }
@@ -44,7 +44,7 @@ def extract_iso(iso, mnt_dir):
     if os.path.isdir(mnt_dir):
         return 1, mnt_dir + " directory already exists."
     # osirrox -prog kubam -indev ./*.iso -extract . centos7.3
-    o = call(["osirrox", "-prog", "kubam", "-indev", iso, "-extract",
+    o = call(["osirrox", "-acl", "off", "-prog", "kubam", "-indev", iso, "-extract",
                 ".", mnt_dir])
     if not o == 0:
         return 1, "error extracting ISO file.  Bad ISO file?"
@@ -55,7 +55,15 @@ def get_os(os_dir):
     for o, odic in os_dict.iteritems():
         fname = os_dir + "/" + odic["key_file"]
         if os.path.isfile(fname):
-            f = open(fname, 'r')
+            try: 
+                f = open(fname, 'r')
+            except OSError as err:
+                # permission denied error on ISO image.
+                if err.errno == 13:
+                    call(['chmod', '-R', '0755', os_dir])
+                    call(['chmod', '0755', fname])
+                    f = open(fname, 'r')
+            
             for line in f:
                 if re.search(odic["key_string"], line):
                     print "match: " , odic["key_string"]
@@ -91,15 +99,37 @@ def mkboot_centos(version):
     return 0, "success"
     
 def mkboot_esxi(version):
-    return 0 
+    boot_iso = "/kubam/esxi6.5-boot.iso"
+    if os.path.isfile(boot_iso):
+        return 0, "boot iso was already created"
+    os_dir = "kubam/esxi6.5"
+    # overwrite the boot directory
+    o = call(["cp", "-a", 
+                "/usr/share/kubam/stage1/esxi6.5/BOOT.CFG", 
+                os_dir])
 
+    cwd = os.getcwd()
+    os.chdir("/kubam")
+    # https://docs.vmware.com/en/VMware-vSphere/6.5/com.vmware.vsphere.install.doc/GUID-C03EADEA-A192-4AB4-9B71-9256A9CB1F9C.html
+    o = call(["mkisofs", "-relaxed-filenames", "-J", "-R", 
+                "-o", boot_iso, "-b", "ISOLINUX.BIN",
+                "-c", "boot.cat", "-no-emul-boot", 
+                "-boot-load-size" , "4", 
+                "-boot-info-table", "-no-emul-boot", os_dir])
+
+    os.chdir(cwd)
+    return 0, "success"
+    
 
 
 def mkboot(os):
     if os == "centos7.3":
         return mkboot_centos("7.3")
     if os == "esxi6.5":
-        return mkboot_esxi("6.5")
+        # we don't really make anything for ESXi yet. 
+        # until we figure out if ipxe is an option. 
+        return 0, "success"
+        #return mkboot_esxi("6.5")
     
 # determine version of OS and make boot dir. 
 # success:  return 0 and status message.
@@ -117,10 +147,28 @@ def mkboot_iso(iso):
     # if the directory is already there, we don't touch it. 
     if os.path.isdir("/kubam/" + o["dir"]):
         print "removing temp"
-        rmtree(tmp_dir) 
+        try:
+            rmtree(tmp_dir) 
+        except OSError as err:
+            # permission denied error on ISO image.
+            if err.errno == 13:
+                call(['chmod', '-R', '0755', tmp_dir])
+                rmtree(tmp_dir) 
     else:
         print "creating " + o["dir"]
-        os.rename(tmp_dir, "/kubam/" + o["dir"])
+        try: 
+            os.rename(tmp_dir, "/kubam/" + o["dir"])
+        except OSError as err:
+            # permission denied error on ISO image.
+            if err.errno == 13:
+                call(['chmod', '-R', '0755', tmp_dir])
+                os.rename(tmp_dir, "/kubam/" + o["dir"])
+            else: 
+                return 1, err.strerror + ": " + err.filename
+        
     # now that we have tree, get boot media ready. 
     err, msg = mkboot(o["dir"])
+    # remove tmp directory
+    rmtree("/kubam/tmp") 
+    
     return err, msg
