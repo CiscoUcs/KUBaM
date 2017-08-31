@@ -4,6 +4,7 @@ from server import UCSServer
 from session import UCSSession
 from util import UCSUtil
 from iso import IsoMaker
+from autoinstall import Builder
 
 app = Flask(__name__)
 
