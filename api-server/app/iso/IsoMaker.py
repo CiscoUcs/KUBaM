@@ -100,6 +100,8 @@ def mkboot_centos(version):
                 "CentOS 7 x86_64", "-boot-load-size" , "4", 
                 "-boot-info-table", "-r", "-J", "-v", 
                 "-T", stage_dir + "/isolinux"])
+    if not o == 0:
+        return 1, "mkisofs failed for %s" % boot_iso
     os.chdir(cwd)
     return 0, "success"
     

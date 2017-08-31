@@ -114,11 +114,14 @@ def mkboot_iso():
     return jsonify({"status": "ok"}), 201
     
 
-# deploy the UCS
-@app.route(API_ROOT + "/deploy", methods=['POST'])
-def deploy_ucs():
-    return "ucs"    
-
+# Make the server images
+@app.route(API_ROOT + "/servers/images", methods=['POST'])
+def deploy_server_autoinstall_images():
+    err, msg = Builder.deploy_server_images()
+    if not err == 0:
+        return jsonify({"error": msg})
+    return jsonify({"status": msg}), 201
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
