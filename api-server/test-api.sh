@@ -26,3 +26,6 @@ curl -H "Content-Type: application/json" -X POST -d '{"iso" : "Vmware-ESXi-6.5.0
 
 # Test Make BOOt ISO
 curl -H "Content-Type: application/json" -XPOST -d '{"iso" : "CentOS-7-x86_64-Minimal-1611.iso" }' http://localhost/api/v1/isos/boot
+
+# Test Making ISO images for servers. Requires that yaml file is in place. 
+curl -H "Content-Type: application/json" -X POST http://localhost/api/v1/servers/images
