@@ -14,8 +14,13 @@ os_dict = {
     },
     "esxi6.5" : {
         "key_file": ".DISCINFO",
-        "key_string": "ESXi",
+        "key_string": "Version: 6.5.0",
         "dir": "esxi6.5"
+    },
+    "esxi6.0" : {
+        "key_file": ".DISCINFO",
+        "key_string": "Version: 6.0.0",
+        "dir": "esxi6.0"
     }
 }
 
@@ -125,11 +130,7 @@ def mkboot_esxi(version):
 def mkboot(os):
     if os == "centos7.3":
         return mkboot_centos("7.3")
-    if os == "esxi6.5":
-        # we don't really make anything for ESXi yet. 
-        # until we figure out if ipxe is an option. 
-        return 0, "success"
-        #return mkboot_esxi("6.5")
+    return 0, "success"
     
 # determine version of OS and make boot dir. 
 # success:  return 0 and status message.
