@@ -167,13 +167,38 @@ Gives you the list of servers in the system:
 }
 ```
 
-### Deploy KUBAM
+### ISO images
 
-Given that we have the servers we want as well as the network that we want to use, we can deploy with KUBAM with the following: 
-
-```
+#### List the Current ISO images
 
 ```
+curl -H "Content-Type: application/json" \
+ -X GET
+http://localhost/api/v1/isos
+```
+
+#### Extract ISO image for use
+
+```
+curl -H "Content-Type: application/json" \
+ -X POST \
+ -d '{"iso" : "Vmware-ESXi-6.0.0-5050593-Custom-Cisco-6.0.3.2.iso" }' \
+http://localhost/api/v1/isos/boot
+```
+
+### Boot Images
+
+KUBAM creates boot images for the servers to boot from.  Depending on the operating, this boot image may be a ```.img``` or a ```.iso``` file. 
+
+```
+curl -H "Content-Type: application/json" \
+-X POST \
+http://localhost/api/v1/servers/images
+```
+This will create the images. This operation may take a long time depending on the operating system as it goes through and builds images.  Still a work in progress. 
+
+This operation requires the ```kubam.yaml``` file to be in place.  
+
 
 ## Running Test Cases
 
