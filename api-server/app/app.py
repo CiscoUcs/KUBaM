@@ -86,6 +86,8 @@ def get_isos():
         return jsonify({'error': isos})
     return jsonify({'isos': isos}), 200
 
+# DO NOT USE
+# This API is only for extracting unknown ISOs.  We can put the iso as well as the directory name we want to extract to.  Use /isos/boot
 # extract an ISO image. This probably isn't used as the /isos/boot does this for you as part of the 
 # creation process. 
 # curl -H "Content-Type: application/json" -X POST -d '{"iso" : "Vmware-ESXi-6.5.0-4564106-Custom-Cisco-6.5.0.2.iso", "os": "esxi6.5" }' http://localhost/api/v1/isos/extract

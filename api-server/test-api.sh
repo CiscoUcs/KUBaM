@@ -21,11 +21,10 @@ curl -X GET -H "Content-Type: application/json"  http://localhost/api/v1/servers
 # Get ISO images
 curl -X GET -H "Content-Type: application/json"  http://localhost/api/v1/isos
 
-# Test ISO extract
-curl -H "Content-Type: application/json" -X POST -d '{"iso" : "Vmware-ESXi-6.5.0-4564106-Custom-Cisco-6.5.0.2.iso", "os": "esxi6.5" }' http://localhost/api/v1/isos/extract
-
 # Test Make BOOt ISO
 curl -H "Content-Type: application/json" -XPOST -d '{"iso" : "CentOS-7-x86_64-Minimal-1611.iso" }' http://localhost/api/v1/isos/boot
+curl -H "Content-Type: application/json" -XPOST -d '{"iso" : "Vmware-ESXi-6.0.0-5050593-Custom-Cisco-6.0.3.2.iso" }' http://localhost/api/v1/isos/boot
+curl -H "Content-Type: application/json" -XPOST -d '{"iso" : "Vmware-ESXi-6.5.0-4564106-Custom-Cisco-6.5.0.2.iso" }' http://localhost/api/v1/isos/boot
 
 # Test Making ISO images for servers. Requires that yaml file is in place. 
 curl -H "Content-Type: application/json" -X POST http://localhost/api/v1/servers/images
