@@ -30,7 +30,10 @@ def build_boot_image(node, template):
         return 1, "not able to copy files from %s to %s" % (src_dir, tmp_dir)
     # now chmod just in case. Not sure why this happens with ESXi. 
     o = call(["chmod", "-R", "0755", tmp_dir])
-    
+   
+    # Copy over the BOOT.CAT file to add the kickstart directive.
+    o = call(["cp", KUBAM_SHARE_DIR + "/stage1/" + node["os"] + "/BOOT.CFG", tmp_dir + "/BOOT.CFG"])
+ 
     # write the file over the existing file if it exists. 
     # hack to over write file 
     fw = tmp_dir + "/KS1.CFG"

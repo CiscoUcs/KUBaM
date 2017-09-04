@@ -182,8 +182,8 @@ http://localhost/api/v1/isos
 ```
 curl -H "Content-Type: application/json" \
  -X POST \
- -d '{"iso" : "Vmware-ESXi-6.0.0-5050593-Custom-Cisco-6.0.3.2.iso" }' \
-http://localhost/api/v1/isos/boot
+ -d '{"iso" : "Vmware-ESXi-6.0.0-5050593-Custom-Cisco-6.0.3.2.iso", "os": "esxi6.0" }' \
+http://localhost/api/v1/isos/extract
 ```
 
 ### Boot Images

@@ -6,6 +6,7 @@ rootpw Cisco.123
 install --firstdisk --overwritevmfs
 # Set the network to DHCP on the first network adapater
 network --bootproto=static --device=vmnic0 --ip={{ ip }} --netmask={{ netmastk }} --gateway={{ gateway }} --hostname={{ name }} --nameserver={{ nameserver }} 
+reboot
 # A sample post-install script
 %post --interpreter=python --ignorefailure=true
 import time
