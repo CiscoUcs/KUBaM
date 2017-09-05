@@ -5,7 +5,7 @@ rootpw Cisco.123
 # The install media is in the CD-ROM drive
 install --firstdisk --overwritevmfs
 # Set the network to DHCP on the first network adapater
-network --bootproto=static --device=vmnic0 --ip={{ ip }} --netmask={{ netmastk }} --gateway={{ gateway }} --hostname={{ name }} --nameserver={{ nameserver }} 
+network --bootproto=static --device=vmnic0 --ip={{ ip }} --netmask={{ netmask }} --gateway={{ gateway }} --hostname={{ name }} --nameserver={{ nameserver }} 
 reboot
 # A sample post-install script
 %post --interpreter=python --ignorefailure=true
