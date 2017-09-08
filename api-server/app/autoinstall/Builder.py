@@ -148,6 +148,8 @@ def build_template(node, config):
     err, msg, template_file, template_dir = find_template(node)
     if err > 0:
         return err, msg, ""
+    if not "vlan" in config["network"]:
+        config["network"]["vlan"] = ""
     j2_env = Environment(loader=FileSystemLoader(template_dir),
                      trim_blocks=True)
     f = j2_env.get_template(template_file).render(
@@ -157,6 +159,7 @@ def build_template(node, config):
         netmask=config["network"]["netmask"],
         nameserver=config["network"]["nameserver"],
         gateway=config["network"]["gateway"],
+        vlan=config["network"]["vlan"],
         keys=config["public_keys"] 
     )
     return err, msg, f

@@ -70,12 +70,12 @@ def list_disks(handle, server):
     from ucsmsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
     from ucsmsdk.mometa.fabric.FabricComputeSlotEp import FabricComputeSlotEp
     # get each controller of the server.
+    all_disks = []
     if type(server) is FabricComputeSlotEp:
         cquery = '(dn, "sys/chassis-%s/blade-%s/board.*", type="re")' % (server.chassis_id, server.slot_id)
     else: 
-        # don't do anything. 
-        return
-    all_disks = []
+        # return nothing. 
+        return all_disks
     controllers = handle.query_classid("StorageController", cquery)
     # get the disks of each controller. 
     for c in controllers:
