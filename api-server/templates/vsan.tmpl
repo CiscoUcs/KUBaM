@@ -1,0 +1,67 @@
+# Accept the VMware End User License Agreement
+vmaccepteula
+# Set the root password for the DCUI and Tech Support Mode
+rootpw Cisco.123
+# The install media is in the CD-ROM drive
+install --firstdisk --overwritevmfs
+# Set the network to DHCP on the first network adapater
+network --bootproto=static --device=vmnic0 --ip={{ ip }} --netmask={{ netmask }} --gateway={{ gateway }} --vlanid={{ vlan }} --hostname={{ name }} --nameserver={{ nameserver }} 
+reboot
+# A sample post-install script
+%post --interpreter=python --ignorefailure=true
+import time
+stampFile = open('/finished.stamp', mode='w')
+stampFile.write( time.asctime() )
+
+%firstboot --interpreter=busybox
+
+vsan_syslog_key = "VSAN-KS"
+
+logger $vsan_syslog_key " Enabling and Starting SSH"
+vim-cmd hostsvc/enable_ssh
+vim-cmd hostsvc/start_ssh
+ 
+logger $vsan_syslog_key " Enabling and Starting ESXi Shell"
+vim-cmd hostsvc/enable_esx_shell
+vim-cmd hostsvc/start_esx_shell
+
+logger $vsan_syslog_key " Suppressing ESXi Shell Warning"
+esxcli system settings advanced set -o /UserVars/SuppressShellWarning -i 1
+
+%firstboot --interpreter=python
+
+import commands, os, uuid, syslog
+
+vsan_syslog_key = "VSAN-KS"
+debug = False
+
+# Build VSAN Disk Group command based on vdq -q output
+def createVsanDiskGroup():
+    vdqoutput = eval(commands.getoutput("/sbin/vdq -q"))
+    md = []
+    ssd = []
+    for disk in vdqoutput:
+        if disk['State'] == 'Eligible for use by VSAN':
+            if disk['Reason'] == 'Non-local disk':
+                syslog.syslog(vsan_syslog_key + " Setting enable_local and reclaiming " + disk['Name'])
+                if debug == False:
+                    os.system('esxcli storage nmp satp rule add -s VMW_SATP_LOCAL -o "enable_local enable_ssd" -d ' + disk['Name'])
+                    os.system("esxcli storage core claiming reclaim -d " + disk['Name'])
+                    disk['IsSSD'] = '1'
+            if disk['IsSSD'] == '1':
+                ssd.append(disk['Name'])
+            else:
+                md.append(disk['Name'])
+    for disk in ssd:
+        os.system('esxcli vsan storage tag add -d ' +  disk + ' -t capacityFlash')
+    os.system('esxcli vsan storage tag remove -d ' +  ssd[0] + ' -t capacityFlash')
+    os.system('esxcli vsan storage tag remove -d ' +  ssd[5] + ' -t capacityFlash')
+    diskgroup_cmd1 = 'esxcli vsan storage add -s '+ ssd[0] + ' -d ' + ' -d '.join(ssd[1:4])
+    diskgroup_cmd2 = 'esxcli vsan storage add -s '+ ssd[5] + ' -d ' + ' -d '.join(ssd[6:8])
+    syslog.syslog(vsan_syslog_key + " Creating VSAN Disk Group using SSD: " +', '.join(ssd) +  " MD: " + ', '.join(md))
+    if debug == False:
+         os.system(diskgroup_cmd1)
+         os.system(diskgroup_cmd2)
+createVsanDiskGroup()
+
+
