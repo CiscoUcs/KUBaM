@@ -14,7 +14,7 @@ RUN yum -y install  xorriso \
                     python-flask
 
 RUN curl https://bootstrap.pypa.io/get-pip.py | python - && \
-    pip install ucsmsdk
+    pip install ucsmsdk flask_cors
 
 # make output of nginx logs go to stdout so we see in docker.
 RUN ln -sf /dev/stdout /var/log/nginx/access.log && \

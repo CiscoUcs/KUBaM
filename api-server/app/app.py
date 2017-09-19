@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, abort
+from flask_cors import CORS, cross_origin
 from network import UCSNet
 from server import UCSServer
 from session import UCSSession
@@ -7,6 +8,7 @@ from iso import IsoMaker
 from autoinstall import Builder
 
 app = Flask(__name__)
+CORS(app)
 
 
 API_ROOT="/api/v1"
@@ -34,6 +36,7 @@ def get_creds():
 # test with: curl -H "Content-Type: application/json" -X POST -d '{"credentials": {"user" : "admin", "password" : "cisco123", "server" : "172.28.225.163"}}' http://localhost/api/v1/credentials
 
 @app.route(API_ROOT + "/session", methods=['POST'])
+@cross_origin()
 def create_creds():
     global handle
     if not request.json:
@@ -45,13 +48,12 @@ def create_creds():
     h, err = UCSSession.login(credentials['user'], 
                               credentials['password'],
                               credentials['server'])
-    print h
     if h == "":
         return jsonify({'error': err}), 401
     handle = h
     return jsonify({'login': "success"}), 201
 
-@app.route(API_ROOT + "/session", methods=['DELETE'])
+@app.route(API_ROOT + "/session", methods=['DELETE', 'OPTIONS'])
 def delete_session():
     if handle != "":
         UCSSession.logout(handle)
@@ -123,18 +125,6 @@ def deploy_server_autoinstall_images():
     if not err == 0:
         return jsonify({"error": msg})
     return jsonify({"status": "ok"}), 201
-
-# add cors for gui:
-def add_cors_headers(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    if request.method == 'OPTIONS':
-        response.headers['Access-Control-Allow-Methods'] = 'DELETE, GET, POST, PUT'
-        headers = request.headers.get('Access-Control-Request-Headers')
-        if headers:
-            response.headers['Access-Control-Allow-Headers'] = headers
-    return response    
-
-app.after_request(add_cors_headers)
 
 if __name__ == '__main__':
     app.run(debug=True)
