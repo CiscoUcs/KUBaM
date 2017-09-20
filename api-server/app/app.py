@@ -5,12 +5,13 @@ from server import UCSServer
 from session import UCSSession
 from util import UCSUtil
 from iso import IsoMaker
+from db import YamlDB
 from autoinstall import Builder
 
 app = Flask(__name__)
 CORS(app)
 
-
+KUBAM_CFG="/kubam/kubam.yaml"
 API_ROOT="/api/v1"
 
 handle = ""
@@ -69,8 +70,28 @@ def get_networks():
     if handle == "":
         return not_logged_in() 
     vlans = UCSNet.listVLANs(handle) 
-    return jsonify({'vlans': [{"name": vlan.name, "vlan-id": vlan.id}  for vlan in vlans]}), 200
-    
+    err, msg, net_settings = YamlDB.get_ucs_network(KUBAM_CFG)
+    selected_vlan = ""
+    if "vlan" in net_settings:
+        selected_vlan = net_settings["vlan"]
+       
+    return jsonify({'vlans': [{"name": vlan.name, "id": vlan.id, "selected": (vlan.name == selected_vlan)}  for vlan in vlans]}), 200
+                    
+
+@app.route(API_ROOT + "/networks", methods=['POST'])
+def select_vlan():
+    global handle
+    if handle == "":
+        return not_logged_in() 
+    if not request.json:
+        return jsonify({'error': 'expected credentials hash'}), 400
+    vlan = request.json['vlan']
+    # Strip off the /fabric/net- portion.
+    err, msg = YamlDB.update_ucs_network(KUBAM_CFG, {"vlan": vlan})
+    if err != 0:
+        return jsonify({'error': msg}), 500
+    return jsonify({'status': 'ok'}), 201
+        
 
 @app.route(API_ROOT + "/servers", methods=['GET'])
 def get_servers():

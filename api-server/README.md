@@ -30,7 +30,7 @@ docker run -p 80:80 -d -v $KUBAM_DIR:/kubam \
 	kubam/kubam
 ```
 
-## To start the API server:
+## To start the API server without a container
 
 ```
 git clone https://github.com/CiscoUcs/KUBaM.git
@@ -38,6 +38,59 @@ cd api-server
 python api.py
 ```
 This will launch the application on port 5000.  
+
+
+## Architecture
+
+The API server is a service that runs in a container that simplifies communication with UCS.  It uses the [UCSMSDK](https://github.com/CiscoUcs/ucsmsdk) which is written in python.  This is, frankly, the only reason this is written in python - There is no SDK for golang at the moment. 
+
+The API when first starting will look for a YAML file called ```kubam.yaml``` in the ```/kubam``` directory.  If it is found then it will use those values to configure everything.  It will, however not deploy anything, it will wait for you to tell it to do that. 
+
+
+## KUBAM ```kubam.yaml``` file
+
+The yaml file will have the following format: 
+
+```yaml
+---
+ucsm:
+ credentials:
+ 	ip: 172.28.226.163
+  	user: admin
+  	password: nbv12345
+  	
+ ucs_server_pool:
+	blades:
+	  - 1/1
+	  - 2/1
+	rack_servers:
+	  - 6
+	  - 7
+	  - 8
+	  	  
+ ucs_network:
+   vlan: default
+  
+kubam_ip: 172.28.225.135
+
+public_keys:
+- "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDeV4/Sy+B8R21pKzODfGn5W/p9MC9/4ejFUJoI3RlobYOWWxbLmnHYbKmRHn8Jgpmm4xqv61uaFpbAZvxFTyKIqLdcYmxaHem35uzCJbgB8BvT+4aGg1pZREunX6YaE8+s3hFZRu4ti7UHQYWRD1tCizYz78YHL8snp+N3UAPmP9eTTNw62PHAJERi1Hbl6sRfYijqNlluO223Thqbmhtt3S8tnjkRsFnNxsDgxrfbR3GBQ5925hPth3lGejln2P1L9EIQw9NOmtMhF9UpXPWP9r234p3crmBTsw+E6IF0+OsGKOl8Ri4Im7GpnAgbY9I5THEDn142uNOm6vJATZZ3 root@devi-builder"
+	
+hosts:
+- name: esxi1
+  ip: 172.28.225.132
+  os: centos7.3
+  role: kubernetes-master
+- name: esxi2
+  ip: 172.28.225.133
+  os: centos7.3
+  role: kubernetes-slave
+  
+network:
+  netmask: 255.255.254.0
+  gateway: 172.28.224.1
+```
+
 
 ## API
 
@@ -136,6 +189,11 @@ Or
   "error": "not logged in to UCS"
 }
 ```
+
+
+#### To select the network used for kubam deployment
+
+
 
 ### UCS Servers
 
