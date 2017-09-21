@@ -14,62 +14,82 @@ CORS(app)
 KUBAM_CFG="/kubam/kubam.yaml"
 API_ROOT="/api/v1"
 
-handle = ""
-
-credentials = {
-    'user': "",
-    'password': "",
-    'server': ""
-}
 
 @app.route('/')
 def index():
     return jsonify({'status': 'ok'})
 
 
+# determine if we have credentials stored or not. 
 @app.route(API_ROOT + "/session", methods=['GET'])
 def get_creds():
-    c = credentials
-    c["password"] = "REDACTED"
-    return jsonify({'credentials': c})
+    creds = {}
+    err, msg, config = YamlDB.open_config(KUBAM_CFG)
+    if err == 0:
+        if "ucsm" in config and "credentials" in config["ucsm"]:
+            creds = config["ucsm"]["credentials"]
+            if "user" in creds and "password" in creds and "server" in creds:
+                creds["password"] = "REDACTED"
+    return jsonify({'credentials': creds}), 200
 
 
 # test with: curl -H "Content-Type: application/json" -X POST -d '{"credentials": {"user" : "admin", "password" : "cisco123", "server" : "172.28.225.163"}}' http://localhost/api/v1/credentials
-
+# every call logs in and logs out. 
 @app.route(API_ROOT + "/session", methods=['POST'])
 @cross_origin()
 def create_creds():
-    global handle
     if not request.json:
         return jsonify({'error': 'expected credentials hash'}), 400
-   
+  
+    credentials = {} 
     credentials['user'] = request.json['credentials']['user']
     credentials['password'] = request.json['credentials']['password']
-    credentials['server'] = request.json['credentials']['server']
+    credentials['ip'] = request.json['credentials']['server']
     h, err = UCSSession.login(credentials['user'], 
                               credentials['password'],
-                              credentials['server'])
+                              credentials['ip'])
     if h == "":
         return jsonify({'error': err}), 401
-    handle = h
+    # write datafile. 
+    YamlDB.update_ucs_creds(KUBAM_CFG, credentials)
+    UCSSession.logout(h)
     return jsonify({'login': "success"}), 201
 
-@app.route(API_ROOT + "/session", methods=['DELETE', 'OPTIONS'])
+@app.route(API_ROOT + "/session", methods=['DELETE'])
 def delete_session():
-    if handle != "":
-        UCSSession.logout(handle)
+    YamlDB.update_ucs_creds(KUBAM_CFG, {})
     return jsonify({'logout': "success"})
 
-def not_logged_in():
-    return jsonify({'error': 'not logged in to UCS'}), 401
+def not_logged_in(msg):
+    if msg == "":
+        msg = "not logged in to UCS"
+    return jsonify({'error': msg}), 401
+
+# returns err, msg, handle
+def login():
+    err, msg, config = YamlDB.open_config(KUBAM_CFG)
+    if err == 0:
+        if "ucsm" in config and "credentials" in config["ucsm"]:
+            creds = config["ucsm"]["credentials"]
+            if "user" in creds and "password" in creds and "ip" in creds:
+                h, msg = UCSSession.login(creds["user"], creds["password"], creds["ip"])
+                if h != "":
+                    return 0, "", h
+                return 1, msg, ""
+                    
+    return 1, "error logging in: %s" % msg, ""
+        
+def logout(handle):
+    UCSSession.logout(handle) 
     
 # get the networks in the UCS. 
 @app.route(API_ROOT + "/networks", methods=['GET'])
 def get_networks():
-    global handle
-    if handle == "":
-        return not_logged_in() 
+    err, msg, handle = login()
+    if err != 0: 
+        return not_logged_in(msg) 
     vlans = UCSNet.listVLANs(handle) 
+    logout(handle)
     err, msg, net_settings = YamlDB.get_ucs_network(KUBAM_CFG)
     selected_vlan = ""
     if "vlan" in net_settings:
@@ -80,13 +100,9 @@ def get_networks():
 
 @app.route(API_ROOT + "/networks", methods=['POST'])
 def select_vlan():
-    global handle
-    if handle == "":
-        return not_logged_in() 
     if not request.json:
         return jsonify({'error': 'expected credentials hash'}), 400
     vlan = request.json['vlan']
-    # Strip off the /fabric/net- portion.
     err, msg = YamlDB.update_ucs_network(KUBAM_CFG, {"vlan": vlan})
     if err != 0:
         return jsonify({'error': msg}), 500
@@ -95,10 +111,11 @@ def select_vlan():
 
 @app.route(API_ROOT + "/servers", methods=['GET'])
 def get_servers():
-    global handle
-    if handle == "":
-        return not_logged_in() 
+    err, msg, handle = login()
+    if err != 0: 
+        return not_logged_in(msg) 
     servers = UCSServer.list_servers(handle) 
+    logout(handle)
     return jsonify({'servers': servers}), 200
 
 # list ISO images.

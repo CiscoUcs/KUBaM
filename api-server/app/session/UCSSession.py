@@ -1,9 +1,19 @@
 from ucsmsdk.ucshandle import UcsHandle
 from ucsmsdk.ucsexception import UcsException
+import socket
 from urllib2 import HTTPError
 import os, sys
 
+# returns handle, "error message"
 def login(username, password, server):
+    # first see if reachable
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(2)
+    result = s.connect_ex((server, 80))
+    if result != 0:
+        return "", "%s is not reachable" % server
+    s.close() 
+
     handle = UcsHandle(server, username, password)
     try:
         handle.login()
