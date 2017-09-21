@@ -115,7 +115,7 @@ def write_config(config, out_file):
     try: 
         with open(out_file, "w") as f:
             try: 
-                msg = yaml.dump(config, f, default_flow_style=False)
+                msg = yaml.safe_dump(config, f, encoding='utf-8', default_flow_style=False)
             except yaml.YAMLError as err:
                 msg = "Error writing %s config file: %s" % (out_file, err)
                 err = 1
