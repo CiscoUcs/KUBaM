@@ -52,8 +52,6 @@ def create_creds():
     h, err = UCSSession.login(credentials['user'], 
                               credentials['password'],
                               credentials['ip'])
-    app.logger.info(h)
-    app.logger.info(err)
     if h == "":
         return jsonify({'error': err}), 401
     # write datafile. 
@@ -104,15 +102,21 @@ def get_networks():
     return jsonify({'vlans': [{"name": vlan.name, "id": vlan.id, "selected": (vlan.name == selected_vlan)}  for vlan in vlans]}), 200
                     
 
-@app.route(API_ROOT + "/networks", methods=['POST'])
+@app.route(API_ROOT + "/networks/vlan", methods=['POST'])
 def select_vlan():
     if not request.json:
-        return jsonify({'error': 'expected credentials hash'}), 400
+        return jsonify({'error': 'expected hash of VLANs'}), 400
+    err, msg, handle = login()
+    if err != 0: 
+        return not_logged_in(msg) 
+    #app.logger.info("Request is: ")
+    #app.logger.info(request)
     vlan = request.json['vlan']
     err, msg = YamlDB.update_ucs_network(KUBAM_CFG, {"vlan": vlan})
     if err != 0:
         return jsonify({'error': msg}), 500
-    return jsonify({'status': 'ok'}), 201
+    # return the existing networks now with the new one chosen. 
+    return get_networks()
         
 
 @app.route(API_ROOT + "/servers", methods=['GET'])
