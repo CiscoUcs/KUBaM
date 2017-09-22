@@ -9,10 +9,13 @@ def login(username, password, server):
     # first see if reachable
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(2)
-    result = s.connect_ex((server, 80))
-    if result != 0:
-        return "", "%s is not reachable" % server
-    s.close() 
+    try:
+        result = s.connect_ex((server, 80))
+        if result != 0:
+            return "", "%s is not reachable" % server
+        s.close() 
+    except socket.error as err:
+        return "", "UCS Login Error: %s %s" % (server, err.strerror)
 
     handle = UcsHandle(server, username, password)
     try:

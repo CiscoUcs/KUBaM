@@ -161,7 +161,11 @@ def update_ucs_creds(file_name, creds_hash):
         return err, msg
     if not "ucsm" in config:
         config["ucsm"] = {}
-    config["ucsm"]["credentials"] = creds_hash 
+    # if the creds is empty, then get rid of credentials. 
+    if not creds_hash:
+        config["ucsm"].pop("credentials", None)
+    else: 
+        config["ucsm"]["credentials"] = creds_hash 
     err, msg = write_config(config, file_name)
     return err, msg
 

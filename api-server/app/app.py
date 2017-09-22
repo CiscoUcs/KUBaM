@@ -28,26 +28,32 @@ def get_creds():
     if err == 0:
         if "ucsm" in config and "credentials" in config["ucsm"]:
             creds = config["ucsm"]["credentials"]
-            if "user" in creds and "password" in creds and "server" in creds:
+            if "user" in creds and "password" in creds and "ip" in creds:
                 creds["password"] = "REDACTED"
+                app.logger.info(creds)
     return jsonify({'credentials': creds}), 200
 
 
-# test with: curl -H "Content-Type: application/json" -X POST -d '{"credentials": {"user" : "admin", "password" : "cisco123", "server" : "172.28.225.163"}}' http://localhost/api/v1/credentials
+# test with: curl -H "Content-Type: application/json" -X POST -d '{"credentials": {"user" : "admin", "password" : "cisco123", "server" : "172.28.225.163"}}' http://localhost/api/v1/session
 # every call logs in and logs out. 
 @app.route(API_ROOT + "/session", methods=['POST'])
 @cross_origin()
 def create_creds():
     if not request.json:
         return jsonify({'error': 'expected credentials hash'}), 400
-  
+     
     credentials = {} 
     credentials['user'] = request.json['credentials']['user']
     credentials['password'] = request.json['credentials']['password']
     credentials['ip'] = request.json['credentials']['server']
+    if credentials['ip'] == "":
+        return jsonify({'error': "Please enter a valid UCSM IP address."}), 401
+    #app.logger.info("starting login attempt to UCS.")
     h, err = UCSSession.login(credentials['user'], 
                               credentials['password'],
                               credentials['ip'])
+    app.logger.info(h)
+    app.logger.info(err)
     if h == "":
         return jsonify({'error': err}), 401
     # write datafile. 
@@ -57,7 +63,7 @@ def create_creds():
 
 @app.route(API_ROOT + "/session", methods=['DELETE'])
 def delete_session():
-    YamlDB.update_ucs_creds(KUBAM_CFG, {})
+    YamlDB.update_ucs_creds(KUBAM_CFG, "")
     return jsonify({'logout': "success"})
 
 def not_logged_in(msg):
