@@ -46,7 +46,6 @@ class DBUnitTests(unittest.TestCase):
         err, msg, config = YamlDB.validate_config(self.cfg, True)
         assert(err == 0)
         err, msg, config = YamlDB.validate_config(self.bad1, True)
-        print msg
         assert(err != 0)
     def test_write_config(self):
         err, msg = YamlDB.write_config(self.cfg, "/tmp/foo.yaml")
@@ -71,6 +70,11 @@ class DBUnitTests(unittest.TestCase):
         err, msg, net = YamlDB.get_ucs_network("/tmp/bfoo.yaml")
         assert(err == 0)
         assert("vlan" in net)
+
+    def test_get_ucs_servers(self):
+        err, msg, servers = YamlDB.get_ucs_servers("/tmp/bfoo.yaml")
+        assert(err == 0)
+        assert("blades" in servers)
     
         
         

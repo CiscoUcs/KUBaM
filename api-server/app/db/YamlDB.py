@@ -204,4 +204,17 @@ def update_ucs_servers(file_name, server_hash):
     err, msg = write_config(config, file_name)
     return err, msg
 
+def get_ucs_servers(file_name):
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg, ""
+    elif err == 2:
+        return 0, "", {} 
+    elif not "ucsm" in config:
+        return 0, "", {} 
+    elif not "ucs_server_pool" in config["ucsm"]:
+        return 0, "", {}
+    else:
+        return 0, "", config["ucsm"]["ucs_server_pool"]
+
 

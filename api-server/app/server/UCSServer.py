@@ -27,9 +27,9 @@ def list_servers(handle):
     all_servers = [] 
     for i, s in enumerate(m):
         if type(s) is FabricComputeSlotEp:
-            all_servers.append({"type":"blade", "chassis_id": s.chassis_id, "slot": s.rn, "model": s.model })
+            all_servers.append({"type":"blade", "chassis_id": s.chassis_id, "slot": s.rn.replace('slot-', ''), "model": s.model })
         if type(s) is ComputeRackUnit:
-            all_servers.append({"type":"rack", "rack_id": s.rn, "model": s.model })
+            all_servers.append({"type":"rack", "rack_id": s.rn.replace('rack-unit-', ''), "model": s.model })
     return all_servers
     
 

@@ -118,6 +118,26 @@ def select_vlan():
     # return the existing networks now with the new one chosen. 
     return get_networks()
         
+# see if there are any selected servers in the database 
+def servers_to_api(ucs_servers, dbServers):
+    for i, real_server in enumerate(ucs_servers):
+        if real_server["type"] == "blade":
+            if "blades" in dbServers:
+                for b in dbServers["blades"]:
+                    b_parts = b.split("/")
+                    if (    len(b_parts) == 2 and 
+                            real_server["chassis_id"] == b_parts[0] and 
+                            real_server["slot"] == b_parts[1]):
+                        real_server["selected"] = True
+                        ucs_servers[i] = real_server
+        elif real_server["type"] == "rack":
+            if "rack_servers" in dbServers:
+                for s in dbServers["rack_servers"]:
+                    if real_server["rack_id"] == s:
+                        real_server["selected"] = True
+                        ucs_servers[i] = real_server
+    return ucs_servers
+
 
 @app.route(API_ROOT + "/servers", methods=['GET'])
 def get_servers():
@@ -126,7 +146,57 @@ def get_servers():
         return not_logged_in(msg) 
     servers = UCSServer.list_servers(handle) 
     logout(handle)
+  
+    # gets a hash of severs of form:    
+    # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
+    err, msg, dbServers = YamlDB.get_ucs_servers(KUBAM_CFG)
+    servers = servers_to_api(servers, dbServers) 
+    app.logger.info("returninng servers...")
+    app.logger.info(servers)
     return jsonify({'servers': servers}), 200
+
+
+# translates the json we get from the web interface to what we expect to put in 
+# the database.
+def servers_to_db(servers):
+    # gets a server array list and gets the selected servers and
+    # puts them in the database form
+    server_pool = {}
+    app.logger.info(servers)
+    for s in servers:
+        if "selected" in s and s["selected"] == True:
+            if s["type"] == "blade":
+                if not "blades" in server_pool:
+                    server_pool["blades"] = []
+                b = "%s/%s" % (s["chassis_id"] , s["slot"])
+                server_pool["blades"].append(b)
+            elif s["type"] == "rack":
+                if not "rack_servers" in server_pool:
+                    server_pool["rack_servers"] = []
+                server_pool["rack_servers"].append(s["rack_id"])
+    return server_pool
+
+@app.route(API_ROOT + "/servers", methods=['POST'])
+def select_servers():
+    # make sure we got some data.
+    if not request.json:
+        return jsonify({'error': 'expected hash of servers'}), 400
+    # make sure we can login
+    err, msg, handle = login()
+    if err != 0: 
+        return not_logged_in(msg) 
+    servers = request.json['servers']
+    # we expect servers to be a hash of like:
+    # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
+    servers = servers_to_db(servers)
+    if servers:
+        err, msg = YamlDB.update_ucs_servers(KUBAM_CFG, servers)
+        if err != 0:
+            return jsonify({'error': msg}), 500
+    # return the existing networks now with the new one chosen. 
+    return get_servers()
+
+
 
 # list ISO images.
 @app.route(API_ROOT + "/isos", methods=['GET'])
