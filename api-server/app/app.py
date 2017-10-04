@@ -94,12 +94,13 @@ def get_networks():
         return not_logged_in(msg) 
     vlans = UCSNet.listVLANs(handle) 
     logout(handle)
+    err, msg, net_hash = YamlDB.get_network(KUBAM_CFG)
     err, msg, net_settings = YamlDB.get_ucs_network(KUBAM_CFG)
     selected_vlan = ""
     if "vlan" in net_settings:
         selected_vlan = net_settings["vlan"]
        
-    return jsonify({'vlans': [{"name": vlan.name, "id": vlan.id, "selected": (vlan.name == selected_vlan)}  for vlan in vlans]}), 200
+    return jsonify({'vlans': [{"name": vlan.name, "id": vlan.id, "selected": (vlan.name == selected_vlan)}  for vlan in vlans], 'network' : net_hash}), 200
                     
 
 @app.route(API_ROOT + "/networks/vlan", methods=['POST'])
@@ -117,7 +118,26 @@ def select_vlan():
         return jsonify({'error': msg}), 500
     # return the existing networks now with the new one chosen. 
     return get_networks()
-        
+    
+
+@app.route(API_ROOT + "/networks", methods=['POST'])
+def update_networks():
+    if not request.json:
+        return jsonify({'error': 'expected hash of network settings'}), 400
+    err, msg, handle = login()
+    if err != 0: 
+        return not_logged_in(msg) 
+    vlan = request.json['vlan']
+    err, msg = YamlDB.update_ucs_network(KUBAM_CFG, {"vlan": vlan})
+    if err != 0:
+        return jsonify({'error': msg}), 400
+    network = request.json['network']
+    err, msg = YamlDB.update_network(KUBAM_CFG, {"network": network})
+    if err != 0:
+        return jsonify({'error': msg}), 400
+    return get_networks()
+
+    
 # see if there are any selected servers in the database 
 def servers_to_api(ucs_servers, dbServers):
     for i, real_server in enumerate(ucs_servers):
@@ -150,10 +170,15 @@ def get_servers():
     # gets a hash of severs of form:    
     # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
     err, msg, dbServers = YamlDB.get_ucs_servers(KUBAM_CFG)
+    if err != 0:
+        return jsonify({'error': msg}), 400
     servers = servers_to_api(servers, dbServers) 
     app.logger.info("returninng servers...")
     app.logger.info(servers)
-    return jsonify({'servers': servers}), 200
+    err, msg, hosts = YamlDB.get_hosts(KUBAM_CFG)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+    return jsonify({'servers': servers, 'hosts': hosts}), 200
 
 
 # translates the json we get from the web interface to what we expect to put in 
@@ -192,7 +217,15 @@ def select_servers():
     if servers:
         err, msg = YamlDB.update_ucs_servers(KUBAM_CFG, servers)
         if err != 0:
-            return jsonify({'error': msg}), 500
+            return jsonify({'error': msg}), 400
+    if "hosts" not in request.json:
+        return get_servers()
+    
+    hosts = request.json['hosts']
+    err, msg = YamlDB.update_hosts(KUBAM_CFG, hosts)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+    
     # return the existing networks now with the new one chosen. 
     return get_servers()
 

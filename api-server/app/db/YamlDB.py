@@ -7,10 +7,25 @@ from socket import inet_aton, error as Serror
 from jinja2 import Environment, FileSystemLoader
 from subprocess import call
 from os import path
+from sshpubkeys import SSHKey
 
 # constants.  
-supported_oses = ["centos7.3", "esxi6.0", "esxi6.5"]
+supported_oses = ["centos7.3", "esxi6.0", "esxi6.5", "rh7.3"]
 
+
+# validate list of public keys
+def validate_pks(key_list):
+    err = 0
+    msg = ""
+    for k in key_list:
+        ssh = SSHKey(k, strict_mode=True)
+        try: 
+            ssh.parse()
+        except InvalidKeyException as err:
+            err +=1
+            msg = msg + "\nInvalid SSH Public Key:" % k
+    return err, msg
+        
 
 # takes in an OS and verifies it's something we support
 def validate_os(op_sys):
@@ -193,6 +208,30 @@ def get_ucs_network(file_name):
     else:
         return 0, "", config["ucsm"]["ucs_network"]
 
+def update_network(file_name, net_hash):
+    err, msg = validate_network(net_hash)
+    if err > 0:
+        return err, msg
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    if not "network" in config:
+        config["network"] = {}
+    config["network"] = net_hash 
+    err, msg = write_config(config, file_name)
+    return err, msg
+
+def get_network(file_name):
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg, ""
+    elif err == 2:
+        return 0, "", {} 
+    elif not "network" in config:
+        return 0, "", {} 
+    else:
+        return 0, "", config["network"]
+    
     
 def update_ucs_servers(file_name, server_hash):
     err, msg, config = open_config(file_name)
@@ -203,6 +242,7 @@ def update_ucs_servers(file_name, server_hash):
     config["ucsm"]["ucs_server_pool"] = server_hash 
     err, msg = write_config(config, file_name)
     return err, msg
+
 
 def get_ucs_servers(file_name):
     err, msg, config = open_config(file_name)
@@ -217,4 +257,75 @@ def get_ucs_servers(file_name):
     else:
         return 0, "", config["ucsm"]["ucs_server_pool"]
 
+# get hosts out of the database
+def get_hosts(file_name):
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg, ""
+    elif err == 2:
+        return 0, "", {} 
+    elif not "hosts" in config:
+        return 0, "", {} 
+    else:
+        return 0, "", config["hosts"] 
 
+# update the hosts
+def update_hosts(file_name, ho_hash):
+    err, msg = validate_hosts(ho_hash)
+    if err > 0:
+        return err, msg
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    if not "hosts" in config:
+        config["hosts"] = {}
+    config["hosts"] = ho_hash 
+    err, msg = write_config(config, file_name)
+    return err, msg
+
+def get_kubam_ip(file_name):
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg, ""
+    elif err == 2:
+        return 0, "", {} 
+    elif not "kubam_ip" in config:
+        return 0, "", {} 
+    else:
+        return 0, "", config["kubam_ip"] 
+
+def update_kubam_ip(file_name, kubam_ip):
+    err, msg = validate_ip(kubam_ip)
+    if err > 0:
+        return err, msg
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    config["hosts"] = kubam_ip
+    err, msg = write_config(config, file_name)
+    return err, msg
+
+def get_public_keys(file_name):
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg, ""
+    elif err == 2:
+        return 0, "", {} 
+    elif not "public_keys" in config:
+        return 0, "", {} 
+    else:
+        return 0, "", config["public_keys"] 
+
+
+def update_public_keys(file_name, public_keys):
+    err, msg = validate_pks(public_keys)
+    if err > 0:
+        return err, msg
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    if not "public_keys" in config:
+        config["public_keys"] = []
+    config["public_keys"] = public_keys
+    err, msg = write_config(config, file_name)
+    return err, msg

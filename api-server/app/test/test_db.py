@@ -75,6 +75,41 @@ class DBUnitTests(unittest.TestCase):
         err, msg, servers = YamlDB.get_ucs_servers("/tmp/bfoo.yaml")
         assert(err == 0)
         assert("blades" in servers)
+    def test_get_network(self):
+        err, msg, network = YamlDB.get_network("/tmp/bfoo.yaml")
+        assert(err == 0)
+
+    def test_update_network(self):
+        err, msg = YamlDB.update_network("/tmp/bfoo.yaml", {"nameserver": "192.168.3.1", "netmask": "255.255.255.0", "gateway": "192.168.1.1"})
+        assert(err == 0)
+        # make sure that it doesn't let non-valid network configuration through. 
+        err, msg = YamlDB.update_network("/tmp/bfoo.yaml", {"netmask": "255.255.255.0", "gateway": "blah"})
+        assert(err > 0)
+    def test_get_hosts(self):
+        err, msg, hosts = YamlDB.get_hosts("/tmp/bfoo.yaml")
+        assert(err == 0)
+    
+    def test_update_hosts(self):
+        err, msg = YamlDB.update_hosts("/tmp/bfoo.yaml", self.cfg["hosts"])
+        assert(err == 0)
+
+    def test_get_public_keys(self):
+        err, msg, keys = YamlDB.get_public_keys("/tmp/bfoo.yaml")
+        assert(err == 0)
+
+    def test_get_kubam_ip(self):
+        err, msg, keys = YamlDB.get_kubam_ip("/tmp/bfoo.yaml")
+        assert(err == 0)
+
+    def test_update_kubam_ip(self):
+        err, msg = YamlDB.update_kubam_ip("/tmp/bfoo.yaml", "192.168.30.4")
+        assert(err == 0)
+    
+    def test_update_pks(self): 
+        err, msg = YamlDB.update_public_keys("/tmp/bfoo.yaml", ["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDeV4/Sy+B8R21pKzODfGn5W/p9MC9/4ejFUJoI3RlobYOWWxbLmnHYbKmRHn8Jgpmm4xqv61uaFpbAZvxFTyKIqLdcYmxaHem35uzCJbgB8BvT+4aGg1pZREunX6YaE8+s3hFZRu4ti7UHQYWRD1tCizYz78YHL8snp+N3UAPmP9eTTNw62PHAJERi1Hbl6sRfYijqNlluO223Thqbmhtt3S8tnjkRsFnNxsDgxrfbR3GBQ5925hPth3lGejln2P1L9EIQw9NOmtMhF9UpXPWP9r234p3crmBTsw+E6IF0+OsGKOl8Ri4Im7GpnAgbY9I5THEDn142uNOm6vJATZZ3 root@devi-builder"])
+        assert(err == 0)
+        
+        
     
         
         
