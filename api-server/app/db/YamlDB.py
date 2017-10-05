@@ -329,3 +329,13 @@ def update_public_keys(file_name, public_keys):
     config["public_keys"] = public_keys
     err, msg = write_config(config, file_name)
     return err, msg
+
+def show_config(file_name):
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg, ""
+    elif err == 2:
+        return 0, "", []
+    else:
+        return 0, "", config
+    

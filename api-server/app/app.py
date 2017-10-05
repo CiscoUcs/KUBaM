@@ -30,7 +30,7 @@ def get_creds():
             creds = config["ucsm"]["credentials"]
             if "user" in creds and "password" in creds and "ip" in creds:
                 creds["password"] = "REDACTED"
-                app.logger.info(creds)
+                #app.logger.info(creds)
     return jsonify({'credentials': creds}), 200
 
 
@@ -85,6 +85,53 @@ def login():
         
 def logout(handle):
     UCSSession.logout(handle) 
+
+#get the kubam ip address
+@app.route(API_ROOT + "/ip", methods=['GET'])
+def get_kubam_ip():
+    err, msg, ip = YamlDB.get_kubam_ip(KUBAM_CFG)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+    return jsonify({'kubam_ip' : ip}), 200
+
+#update the kubam IP address
+@app.route(API_ROOT + "/ip", methods=['POST'])
+def update_kubam_ip():
+    if not request.json:
+        return jsonify({'error': 'expected request with kubam_ip '}), 400
+    if "kubam_ip" not in request.json:
+        return jsonify({'error': 'expected request with kubam_ip '}), 400
+
+    ip = request.json['kubam_ip']
+    err, msg = YamlDB.update_kubam_ip(KUBAM_CFG, ip)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+    return jsonify({'kubam_ip' : ip}), 201
+
+# get the public keys
+@app.route(API_ROOT + "/keys", methods=['GET'])
+def get_public_keys():
+    err, msg, keys = YamlDB.get_public_keys(KUBAM_CFG)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+    return jsonify({'keys' : keys}), 200
+
+
+# update public keys
+@app.route(API_ROOT + "/keys", methods=['POST'])
+def update_public_keys():
+    if not request.json:
+        return jsonify({'error': 'expected request with keys '}), 400
+    if "keys" not in request.json:
+        return jsonify({'error': 'expected request with keys '}), 400
+
+    keys = request.json['keys']
+    err, msg = YamlDB.update_public_keys(KUBAM_CFG, keys)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+    return jsonify({'keys' : keys}), 201
+
+
     
 # get the networks in the UCS. 
 @app.route(API_ROOT + "/networks", methods=['GET'])
@@ -127,8 +174,8 @@ def update_networks():
     err, msg, handle = login()
     if err != 0: 
         return not_logged_in(msg) 
-    app.logger.info("request is")
-    app.logger.info(request.json)
+    #app.logger.info("request is")
+    #app.logger.info(request.json)
     vlan = request.json['vlan']
     err, msg = YamlDB.update_ucs_network(KUBAM_CFG, {"vlan": vlan})
     if err != 0:
@@ -175,8 +222,8 @@ def get_servers():
     if err != 0:
         return jsonify({'error': msg}), 400
     servers = servers_to_api(servers, dbServers) 
-    app.logger.info("returninng servers...")
-    app.logger.info(servers)
+    #app.logger.info("returninng servers...")
+    #app.logger.info(servers)
     err, msg, hosts = YamlDB.get_hosts(KUBAM_CFG)
     if err != 0:
         return jsonify({'error': msg}), 400
@@ -189,7 +236,7 @@ def servers_to_db(servers):
     # gets a server array list and gets the selected servers and
     # puts them in the database form
     server_pool = {}
-    app.logger.info(servers)
+    #app.logger.info(servers)
     for s in servers:
         if "selected" in s and s["selected"] == True:
             if s["type"] == "blade":
