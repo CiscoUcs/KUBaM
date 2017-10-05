@@ -249,11 +249,11 @@ def get_ucs_servers(file_name):
     if err == 1:
         return err, msg, ""
     elif err == 2:
-        return 0, "", {} 
+        return 0, "", []
     elif not "ucsm" in config:
-        return 0, "", {} 
+        return 0, "", []
     elif not "ucs_server_pool" in config["ucsm"]:
-        return 0, "", {}
+        return 0, "", []
     else:
         return 0, "", config["ucsm"]["ucs_server_pool"]
 
@@ -310,9 +310,9 @@ def get_public_keys(file_name):
     if err == 1:
         return err, msg, ""
     elif err == 2:
-        return 0, "", {} 
+        return 0, "", []
     elif not "public_keys" in config:
-        return 0, "", {} 
+        return 0, "", []
     else:
         return 0, "", config["public_keys"] 
 
