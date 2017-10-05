@@ -10,6 +10,4 @@ class ServerUnitTests(unittest.TestCase):
 
     def test_serverlist(self):
         servers = UCSServer.list_servers(self.handle)
-        for s in servers:
-            print s
         assert(servers != "")

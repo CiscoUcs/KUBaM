@@ -263,9 +263,9 @@ def get_hosts(file_name):
     if err == 1:
         return err, msg, ""
     elif err == 2:
-        return 0, "", {} 
+        return 0, "", []
     elif not "hosts" in config:
-        return 0, "", {} 
+        return 0, "", []
     else:
         return 0, "", config["hosts"] 
 
@@ -278,7 +278,7 @@ def update_hosts(file_name, ho_hash):
     if err == 1:
         return err, msg
     if not "hosts" in config:
-        config["hosts"] = {}
+        config["hosts"] = []
     config["hosts"] = ho_hash 
     err, msg = write_config(config, file_name)
     return err, msg
@@ -288,9 +288,9 @@ def get_kubam_ip(file_name):
     if err == 1:
         return err, msg, ""
     elif err == 2:
-        return 0, "", {} 
+        return 0, "", ""
     elif not "kubam_ip" in config:
-        return 0, "", {} 
+        return 0, "", ""
     else:
         return 0, "", config["kubam_ip"] 
 
@@ -301,7 +301,7 @@ def update_kubam_ip(file_name, kubam_ip):
     err, msg, config = open_config(file_name)
     if err == 1:
         return err, msg
-    config["hosts"] = kubam_ip
+    config["kubam_ip"] = kubam_ip
     err, msg = write_config(config, file_name)
     return err, msg
 

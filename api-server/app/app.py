@@ -127,12 +127,14 @@ def update_networks():
     err, msg, handle = login()
     if err != 0: 
         return not_logged_in(msg) 
+    app.logger.info("request is")
+    app.logger.info(request.json)
     vlan = request.json['vlan']
     err, msg = YamlDB.update_ucs_network(KUBAM_CFG, {"vlan": vlan})
     if err != 0:
         return jsonify({'error': msg}), 400
     network = request.json['network']
-    err, msg = YamlDB.update_network(KUBAM_CFG, {"network": network})
+    err, msg = YamlDB.update_network(KUBAM_CFG, network)
     if err != 0:
         return jsonify({'error': msg}), 400
     return get_networks()

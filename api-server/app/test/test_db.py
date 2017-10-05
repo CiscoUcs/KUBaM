@@ -87,9 +87,11 @@ class DBUnitTests(unittest.TestCase):
         assert(err > 0)
     def test_get_hosts(self):
         err, msg, hosts = YamlDB.get_hosts("/tmp/bfoo.yaml")
+        print hosts
         assert(err == 0)
     
     def test_update_hosts(self):
+        print self.cfg["hosts"]
         err, msg = YamlDB.update_hosts("/tmp/bfoo.yaml", self.cfg["hosts"])
         assert(err == 0)
 
