@@ -7,7 +7,7 @@ from socket import inet_aton, error as Serror
 from jinja2 import Environment, FileSystemLoader
 from subprocess import call
 from os import path
-from sshpubkeys import SSHKey
+from sshpubkeys import SSHKey, InvalidKeyException
 
 # constants.  
 supported_oses = ["centos7.3", "esxi6.0", "esxi6.5", "rh7.3"]
@@ -17,7 +17,10 @@ supported_oses = ["centos7.3", "esxi6.0", "esxi6.5", "rh7.3"]
 def validate_pks(key_list):
     err = 0
     msg = ""
+    
     for k in key_list:
+        if k == None:
+            return 1, "No Key was passed in."
         ssh = SSHKey(k, strict_mode=True)
         try: 
             ssh.parse()

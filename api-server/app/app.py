@@ -326,6 +326,33 @@ def deploy_server_autoinstall_images():
         return jsonify({"error": msg})
     return jsonify({"status": "ok"}), 201
 
+# the grand daddy of them all.  It is what deploys everything. 
+@app.route(API_ROOT + "/deploy", methods=['POST'])
+def deploy():
+    if not request.json:
+        return jsonify({'error': 'expected kubam_ip and keys in json request'}), 400
+    if not "kubam_ip" in request.json:
+        return jsonify({'error': 'expected kubam_ip in json request.'}), 400
+    if not "keys" in request.json:
+        return jsonify({'error': 'expected keys in json request.'}), 400
+
+    app.logger.info(request.json)
+    # update the kubam_IP if it is changed.     
+    ip = request.json['kubam_ip']
+    err, msg = YamlDB.update_kubam_ip(KUBAM_CFG, ip)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+
+    # update the keys if changed. 
+    keys = request.json['keys']
+    app.logger.info(keys)
+    err, msg = YamlDB.update_public_keys(KUBAM_CFG, keys)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+
+    return jsonify({"status": "ok"}), 201
+
+
 if __name__ == '__main__':
     app.run(debug=True)
 
