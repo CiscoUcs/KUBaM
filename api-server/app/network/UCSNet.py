@@ -5,7 +5,6 @@ def listVLANs(handle):
     # get only VLANs not appliance port vlans
     filter_string = '(dn, "fabric/lan/net-[A-Za-z0-9]+", type="re")'
     vlans = handle.query_classid("fabricVlan", filter_string)
-    print vlans[1]
     return vlans
     #vlans = handle.query_classid("fabricVlan")
         
@@ -22,10 +21,8 @@ def selectVLAN(handle):
     return vlans[val]
 
 def createKubeMacs(handle, org):
-    print "Creating Kubernetes MAC Pools"
     from ucsmsdk.mometa.macpool.MacpoolPool import MacpoolPool
     from ucsmsdk.mometa.macpool.MacpoolBlock import MacpoolBlock
-    print "org: %s" % org
     mo = MacpoolPool(parent_mo_or_dn=org, policy_owner="local", descr="Kubernetes MAC Pool A", assignment_order="default", name="kubeA")
     mo_1 = MacpoolBlock(parent_mo_or_dn=mo, to="00:25:B5:88:8A:FF", r_from="00:25:B5:88:8A:00")
     handle.add_mo(mo)
@@ -38,6 +35,9 @@ def createKubeMacs(handle, org):
     except UcsException as err:
         if err.error_code == "103":
             print "\tKubernetes MAC Pools already exist"
+        else:
+            return 1, err.error_descr
+    return 0, ""
 
 def deleteKubeMacs(handle, org):
     print "Deleting Kubernetes MAC Pools"
@@ -68,6 +68,9 @@ def createVNICTemplates(handle, vlan, org):
     except UcsException as err:
         if err.error_code == "103":
             print "\tVNIC Templates already exist"
+        else:
+            return 1, err.error_descr
+    return 0, ""
 
 def deleteVNICTemplates(handle, org):
     print "Deleting VNIC Templates"
@@ -93,6 +96,9 @@ def createLanConnPolicy(handle, org):
     except UcsException as err:
         if err.error_code == "103":
             print "\tLAN connectivity policy 'kube' already exists"
+        else:
+            return 1, err.error_descr
+    return 0, ""
 
 def deleteLanConnPolicy(handle, org):
     print "Deleting kube LAN Connectivity policy"
@@ -103,11 +109,19 @@ def deleteLanConnPolicy(handle, org):
     except AttributeError:
         print "\talready deleted"
 
-def createKubeNetworking(handle, org):
-    vlan = selectVLAN(handle) 
-    createKubeMacs(handle, org)
-    createVNICTemplates(handle, vlan.name, org)
-    createLanConnPolicy(handle, org)
+def createKubeNetworking(handle, org, vlan_name):
+    err = 0
+    msg = ""
+    err, msg = createKubeMacs(handle, org)
+    if err != 0:
+        return err, msg
+
+    err, msg = createVNICTemplates(handle, vlan_name, org)
+    if err != 0:
+        return err, msg
+    
+    err, msg = createLanConnPolicy(handle, org)
+    return err, msg
 
 def deleteKubeNetworking(handle, org):
     deleteLanConnPolicy(handle, org)

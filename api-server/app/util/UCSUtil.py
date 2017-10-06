@@ -22,6 +22,9 @@ def create_org(handle, org):
     except UcsException as err:
         if err.error_code == "103":
             print "\tOrganization already exists."
+        else:
+            return 1, err.error_descr
+    return 0, ""
 
 # org should be passed with the org-<name> prepended to it.  
 def delete_org(handle, org):

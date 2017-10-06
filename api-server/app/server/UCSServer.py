@@ -153,6 +153,9 @@ def createKubeBootPolicy(handle, org):
     except UcsException as err:
         if err.error_code == "103":
             print "\talready exists"
+        else:
+            return 1, err.error_descr
+    return 0, ""
 
 def createBiosPolicy(handle, org):
     print "Creating Kube Bios policy"
@@ -174,6 +177,9 @@ def createBiosPolicy(handle, org):
     except UcsException as err:
         if err.error_code == "103":
             print "\talready exists"
+        else:
+            return 1, err.error_descr
+    return 0, ""
 
 def deleteBiosPolicy(handle, org):
     print "Deleting Kubernetes Bios Policy"
@@ -204,6 +210,9 @@ def createKubeLocalDiskPolicy(handle, org):
     except UcsException as err:
         if err.error_code == "103":
             print "\talready exists"
+        else:
+            return 1, err.error_descr
+    return 0, ""
 
 def deleteKubeLocalDiskPolicy(handle, org):
     print "Deleting Kube Local Disk Policy"
@@ -226,6 +235,9 @@ def createKubeUUIDPools(handle, org):
     except UcsException as err:
         if err.error_code == "103":
             print "\talready exists"
+        else:
+            return 1, err.error_descr
+    return 0, ""
 
 def deleteKubeUUIDPools(handle, org):
     print "Deleting Kube UUID Pool"
@@ -246,27 +258,36 @@ def createKubeServerPool(handle, org):
     except UcsException as err:
         if err.error_code == "103":
             print "\talready exists"
+        else:
+            return 1, err.error_descr
+    return 0, ""
 
 def addServersToKubePool(handle, servers, org):
     print "Adding servers to Kubernetes Pool"
     from ucsmsdk.mometa.compute.ComputePool import ComputePool
     from ucsmsdk.mometa.compute.ComputePooledSlot import ComputePooledSlot
     from ucsmsdk.mometa.compute.ComputePooledRackUnit import ComputePooledRackUnit
-    from ucsmsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
-    from ucsmsdk.mometa.fabric.FabricComputeSlotEp import FabricComputeSlotEp
     mo = ComputePool(parent_mo_or_dn=org, policy_owner="local", name="Kubernetes", descr="")
-    for s in servers: 
-        reset_disks(handle, s)
-        if type(s) is FabricComputeSlotEp:
-            ComputePooledSlot(parent_mo_or_dn=mo, slot_id=re.sub("slot-","", s.slot_id), chassis_id=str(s.chassis_id))
-        if type(s) is ComputeRackUnit:
-            ComputePooledRackUnit(parent_mo_or_dn=mo, id=re.sub("rack-unit-","", s.rn))
-        handle.add_mo(mo, True)
+    if "blades" in servers:
+        for s in servers["blades"]:
+            # seperate chassis from slot.  
+            # get the blade by making it. 
+            #reset_disks(handle, s)
+            # add teh blade to the pool. 
+            chassis, slot = s.split("/")
+            ComputePooledSlot(parent_mo_or_dn=mo, slot_id=str(slot), chassis_id=str(chassis))
+    if "rack_servers" in servers:
+        for r in servers["rack_servers"]:
+            ComputePooledRackUnit(parent_mo_or_dn=mo, id=r)
+    handle.add_mo(mo, True)
     try: 
         handle.commit()
     except UcsException as err:
         if err.error_code == "103":
             print "\talready exists"
+        else:
+            return 1, err.error_descr
+    return 0, ""
 
 
 def deleteKubeServerPool(handle, org):
@@ -321,8 +342,11 @@ def createServiceProfileTemplate(handle, org):
     except UcsException as err:
         if err.error_code == "103":
             print "\talready exists"
+        else:
+            return 1, err.error_descr
     except Exception:
-        print Exception
+        return 1, "%s" % Exception
+    return 0, ""
 
 
 
@@ -337,15 +361,15 @@ def deleteServiceProfileTemplate(handle, org):
         print "\talready deleted"
 
 
-def createServers(handle, servers, org):
+def createServers(handle, hosts, org):
     print "Creating Kubernetes Service Profiles"
     from ucsmsdk.ucsmethodfactory import ls_instantiate_n_named_template
     from ucsmsdk.ucsbasetype import DnSet, Dn
 
-    for i, s in enumerate(servers):
+    for i, s in enumerate(hosts):
         dn_set = DnSet()
         dn = Dn()
-        sp_name = "kube0%d" % (i+1)
+        sp_name = s["name"]
         dn.attr_set("value",sp_name)
         dn_set.child_add(dn)
         elem = ls_instantiate_n_named_template(cookie=handle.cookie, 
@@ -360,7 +384,8 @@ def createServers(handle, servers, org):
             if err.error_code == "105":
                 print "\t" + sp_name + " already exists."
             else:
-                print err
+                return 1, err.error_descr
+    return 0, ""
 
 def deleteServers(handle, org):
     print "Deleting Kubernetes Nodes"
@@ -377,20 +402,12 @@ def deleteServers(handle, org):
         except UcsException as err:
             print "\t"+ k.name + ": " + err.error_descr
 
-def createKubeVirtualMedia(handle, org):
+def createKubeVirtualMedia(handle, org, kubam_ip):
     print "Adding Virtual Media Policy"
     from urlparse import urlparse
     import os.path
     yn = False
-    url = ""
-    while yn == False:
-        print "What is the URL for the Boot ISO image?"
-        url = raw_input("(E.g.: http://192.168.2.2/kubam/centos7.2-boot.iso) : ")
-        print "You entered: " + url
-        yn = raw_input("Is this correct? [y/N]: ")
-        if yn != "y":
-            yn = False
-                
+    url = "http://" + kubam_ip + "/kubam/centos7.3-boot.iso"            
     o = urlparse(url)
     paths = os.path.split(o.path)
     scheme = o.scheme # http, https
@@ -431,6 +448,9 @@ def createKubeVirtualMedia(handle, org):
     except UcsException as err:
         if err.error_code == "103":
             print "\talready exists"
+        else:
+            return 1, err.error_descr
+    return 0, ""
     
 def deleteVirtualMedia(handle, org):
     print "Deleting Kubernetes Virtual Media Policy"
@@ -456,6 +476,9 @@ def createScrubPolicy(handle, org):
     except UcsException as err:
         if err.error_code == "103":
             print "\talready exists"
+        else:
+            return 1, err.error_descr
+    return 0, ""
 
 
 def deleteScrubPolicy(handle, org):
@@ -514,6 +537,9 @@ def createDiskGroupConfig(handle, org):
     except UcsException as err:
         if err.error_code == "103":
             print "\talready exists"
+        else:
+            return 1, err.error_descr
+    return 0, ""
 
 def createStorageProfile(handle, org):
     from ucsmsdk.mometa.lstorage.LstorageProfile import LstorageProfile 
@@ -539,21 +565,53 @@ def createStorageProfile(handle, org):
     except UcsException as err:
         if err.error_code == "103":
             print "\talready exists"
+        else:
+            return 1, err.error_descr
+    return 0, ""
 
-def createKubeServers(handle, org):
-    createKubeBootPolicy(handle, org)
-    #createKubeLocalDiskPolicy(handle, org)
-    createBiosPolicy(handle, org)
-    createDiskGroupConfig(handle, org)
-    createStorageProfile(handle, org)
-    createScrubPolicy(handle, org)
-    createKubeUUIDPools(handle, org)
-    createKubeServerPool(handle, org)
-    createKubeVirtualMedia(handle, org)
-    servers = select_kube_servers(handle) 
-    addServersToKubePool(handle, servers, org)
-    createServiceProfileTemplate(handle, org)
-    createServers(handle, servers, org)
+def createKubeServers(handle, org, hosts, servers, kubam_ip):
+    err, msg = createKubeBootPolicy(handle, org)
+    if err != 0:
+        return err, msg
+
+    err, msg = createBiosPolicy(handle, org)
+    if err != 0:
+        return err, msg
+
+    err, msg = createDiskGroupConfig(handle, org)
+    if err != 0:
+        return err, msg
+
+    err, msg = createStorageProfile(handle, org)
+    if err != 0:
+        return err, msg
+
+    err, msg = createScrubPolicy(handle, org)
+    if err != 0:
+        return err, msg
+
+    err, msg = createKubeUUIDPools(handle, org)
+    if err != 0:
+        return err, msg
+
+    err, msg = createKubeServerPool(handle, org)
+    if err != 0:
+        return err, msg
+
+    err, msg = createKubeVirtualMedia(handle, org, kubam_ip)
+    if err != 0:
+        return err, msg
+
+    err, msg = addServersToKubePool(handle, servers, org)
+    if err != 0:
+        return err, msg
+
+    err, msg = createServiceProfileTemplate(handle, org)
+    if err != 0:
+        return err, msg
+
+    err, msg = createServers(handle, hosts, org)
+    return err, msg
 
 def deleteKubeServers(handle, org):
     deleteServers(handle, org)

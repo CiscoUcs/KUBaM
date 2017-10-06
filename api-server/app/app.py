@@ -326,6 +326,43 @@ def deploy_server_autoinstall_images():
         return jsonify({"error": msg})
     return jsonify({"status": "ok"}), 201
 
+
+
+#stage2: make the UCS configuration using the kubam information. 
+def make_ucs():
+    err, msg, handle = login()
+    if err != 0: 
+        return not_logged_in(msg) 
+    #TODO: make so we can specify orgs in kubam. Right now its hard coded. 
+    err, msg = UCSUtil.create_org(handle, "kubam")
+    if err != 0: 
+        logout(handle)
+        return err, msg 
+    err, msg, net_settings = YamlDB.get_ucs_network(KUBAM_CFG)
+    selected_vlan = ""
+    if "vlan" in net_settings:
+        selected_vlan = net_settings["vlan"]
+    if selected_vlan == "":
+        logout(handle)
+        return 1, "No vlan selected in UCS configuration."
+    err, msg = UCSNet.createKubeNetworking(handle, "org-root/org-kubam", selected_vlan)
+    if err != 0:
+        logout(handle)
+        return err, msg
+
+    # get the selected servers, and hosts.
+    err, msg, hosts = YamlDB.get_hosts(KUBAM_CFG)
+    err, msg, servers = YamlDB.get_ucs_servers(KUBAM_CFG)
+    err, msg, kubam_ip = YamlDB.get_kubam_ip(KUBAM_CFG)
+    err, msg = UCSServer.createKubeServers(handle, "org-root/org-kubam", hosts, servers, kubam_ip)
+    if err != 0:
+        logout(handle)
+        return err, msg
+    
+    logout(handle)
+    return err, msg
+    
+
 # the grand daddy of them all.  It is what deploys everything. 
 @app.route(API_ROOT + "/deploy", methods=['POST'])
 def deploy():
@@ -350,6 +387,13 @@ def deploy():
     if err != 0:
         return jsonify({'error': msg}), 400
 
+    # make the UCS configuration.  
+    # stage 2:
+    err, msg = make_ucs()
+    if err != 0:
+        return jsonify({'error': msg}), 400
+   
+    # now call the deployment!    
     return jsonify({"status": "ok"}), 201
 
 
