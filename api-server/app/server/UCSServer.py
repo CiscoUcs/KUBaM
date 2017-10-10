@@ -273,7 +273,7 @@ def addServersToKubePool(handle, servers, org):
             # seperate chassis from slot.  
             # get the blade by making it. 
             #reset_disks(handle, s)
-            # add teh blade to the pool. 
+            # add the blade to the pool. 
             chassis, slot = s.split("/")
             ComputePooledSlot(parent_mo_or_dn=mo, slot_id=str(slot), chassis_id=str(chassis))
     if "rack_servers" in servers:
@@ -570,6 +570,8 @@ def createStorageProfile(handle, org):
     return 0, ""
 
 def createKubeServers(handle, org, hosts, servers, kubam_ip):
+    #TODO: if the servers are not associated remove the disk configuration. 
+    
     err, msg = createKubeBootPolicy(handle, org)
     if err != 0:
         return err, msg

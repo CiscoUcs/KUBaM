@@ -12,6 +12,20 @@ from sshpubkeys import SSHKey, InvalidKeyException
 # constants.  
 supported_oses = ["centos7.3", "esxi6.0", "esxi6.5", "rh7.3"]
 
+# makes sure that the list of ISO images actually exists. 
+def validate_iso_images(iso_images):
+    for i in iso_images:
+        if i == None:
+            return 1, "empty value not accepted."
+        elif not "file" in i and not "os" in i:
+            return 1, "iso must have an 'os' value and a 'file' value"
+        elif not i["os"] in supported_oses:
+            return 1, "%s is not a supported OS." % i["os"]
+        elif not path.isfile(i["file"]):
+            return 1, "%s file is not found." % i["file"]
+    return 0, ""
+        
+        
 
 # validate list of public keys
 def validate_pks(key_list):
@@ -342,3 +356,27 @@ def show_config(file_name):
     else:
         return 0, "", config
     
+
+def get_iso_map(file_name):
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg, ""
+    elif err == 2:
+        return 0, "", []
+    elif not "iso_map" in config:
+        return 0, "", []
+    else:
+        return 0, "", config["iso_map"] 
+
+def update_iso_map(file_name, iso_images):
+    err, msg = validate_iso_images(iso_images)
+    if err > 0:
+        return err, msg
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    if not "iso_map" in config:
+        config["iso_map"] = []
+    config["iso_map"] = iso_images
+    err, msg = write_config(config, file_name)
+    return err, msg

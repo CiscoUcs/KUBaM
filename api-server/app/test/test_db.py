@@ -116,6 +116,14 @@ class DBUnitTests(unittest.TestCase):
         print config
         assert(err == 0)
 
+    def test_get_iso_map(self):
+        err, msg, isos = YamlDB.get_iso_map("/tmp/bfoo.yaml")
+        assert(err == 0)
+    def test_update_iso_map(self):
+        err, msg = YamlDB.update_iso_map("/tmp/bfoo.yaml", [{"os" : "centos7.3", "file" : "/Users/vallard/Downloads/kubam/CentOS-7-x86_64-Minimal-1611.iso"}, {"os": "esxi6.0", "file": "/Users/vallard/Downloads/kubam/Vmware-ESXi-6.0.0-5050593-Custom-Cisco-6.0.3.2.iso"}])
+        print msg
+        assert(err == 0)
+        
         
 if __name__ == '__main__':
     unittest.main()
