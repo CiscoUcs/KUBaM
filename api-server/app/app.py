@@ -309,11 +309,18 @@ def extract_iso():
 # curl -H "Content-Type: application/json" -X POST -d '{"iso" : "CentOS-7-x86_64-Minimal-1611.iso" }' http://localhost/api/v1/isos/boot
 @app.route(API_ROOT + "/isos/boot", methods=['POST'])
 def mkboot_iso():
-    if not request.json:
-        return jsonify({"error": "expected iso hash"}), 400
-    iso = request.json['iso']
-    err, msg = IsoMaker.mkboot_iso(iso)
-    if not err == 0:
+    # get the iso map
+    err, msg, isos = YamlDB.get_iso_map(KUBAM_CFG)
+    if err != 0:
+        return jsonify({"error": msg}), 400
+    if len(isos) == 0:
+        return jsonify({"error": "No ISOS have been mapped.  Please map an ISO image with an OS"}), 400
+    #err, msg = IsoMaker.mkboot_iso(isos)
+    if err != 0:
+        return jsonify({"error": msg}), 400
+
+    err, msg = Builder.deploy_server_images(KUBAM_CFG)
+    if err != 0:
         return jsonify({"error": msg}), 400
     return jsonify({"status": "ok"}), 201
     
@@ -329,23 +336,25 @@ def get_iso_map():
 # update iso to os map
 @app.route(API_ROOT + "/isos/map", methods=['POST'])
 def update_iso_map():
+    app.logger.info("request.json")
+    app.logger.info(request.json)
     if not request.json:
-        return jsonify({'error': 'expected request with iso_images '}), 400
+        return jsonify({'error': 'expected request with iso_map '}), 400
     if "iso_map" not in request.json:
-        return jsonify({'error': 'expected request with iso_images '}), 400
+        return jsonify({'error': 'expected request with iso_map '}), 400
 
     isos = request.json['iso_map']
     err, msg = YamlDB.update_iso_map(KUBAM_CFG, isos)
     if err != 0:
         return jsonify({'error': msg}), 400
-    return jsonify({'keys' : keys}), 201
+    return get_iso_map()
 
 
 
 # Make the server images
 @app.route(API_ROOT + "/servers/images", methods=['POST'])
 def deploy_server_autoinstall_images():
-    err, msg = Builder.deploy_server_images()
+    err, msg = Builder.deploy_server_images(KUBAM_CFG)
     if not err == 0:
         return jsonify({"error": msg})
     return jsonify({"status": "ok"}), 201

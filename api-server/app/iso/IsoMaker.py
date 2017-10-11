@@ -137,41 +137,43 @@ def mkboot(os):
 # determine version of OS and make boot dir. 
 # success:  return 0 and status message.
 # failure:  return 1 and error message.
-def mkboot_iso(iso):
-    iso = "/kubam/" + iso
+def mkboot_iso(isos):
     # create random tmp directory
-    tmp_dir = "/kubam/tmp/" + ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))
-    err, err_msg = extract_iso(iso, tmp_dir)
-    if err != 0:
-        return err_msg, err
-    o = get_os(tmp_dir)
-    if not o:
-        return 1, "OS could not be determined with ISO image.  Perhaps this is not a supported OS?"
-    # if the directory is already there, we don't touch it. 
-    if os.path.isdir("/kubam/" + o["dir"]):
-        print "removing temp"
-        try:
-            rmtree(tmp_dir) 
-        except OSError as err:
-            # permission denied error on ISO image.
-            if err.errno == 13:
-                call(['chmod', '-R', '0755', tmp_dir])
+    for iso in isos:
+        tmp_dir = "/kubam/tmp/" + ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+        err, err_msg = extract_iso(iso["file"], tmp_dir)
+        if err != 0:
+            return err_msg, err
+        o = get_os(tmp_dir)
+        if not o:
+            return 1, "OS could not be determined with ISO image.  Perhaps this is not a supported OS?"
+        if not o["dir"] == iso["os"]:
+            return 1, "This ISO image seems to be %s but you specified that it was %s.  Please change" % (o["dir"], os["os"])
+        # if the directory is already there, we don't touch it. 
+        if os.path.isdir("/kubam/" + o["dir"]):
+            print "removing temp"
+            try:
                 rmtree(tmp_dir) 
-    else:
-        print "creating " + o["dir"]
-        try: 
-            os.rename(tmp_dir, "/kubam/" + o["dir"])
-        except OSError as err:
-            # permission denied error on ISO image.
-            if err.errno == 13:
-                call(['chmod', '-R', '0755', tmp_dir])
+            except OSError as err:
+                # permission denied error on ISO image.
+                if err.errno == 13:
+                    call(['chmod', '-R', '0755', tmp_dir])
+                    rmtree(tmp_dir) 
+        else:
+            print "creating " + o["dir"]
+            try: 
                 os.rename(tmp_dir, "/kubam/" + o["dir"])
-            else: 
-                return 1, err.strerror + ": " + err.filename
+            except OSError as err:
+                # permission denied error on ISO image.
+                if err.errno == 13:
+                    call(['chmod', '-R', '0755', tmp_dir])
+                    os.rename(tmp_dir, "/kubam/" + o["dir"])
+                else: 
+                    return 1, err.strerror + ": " + err.filename
         
-    # now that we have tree, get boot media ready. 
-    err, msg = mkboot(o["dir"])
-    # remove tmp directory
-    rmtree("/kubam/tmp") 
+        # now that we have tree, get boot media ready. 
+        err, msg = mkboot(o["dir"])
+        # remove tmp directory
+        rmtree("/kubam/tmp") 
     
     return err, msg

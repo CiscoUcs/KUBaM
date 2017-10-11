@@ -182,7 +182,9 @@ def open_config(file_name):
     return err, msg, config
 
 def parse_config(file_name, strict):
-    config = open_config(file_name) 
+    err, msg, config = open_config(file_name) 
+    if err != 0:
+        return err, msg
     return validate_config(config, strict)
 
 # our database operations will all be open and update the file. 
