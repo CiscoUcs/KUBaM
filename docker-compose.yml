@@ -1,0 +1,20 @@
+version: '2'
+services:
+  web:
+    image: kubam/web
+    ports:
+      - "5000:5000"
+    depends_on:
+      - kubam
+    links:
+      - kubam
+  kubam:
+    image: kubam/kubam
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - "/dev/fuse"
+    volumes:
+      - ~/kubam:/kubam
+    ports: 
+      - "80:80"

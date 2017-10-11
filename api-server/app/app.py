@@ -16,12 +16,14 @@ API_ROOT="/api/v1"
 
 
 @app.route('/')
+@cross_origin()
 def index():
     return jsonify({'status': 'ok'})
 
 
 # determine if we have credentials stored or not. 
 @app.route(API_ROOT + "/session", methods=['GET'])
+@cross_origin()
 def get_creds():
     creds = {}
     err, msg, config = YamlDB.open_config(KUBAM_CFG)
@@ -60,6 +62,7 @@ def create_creds():
     return jsonify({'login': "success"}), 201
 
 @app.route(API_ROOT + "/session", methods=['DELETE'])
+@cross_origin()
 def delete_session():
     YamlDB.update_ucs_creds(KUBAM_CFG, "")
     return jsonify({'logout': "success"})
@@ -88,6 +91,7 @@ def logout(handle):
 
 #get the kubam ip address
 @app.route(API_ROOT + "/ip", methods=['GET'])
+@cross_origin()
 def get_kubam_ip():
     err, msg, ip = YamlDB.get_kubam_ip(KUBAM_CFG)
     if err != 0:
@@ -96,6 +100,7 @@ def get_kubam_ip():
 
 #update the kubam IP address
 @app.route(API_ROOT + "/ip", methods=['POST'])
+@cross_origin()
 def update_kubam_ip():
     if not request.json:
         return jsonify({'error': 'expected request with kubam_ip '}), 400
@@ -110,6 +115,7 @@ def update_kubam_ip():
 
 # get the public keys
 @app.route(API_ROOT + "/keys", methods=['GET'])
+@cross_origin()
 def get_public_keys():
     err, msg, keys = YamlDB.get_public_keys(KUBAM_CFG)
     if err != 0:
@@ -119,6 +125,7 @@ def get_public_keys():
 
 # update public keys
 @app.route(API_ROOT + "/keys", methods=['POST'])
+@cross_origin()
 def update_public_keys():
     if not request.json:
         return jsonify({'error': 'expected request with keys '}), 400
@@ -135,6 +142,7 @@ def update_public_keys():
     
 # get the networks in the UCS. 
 @app.route(API_ROOT + "/networks", methods=['GET'])
+@cross_origin()
 def get_networks():
     err, msg, handle = login()
     if err != 0: 
@@ -151,6 +159,7 @@ def get_networks():
                     
 
 @app.route(API_ROOT + "/networks/vlan", methods=['POST'])
+@cross_origin()
 def select_vlan():
     if not request.json:
         return jsonify({'error': 'expected hash of VLANs'}), 400
@@ -168,6 +177,7 @@ def select_vlan():
     
 
 @app.route(API_ROOT + "/networks", methods=['POST'])
+@cross_origin()
 def update_networks():
     if not request.json:
         return jsonify({'error': 'expected hash of network settings'}), 400
@@ -209,6 +219,7 @@ def servers_to_api(ucs_servers, dbServers):
 
 
 @app.route(API_ROOT + "/servers", methods=['GET'])
+@cross_origin()
 def get_servers():
     err, msg, handle = login()
     if err != 0: 
@@ -251,6 +262,7 @@ def servers_to_db(servers):
     return server_pool
 
 @app.route(API_ROOT + "/servers", methods=['POST'])
+@cross_origin()
 def select_servers():
     # make sure we got some data.
     if not request.json:
@@ -282,6 +294,7 @@ def select_servers():
 
 # list ISO images.
 @app.route(API_ROOT + "/isos", methods=['GET'])
+@cross_origin()
 def get_isos():
     err, isos = IsoMaker.list_isos("/kubam")    
     if err != 0:
@@ -294,6 +307,7 @@ def get_isos():
 # creation process. 
 # curl -H "Content-Type: application/json" -X POST -d '{"iso" : "Vmware-ESXi-6.5.0-4564106-Custom-Cisco-6.5.0.2.iso", "os": "esxi6.5" }' http://localhost/api/v1/isos/extract
 @app.route(API_ROOT + "/isos/extract", methods=['POST'])
+@cross_origin()
 def extract_iso():
     if not request.json:
         return jsonify({'error': 'expected iso hash'}), 400
@@ -308,6 +322,7 @@ def extract_iso():
 # curl -H "Content-Type: application/json" -X POST -d '{"iso" : "Vmware-ESXi-6.5.0-4564106-Custom-Cisco-6.5.0.2.iso" }' http://localhost/api/v1/isos/boot
 # curl -H "Content-Type: application/json" -X POST -d '{"iso" : "CentOS-7-x86_64-Minimal-1611.iso" }' http://localhost/api/v1/isos/boot
 @app.route(API_ROOT + "/isos/boot", methods=['POST'])
+@cross_origin()
 def mkboot_iso():
     # get the iso map
     err, msg, isos = YamlDB.get_iso_map(KUBAM_CFG)
@@ -327,6 +342,7 @@ def mkboot_iso():
 
 #map the iso images to os versions. 
 @app.route(API_ROOT + "/isos/map", methods=['GET'])
+@cross_origin()
 def get_iso_map():
     err, msg, isos = YamlDB.get_iso_map(KUBAM_CFG)
     if err != 0:
@@ -335,6 +351,7 @@ def get_iso_map():
 
 # update iso to os map
 @app.route(API_ROOT + "/isos/map", methods=['POST'])
+@cross_origin()
 def update_iso_map():
     app.logger.info("request.json")
     app.logger.info(request.json)
@@ -353,6 +370,7 @@ def update_iso_map():
 
 # Make the server images
 @app.route(API_ROOT + "/servers/images", methods=['POST'])
+@cross_origin()
 def deploy_server_autoinstall_images():
     err, msg = Builder.deploy_server_images(KUBAM_CFG)
     if not err == 0:
@@ -398,6 +416,7 @@ def make_ucs():
 
 # the grand daddy of them all.  It is what deploys everything. 
 @app.route(API_ROOT + "/deploy", methods=['POST'])
+@cross_origin()
 def deploy():
     if not request.json:
         return jsonify({'error': 'expected kubam_ip and keys in json request'}), 400
