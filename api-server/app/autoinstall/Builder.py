@@ -48,11 +48,9 @@ def build_template(node, config):
         vlan=config["network"]["vlan"],
         keys=config["public_keys"] 
     )
-    print "template", f
     return err, msg, f
     
 def build_boot_image(node, template):
-    print "Building Boot Images"
     if node["os"] in ["centos7.3"]:
         return Kickstart.build_boot_image(node, template)
     if node["os"] in ["esxi6.0", "esxi6.5"]:
