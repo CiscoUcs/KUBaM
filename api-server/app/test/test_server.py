@@ -20,8 +20,8 @@ class ServerUnitTests(unittest.TestCase):
         print blade.oper_state
         disks = UCSServer.list_disks(self.handle, blade)
         print disks
-    def test_delete_servers(self):
-        err, msg = UCSServer.deleteKubeServers(self.handle, "org-root/org-kubam", [{"name" : "kubamTest01"}])
-        print msg
-        assert(err == 0)
+#    def test_delete_servers(self):
+#        err, msg = UCSServer.deleteKubeServers(self.handle, "org-root/org-kubam", [{"name" : "kubamTest01"}])
+#        print msg
+#        assert(err == 0)
         
