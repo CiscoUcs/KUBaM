@@ -330,7 +330,7 @@ def mkboot_iso():
         return jsonify({"error": msg}), 400
     if len(isos) == 0:
         return jsonify({"error": "No ISOS have been mapped.  Please map an ISO image with an OS"}), 400
-    #err, msg = IsoMaker.mkboot_iso(isos)
+    err, msg = IsoMaker.mkboot_iso(isos)
     if err != 0:
         return jsonify({"error": msg}), 400
 
