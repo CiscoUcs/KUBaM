@@ -49,6 +49,9 @@ def deleteKubeMacs(handle, org):
         handle.commit()
     except AttributeError:
         print "\talready deleted"
+    except UcsException as err:
+        return 1, err.error_descr
+    return 0, ""
 
 #handle.commit()    
 def createVNICTemplates(handle, vlan, org):
@@ -82,6 +85,9 @@ def deleteVNICTemplates(handle, org):
         handle.commit()
     except AttributeError:
         print "\talready deleted"
+    except UcsException as err:
+        return 1, err.error_descr
+    return 0, ""
 
 def createLanConnPolicy(handle, org):
     print "Creating Kubernetes LAN connectivity policy"
@@ -108,6 +114,9 @@ def deleteLanConnPolicy(handle, org):
         handle.commit()
     except AttributeError:
         print "\talready deleted"
+    except UcsException as err:
+        return 1, err.error_descr
+    return 0, ""
 
 def createKubeNetworking(handle, org, vlan_name):
     err = 0
@@ -124,6 +133,13 @@ def createKubeNetworking(handle, org, vlan_name):
     return err, msg
 
 def deleteKubeNetworking(handle, org):
-    deleteLanConnPolicy(handle, org)
-    deleteVNICTemplates(handle, org)
-    deleteKubeMacs(handle, org) 
+    err, msg = deleteLanConnPolicy(handle, org)
+    if err != 0:
+        return err, msg
+    err, msg = deleteVNICTemplates(handle, org)
+    if err != 0:
+        return err, msg
+    err, msg = deleteKubeMacs(handle, org) 
+    if err != 0:
+        return err, msg
+    return err, msg

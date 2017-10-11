@@ -449,6 +449,28 @@ def deploy():
     return jsonify({"status": "ok"}), 201
 
 
+# dangerous command!  Will undo everything!
+@app.route(API_ROOT + "/deploy", methods=['DELETE'])
+@cross_origin()
+def destroy():
+    app.logger.info("Deleting deployment")
+    err, msg, handle = login()
+    if err != 0: 
+        return not_logged_in(msg) 
+    err, msg, hosts = YamlDB.get_hosts(KUBAM_CFG)
+    if err != 0: 
+        return jsonify({'error': msg}), 400
+    if len(hosts) == 0:
+        return jsonify({"status": "no servers deployed"}),  200
+    err, msg = UCSServer.deleteKubeServers(handle, "org-root/org-kubam", hosts)
+    if err != 0: 
+        return jsonify({'error': msg}), 400
+    err, msg = UCSNet.deleteKubeNetworking(handle, "org-root/org-kubam")
+    if err != 0: 
+        return jsonify({'error': msg}), 400
+    return jsonify({"status": "ok"}), 201
+
+
 if __name__ == '__main__':
     app.run(debug=True)
 

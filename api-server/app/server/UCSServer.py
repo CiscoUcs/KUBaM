@@ -28,71 +28,28 @@ def list_servers(handle):
         if type(s) is ComputeRackUnit:
             all_servers.append({"type":"rack", "label": s.usr_lbl, "rack_id": s.rn.replace('rack-unit-', ''), "model": s.model, "association": s.association, "service_profile": s.assigned_to_dn  })
     return all_servers
+   
+ 
+def list_blade(handle, server):
+    from ucsmsdk.mometa.compute.ComputeBlade import ComputeBlade
+    chassis, slot = server.split("/")
+    dn = "sys/chassis-%s/blade-%s" % (chassis,slot)
+    server = handle.query_dn(dn)
+    return server
     
-
-
-def list_servers_old(handle):
-    from ucsmsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
-    from ucsmsdk.mometa.fabric.FabricComputeSlotEp import FabricComputeSlotEp
-    filter_string = '(presence, "equipped")'
-    # get blades
-    blades = handle.query_classid("fabricComputeSlotEp", filter_string)
-    # get all connected rack mount servers.
-    servers = handle.query_classid("computeRackUnit")
-    m = blades + servers
-    all_servers = [] 
-    for i, s in enumerate(m):
-        if type(s) is FabricComputeSlotEp:
-            all_servers.append({"type":"blade", "chassis_id": s.chassis_id, "slot": s.rn.replace('slot-', ''), "model": s.model })
-        if type(s) is ComputeRackUnit:
-            all_servers.append({"type":"rack", "rack_id": s.rn.replace('rack-unit-', ''), "model": s.model })
-    return all_servers
-    
-
-# get the available servers to put in the pool. 
-def select_kube_servers(handle):
-    from ucsmsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
-    from ucsmsdk.mometa.fabric.FabricComputeSlotEp import FabricComputeSlotEp
-    print "Listing Available UCS Servers"
-    filter_string = '(presence, "equipped")'
-    # get blades
-    blades = handle.query_classid("fabricComputeSlotEp", filter_string)
-    # get all connected rack mount servers.
-    servers = handle.query_classid("computeRackUnit")
-    m = blades + servers
-    while True:
-        for i, s in enumerate(m):
-            if type(s) is FabricComputeSlotEp:
-                print "[%d]: Blade %s/%s type %s" % (i+1, s.chassis_id, s.rn, s.model)
-            if type(s) is ComputeRackUnit:
-                print "[%d]: Rack %s type %s" % (i+1, s.rn, s.model)
-        vals = raw_input("(E.g.: 2,4,8): ")
-        if check_values(m, vals) == True:
-            k8servers = [m[int(x)-1] for x in vals.split(',')]
-            print "Install Kubernetes on the following servers:"
-            for s in k8servers:
-                if type(s) is FabricComputeSlotEp:
-                    print "\tChassis %s/%s type %s" % (s.chassis_id, s.rn, s.model)
-                if type(s) is ComputeRackUnit:
-                    print "\tServer %s type %s" % (s.rn, s.model)
-
-            yn = raw_input("Is this correct? [N/y]: ")
-            if yn == "y" or yn == "Y":
-                return k8servers
-
+# takes the server in standard kubam mode which means its just a hash, not a ComputeBlade object. 
 def list_disks(handle, server):
     from ucsmsdk.mometa.storage.StorageLocalDisk import StorageLocalDisk
     from ucsmsdk.mometa.storage.StorageController import StorageController
     from ucsmsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
+    from ucsmsdk.mometa.compute.ComputeBlade import ComputeBlade
     from ucsmsdk.mometa.fabric.FabricComputeSlotEp import FabricComputeSlotEp
     # get each controller of the server.
     all_disks = []
-    if type(server) is FabricComputeSlotEp:
-        cquery = '(dn, "sys/chassis-%s/blade-%s/board.*", type="re")' % (server.chassis_id, server.slot_id)
-    else: 
-        # return nothing. 
-        return all_disks
+    chassis, slot = server.server_id.split("/")
+    cquery = '(dn, "sys/chassis-%s/blade-%s/board.*", type="re")' % (chassis, slot)
     controllers = handle.query_classid("StorageController", cquery)
+    print "controllers", controllers
     # get the disks of each controller. 
     for c in controllers:
         # get the disks: 
@@ -107,7 +64,12 @@ def list_disks(handle, server):
 # use them!
 def reset_disks(handle, server):
     from ucsmsdk.mometa.storage.StorageLocalDisk import StorageLocalDisk
-    disks = list_disks(handle, server)
+    from ucsmsdk.mometa.compute.ComputeBlade import ComputeBlade
+    
+    compute_blade = list_blade(handle, server)
+    if compute_blade.oper_state != "unassociated":
+        return
+    disks = list_disks(handle, compute_blade)
     for d in disks:
 	#print "changing disk: %s" % d.dn
         #print "disk state: %s" % d.disk_state
@@ -189,6 +151,9 @@ def deleteBiosPolicy(handle, org):
         handle.commit()
     except AttributeError:
         print "\talready deleted"
+    except UcsException as err:
+        return 1, err.error_descr
+    return 0, ""
 
 
 def deleteKubeBootPolicy(handle, org):
@@ -198,6 +163,9 @@ def deleteKubeBootPolicy(handle, org):
         handle.commit()
     except AttributeError:
         print "\talready deleted"
+    except UcsException as err:
+        return 1, err.error_descr
+    return 0, ""
 
 def createKubeLocalDiskPolicy(handle, org):
     print "Creating Kube Local Disk Policy"
@@ -222,6 +190,9 @@ def deleteKubeLocalDiskPolicy(handle, org):
         handle.commit()
     except AttributeError:
         print "\talready deleted"
+    except UcsException as err:
+        return 1, err.error_descr
+    return 0, ""
 
 def createKubeUUIDPools(handle, org):
     print "Creating Kube UUID Pools"
@@ -247,6 +218,9 @@ def deleteKubeUUIDPools(handle, org):
         handle.commit()
     except AttributeError:
         print "\talready deleted"
+    except UcsException as err:
+        return 1, err.error_descr
+    return 0, ""
 
 def createKubeServerPool(handle, org):
     print "Creating Kubernetes Compute Pool"
@@ -268,12 +242,10 @@ def addServersToKubePool(handle, servers, org):
     from ucsmsdk.mometa.compute.ComputePooledSlot import ComputePooledSlot
     from ucsmsdk.mometa.compute.ComputePooledRackUnit import ComputePooledRackUnit
     mo = ComputePool(parent_mo_or_dn=org, policy_owner="local", name="Kubernetes", descr="")
+    blades = handle.query_classid("computeBlade")
     if "blades" in servers:
         for s in servers["blades"]:
-            # seperate chassis from slot.  
-            # get the blade by making it. 
-            #reset_disks(handle, s)
-            # add the blade to the pool. 
+            reset_disks(handle, s)
             chassis, slot = s.split("/")
             ComputePooledSlot(parent_mo_or_dn=mo, slot_id=str(slot), chassis_id=str(chassis))
     if "rack_servers" in servers:
@@ -298,6 +270,9 @@ def deleteKubeServerPool(handle, org):
         handle.commit()
     except AttributeError:
         print "\talready deleted"
+    except UcsException as err:
+        return 1, err.error_descr
+    return 0, ""
 
 
 
@@ -359,6 +334,9 @@ def deleteServiceProfileTemplate(handle, org):
         handle.commit()
     except AttributeError:
         print "\talready deleted"
+    except UcsException as err:
+        return 1, err.error_descr
+    return 0, ""
 
 
 def createServers(handle, hosts, org):
@@ -387,20 +365,24 @@ def createServers(handle, hosts, org):
                 return 1, err.error_descr
     return 0, ""
 
-def deleteServers(handle, org):
+def deleteServers(handle, org, hostnames):
     print "Deleting Kubernetes Nodes"
-
-    filter_string = '(dn, "%s/ls-kube[0-9]+", type="re")' % org
-    kube = handle.query_classid("lsServer", filter_string)
-    for k in kube:
-        print "Deleting " + k.name
-        handle.remove_mo(k)
-        try:
-            handle.commit()
-        except AttributeError:
-            print "\talready deleted"
-        except UcsException as err:
-            print "\t"+ k.name + ": " + err.error_descr
+    for host in hostnames: 
+        #filter_string = '(dn, "%s/ls-kube[0-9]+", type="re")' % org
+        filter_string = '(dn, "%s/ls-%s", type="re")' % (org, host["name"]) 
+        kube_host = handle.query_classid("lsServer", filter_string)
+        if kube_host is None:
+            next
+        for k in kube_host: 
+            print "Deleting " + k.name
+            handle.remove_mo(k)
+            try:
+                handle.commit()
+            except AttributeError:
+                print "\talready deleted"
+            except UcsException as err:
+                return 1, k.name + ": " + err.error_descr
+    return 0, ""
 
 def createKubeVirtualMedia(handle, org, kubam_ip):
     print "Adding Virtual Media Policy"
@@ -460,6 +442,9 @@ def deleteVirtualMedia(handle, org):
         handle.commit()
     except AttributeError:
         print "\talready deleted"
+    except UcsException as err:
+        return 1, err.error_descr
+    return 0, ""
 
 
 def createScrubPolicy(handle, org):
@@ -489,6 +474,9 @@ def deleteScrubPolicy(handle, org):
         handle.commit()
     except AttributeError:
         print "\talready deleted"
+    except UcsException as err:
+        return 1, err.error_descr
+    return 0, ""
 
 def deleteDiskGroupConfig(handle, org):
     print "Deleting Disk Group config"
@@ -498,6 +486,9 @@ def deleteDiskGroupConfig(handle, org):
         handle.commit()
     except AttributeError:
         print "\talready deleted"
+    except UcsException as err:
+        return 1, err.error_descr
+    return 0, ""
 
 def deleteStorageProfile(handle, org):
     print "Deleting Storage Profile"
@@ -507,6 +498,9 @@ def deleteStorageProfile(handle, org):
         handle.commit()
     except AttributeError:
         print "\talready deleted"
+    except UcsException as err:
+        return 1, err.error_descr
+    return 0, ""
 
 def createDiskGroupConfig(handle, org):
     print "Adding Disk Group Config"
@@ -570,8 +564,6 @@ def createStorageProfile(handle, org):
     return 0, ""
 
 def createKubeServers(handle, org, hosts, servers, kubam_ip):
-    #TODO: if the servers are not associated remove the disk configuration. 
-    
     err, msg = createKubeBootPolicy(handle, org)
     if err != 0:
         return err, msg
@@ -615,16 +607,36 @@ def createKubeServers(handle, org, hosts, servers, kubam_ip):
     err, msg = createServers(handle, hosts, org)
     return err, msg
 
-def deleteKubeServers(handle, org):
-    deleteServers(handle, org)
-    deleteServiceProfileTemplate(handle, org)
-    deleteKubeServerPool(handle, org)
-    deleteVirtualMedia(handle, org)
-    deleteScrubPolicy(handle, org)
-    deleteKubeBootPolicy(handle, org)
-    deleteStorageProfile(handle, org)
-    deleteBiosPolicy(handle,org)
-    deleteDiskGroupConfig(handle, org)
-    #deleteKubeLocalDiskPolicy(handle, org)
-    deleteKubeUUIDPools(handle, org)
+def deleteKubeServers(handle, org, hosts):
+    err, msg = deleteServers(handle, org, hosts)
+    if err != 0:
+        return err, msg
+    err, msg = deleteServiceProfileTemplate(handle, org)
+    if err != 0:
+        return err, msg
+    err, msg = deleteKubeServerPool(handle, org)
+    if err != 0:
+        return err, msg
+    err, msg = deleteVirtualMedia(handle, org)
+    if err != 0:
+        return err, msg
+    err, msg = deleteScrubPolicy(handle, org)
+    if err != 0:
+        return err, msg
+    err, msg = deleteKubeBootPolicy(handle, org)
+    if err != 0:
+        return err, msg
+    err, msg = deleteStorageProfile(handle, org)
+    if err != 0:
+        return err, msg
+    err, msg = deleteBiosPolicy(handle,org)
+    if err != 0:
+        return err, msg
+    err, msg = deleteDiskGroupConfig(handle, org)
+    if err != 0:
+        return err, msg
+    err, msg = deleteKubeUUIDPools(handle, org)
+    if err != 0:
+        return err, msg
+    return err, msg
     

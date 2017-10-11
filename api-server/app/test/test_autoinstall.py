@@ -21,34 +21,6 @@ class AutoInstallUnitTests(unittest.TestCase):
     bad1 = { "foo" : "bar" }
     bad_node = {"name" : "badname", "os" : "bados", "ip": "20" }
 
-    def test_validate_os(self):
-        err, msg = Builder.validate_os("bad")
-        assert(msg != "")
-        assert(err == 1)
-        
-
-    def test_validate_ip(self):
-        err, msg = Builder.validate_ip("192.168.3.4.5")
-        assert(msg != "")
-        assert(err == 1)
-        err, msg = Builder.validate_ip("192.168.3.4")
-        assert(err == 0)
-
-    def test_validate_nodes(self):
-        err, msg = Builder.validate_nodes(self.cfg["nodes"])
-        assert(err == 0)
-
-    def test_validate_network(self):
-        err, msg = Builder.validate_network(self.cfg["network"])
-        assert(err == 0)
-
-    def test_validate_config(self):
-        err, msg, config = Builder.validate_config(self.cfg)
-        assert(err == 0)
-        err, msg, config = Builder.validate_config(self.bad1)
-        print msg
-        assert(err != 0)
-
     def test_find_template(self):
         node = self.cfg["nodes"][0]
         err, msg, template, template_dir = Builder.find_template(node) 
