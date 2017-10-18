@@ -83,8 +83,13 @@ def login():
                 if h != "":
                     return 0, "", h
                 return 1, msg, ""
-                    
-    return 1, "error logging in: %s" % msg, ""
+            else: 
+                msg = "kubam.yaml file does not include the user, password, and ip properties to login."
+                err = 1
+        else:
+            msg = "UCS Credentials have not been entered.  Please login to UCS to continue."
+            err = 1
+    return err, msg, ""
         
 def logout(handle):
     UCSSession.logout(handle) 
@@ -137,7 +142,6 @@ def update_public_keys():
     if err != 0:
         return jsonify({'error': msg}), 400
     return jsonify({'keys' : keys}), 201
-
 
     
 # get the networks in the UCS. 
@@ -377,8 +381,6 @@ def deploy_server_autoinstall_images():
         return jsonify({"error": msg})
     return jsonify({"status": "ok"}), 201
 
-
-
 #stage2: make the UCS configuration using the kubam information. 
 def make_ucs():
     err, msg, handle = login()
@@ -414,33 +416,33 @@ def make_ucs():
     return err, msg
     
 
-# the grand daddy of them all.  It is what deploys everything. 
-@app.route(API_ROOT + "/deploy", methods=['POST'])
+@app.route(API_ROOT + "/settings", methods=['POST'])
 @cross_origin()
-def deploy():
+def update_settings():
     if not request.json:
         return jsonify({'error': 'expected kubam_ip and keys in json request'}), 400
     if not "kubam_ip" in request.json:
         return jsonify({'error': 'expected kubam_ip in json request.'}), 400
     if not "keys" in request.json:
         return jsonify({'error': 'expected keys in json request.'}), 400
-
-    app.logger.info(request.json)
+    #app.logger.info(request.json)
     # update the kubam_IP if it is changed.     
     ip = request.json['kubam_ip']
     err, msg = YamlDB.update_kubam_ip(KUBAM_CFG, ip)
     if err != 0:
         return jsonify({'error': msg}), 400
-
     # update the keys if changed. 
     keys = request.json['keys']
     app.logger.info(keys)
     err, msg = YamlDB.update_public_keys(KUBAM_CFG, keys)
     if err != 0:
         return jsonify({'error': msg}), 400
+    return jsonify({"status": "ok"}), 201
 
-    # make the UCS configuration.  
-    # stage 2:
+# the grand daddy of them all.  It is what deploys everything. 
+@app.route(API_ROOT + "/deploy", methods=['POST'])
+@cross_origin()
+def deploy():
     err, msg = make_ucs()
     if err != 0:
         return jsonify({'error': msg}), 400

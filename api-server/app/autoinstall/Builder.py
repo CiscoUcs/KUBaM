@@ -55,6 +55,8 @@ def build_boot_image(node, template):
         return Kickstart.build_boot_image(node, template)
     if node["os"] in ["esxi6.0", "esxi6.5"]:
         return VMware.build_boot_image(node, template)
+    return 1,  "no os is built! for os %s and node %s" % (node["os"], node["name"])
+   
 
 def deploy_server_images(config):
     err = 0
@@ -66,9 +68,11 @@ def deploy_server_images(config):
     for host in config["hosts"]:
         err, msg, template = build_template(host, config)
         if err > 0:
+            print err, msg
             break
         err, msg = build_boot_image(host, template)
         if err == 1:
+            print err, msg
             break
 
     return err, msg 
