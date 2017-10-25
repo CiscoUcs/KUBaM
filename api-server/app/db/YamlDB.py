@@ -94,10 +94,11 @@ def validate_network(network):
     err = 0
     msg = ""
     for item in ["netmask", "gateway", "nameserver", "ntpserver"]:
-        if item in network:
-            er1, msg1 = validate_ip(network[item])
-            err += er1
-            msg = msg + "\n" + msg1
+        if item in network: 
+            if item != "ntpserver":
+                er1, msg1 = validate_ip(network[item])
+                err += er1
+                msg = msg + "\n" + msg1
         else:
             msg = msg + "Network doesn't have %s defined." % item
             err +=1
