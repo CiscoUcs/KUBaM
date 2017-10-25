@@ -93,7 +93,7 @@ def validate_hosts(hosts):
 def validate_network(network):
     err = 0
     msg = ""
-    for item in ["netmask", "gateway", "nameserver"]:
+    for item in ["netmask", "gateway", "nameserver", "ntpserver"]:
         if item in network:
             er1, msg1 = validate_ip(network[item])
             err += er1
