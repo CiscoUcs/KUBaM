@@ -17,6 +17,14 @@ BASE_IMG=KUBAM_SHARE_DIR+"/stage1/ks.img"
 TEMPLATE_DIR=KUBAM_SHARE_DIR+"/templates/"
 
 
+catalog = {
+    "centos7.3" : ["generic", "k8s master", "k8s node"],
+    "redhat7.3" : ["generic", "k8s master", "k8s node"],
+    "esxi6.0" : ["generic"],
+    "esxi6.5" : ["generic"],
+}
+
+
 def find_template(node):
     # first search in kubam directory for file, if not there, get it from default kubam. 
     template = node["os"] + ".tmpl"    
@@ -44,6 +52,7 @@ def build_template(node, config):
         name=node["name"],
         netmask=config["network"]["netmask"],
         nameserver=config["network"]["nameserver"],
+        ntp=config["network"]["ntpserver"],
         gateway=config["network"]["gateway"],
         vlan=config["network"]["vlan"],
         keys=config["public_keys"] 

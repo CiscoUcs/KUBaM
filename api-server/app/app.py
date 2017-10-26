@@ -344,6 +344,15 @@ def mkboot_iso():
     return jsonify({"status": "ok"}), 201
     
 
+# get the capabilities of KUBAM
+@app.route(API_ROOT + "/catalog", methods=['GET'])
+@cross_origin()
+def get_catalog():
+    catalog = Builder.catalog
+    app.logger.info(catalog)
+    return jsonify(catalog), 200
+
+
 #map the iso images to os versions. 
 @app.route(API_ROOT + "/isos/map", methods=['GET'])
 @cross_origin()
