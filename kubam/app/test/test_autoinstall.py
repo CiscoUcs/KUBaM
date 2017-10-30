@@ -6,7 +6,8 @@ class AutoInstallUnitTests(unittest.TestCase):
     cfg = { "hosts" : [
                 {"ip" :  "1.2.3.4" , 
                 "name" : "node1",
-                "role" : "k8s master",
+                #"role" : "k8s master",
+                "role" : "none",
                 "os" : "centos7.3" 
                 },
                 {"ip" :  "1.2.3.5" , 
@@ -41,11 +42,11 @@ class AutoInstallUnitTests(unittest.TestCase):
     
     # need to have a template file in ~/kubam/centos7.3.tmpl for this to work. 
     def test_build_template(self):
-        err, msg, f = Builder.build_template(self.cfg["hosts"][1], 
+        err, msg, f = Builder.build_template(self.cfg["hosts"][0], 
                                              self.cfg)
         if err != 0:
             print msg
-        #print f
+        print f
         assert(err == 0)
 
 

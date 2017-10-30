@@ -6,7 +6,7 @@
 from socket import inet_aton, error as Serror
 from jinja2 import Environment, FileSystemLoader
 from subprocess import call
-from os import path
+from os import path, chdir
 import Kickstart, VMware
 from db import YamlDB 
 
@@ -78,17 +78,19 @@ def build_boot_image(node, template):
 # make_post - make the ansible post install directory so its accessible for
 # post installation tasks.    
 def make_post():
-    if os.path.isdir(KUBAM_DIR + "/post/ansible"):
+    if path.isdir(KUBAM_DIR + "post/ansible"):
         return 0, "ansible scripts already exist. Do not modify."
-    o = call(["mkdir" , "-p", KUBAM_DIR + "/post"])
+    o = call(["mkdir" , "-p", KUBAM_DIR + "post"])
     if not o == 0:
-        return 1, "error making %s directory" % KUBAM_DIR + "/post"
-    o = call(["cp", "-a", KUBAM_SHARE_DIR + "/ansible", KUBAM_DIR + "/post/"])
+        return 1, "error making %s directory" % KUBAM_DIR + "post"
+    o = call(["cp", "-a", KUBAM_SHARE_DIR + "/ansible", KUBAM_DIR + "post/"])
     if not o == 0:
-        return 1, "error copying ansible components to %s directory" % KUBAM_DIR + "/post"
+        return 1, "error copying ansible components to %s directory" % KUBAM_DIR + "post"
 
-    if not os.path.isfile(KUBAM_DIR + "/post/ansible.tgz"):
-        o = call(["tar", "zxf", KUBAM_DIR + "/post/ansible.tgz", KUBAM_DIR + "/post/ansible"])
+    chdir(KUBAM_DIR + "post")
+    o = call(["tar", "czf", KUBAM_DIR + "post/ansible.tgz", "ansible"])
+    if not o == 0:
+        return 1, "error creating tar archive of ansible scripts."
     return 0, ""
 
 def deploy_server_images(config):
@@ -99,6 +101,8 @@ def deploy_server_images(config):
         return err, msg
 
     err, msg = make_post()
+    if err > 0:
+        return err, msg
 
     for host in config["hosts"]:
         err, msg, template = build_template(host, config)

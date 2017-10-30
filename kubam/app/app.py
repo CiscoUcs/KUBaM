@@ -14,7 +14,6 @@ CORS(app)
 KUBAM_CFG="/kubam/kubam.yaml"
 API_ROOT="/api/v1"
 
-
 @app.route('/')
 @cross_origin()
 def index():
