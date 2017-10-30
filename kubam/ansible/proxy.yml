@@ -1,0 +1,6 @@
+---
+# for nodes that need a proxy to access the internet
+- hosts: localhost
+  become: true
+  roles:
+    - proxy

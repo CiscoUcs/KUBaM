@@ -1,8 +1,0 @@
----
-# taken from https://github.com/sjenning/kubeadm-playbook/blob/master/roles/node/tasks/main.yml
-# and modified for our setup. 
-- set_fact: kubeadm_token={{ hostvars[groups['master'][0]]['kubeadm_token'] }}
-  when: kubeadm_token is not defined
-
-- name: Join cluster
-  command: /usr/bin/kubeadm join {{ groups['master'][0] }}:6443 --token {{ kubeadm_token }} --skip-preflight-checks

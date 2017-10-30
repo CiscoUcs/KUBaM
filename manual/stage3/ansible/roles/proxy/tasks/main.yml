@@ -1,0 +1,22 @@
+---
+
+- name: Add yum proxy info
+  lineinfile:
+    destfile: /etc/yum.conf
+    line: "proxy={{ https_proxy }}"
+
+- name: Add local repo
+  template:
+    src: ../templates/local.repo.j2
+    dest: /etc/yum.repos.d/local.repo
+
+- name: make Docker services directory for proxy
+  file: 
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+
+- name: Add Docker proxy
+  template: 
+    src: ../templates/https-proxy.j2
+    dest: /etc/systemd/system/docker.service.d/https-proxy.conf
+  notify: docker_restart

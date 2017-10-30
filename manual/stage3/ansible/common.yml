@@ -1,0 +1,5 @@
+---
+- hosts: cluster
+  become: true
+  roles:
+    - role: common

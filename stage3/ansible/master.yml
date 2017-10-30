@@ -1,5 +1,0 @@
----
-- hosts: master
-  become: true
-  roles: 
-    - role: master

@@ -1,0 +1,93 @@
+---
+
+- name: Ensure /var/contiv directory exists
+  file: name=/var/contiv/ state=directory
+
+- name: See if Private key has already been generated? 
+  stat: path=/var/contiv/auth_proxy_key.pem
+  register: proxy_key
+
+- name: Create Contiv Private Key
+  command: openssl genrsa -out /var/contiv/auth_proxy_key.pem 2048 
+  when: proxy_key.stat.exists == False
+
+- name: Check that Certificate has been created
+  stat: path=/var/contiv/auth_proxy_cert.pem
+  register: proxy_cert 
+
+
+- name: Create Contiv Certificate 
+  command: |
+    openssl req -new -x509 -sha256 -days 3650 
+    -key /var/contiv/auth_proxy_key.pem
+    -out /var/contiv/auth_proxy_cert.pem
+    -subj "/C=US/ST=CA/L=San Jose/O=CPSG/OU=IT Department/CN=auth-local.cisco.com"
+  when: proxy_cert.stat.exists == False
+
+- name: Copy contiv etc YAML file 
+  template: 
+    src: etcd.yaml.j2
+    dest: /tmp/etcd.yaml
+
+- name: Copy contiv YAML file 
+  template: 
+    src: contiv.yaml.j2
+    dest: /tmp/contiv.yaml
+
+- name: Apply etcd YAML configuration
+  command: kubectl apply -f /tmp/etcd.yaml
+
+- name: Apply contiv YAML configuration
+  command: kubectl apply -f /tmp/contiv.yaml
+
+- name: Copy over netctl command
+  copy:
+    src: netctl
+    dest: /usr/bin/
+  register: netctlcp
+
+- name: Make netctl executable
+  file: dest=/usr/bin/netctl mode=a+x
+
+- name: Ensure there is a netmaster entry in /etc/hosts for this machine. Otherwise netctl doesn't work.  
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ master }} netmaster"
+
+
+- name: Wait for contiv to become active
+  wait_for:
+    port: 9999
+    delay: 10 
+
+- name: Ensure contivh1 network is created. 
+  command: netctl net ls -q 
+  register: contivh1
+
+# routing is the default mode. 
+- name: Create Routing 
+  command: netctl global set --fwd-mode routing 
+  when: contivh1.stdout == ""
+
+- name: Set Contiv fwd-mode routing
+  command: netctl global set --fwd-mode routing
+  when: contivh1.stdout == ""
+
+- name: Create Contiv infrastructure network
+  command: netctl net create -n infra -s 132.1.1.0/24 -g 132.1.1.1 contivh1
+  when: contivh1.stdout == ""
+
+- name: Create Contiv Default Network
+  command: netctl net create -t default --subnet=172.16.0.0/16 -g 172.16.0.1 default-net
+  when: contivh1.stdout == ""
+
+- name: Delete Daemon set to allow fwdMode change
+  command: kubectl -n kube-system delete daemonset contiv-netplugin 
+
+- name: Restart Daemonset in fwdMode routing
+  command: kubectl apply -f /tmp/contiv.yaml
+
+# netctl global set --fwd-mode routing
+# netctl net create -n infra -s 132.1.1.0/24 -g 132.1.1.1 contivh1
+# netctl net create -t default --subnet=172.16.0.0/16 -g 172.16.0.1 default-net
+# netctl group create -t default default-net default-epg

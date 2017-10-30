@@ -1,0 +1,123 @@
+---
+
+- name: Ensure there is a name for this machine in  /etc/hosts
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }} {{ hostvars[item].inventory_hostname }}"
+    state: present
+  with_items: "{{ groups.all }}"
+
+
+- name: Add Kubernetes yum repo
+  yum_repository:
+    name: Kubernetes
+    description: Kubernetes
+    file: kubernetes
+    baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
+    enabled: true
+    gpgcakey: https://packages.cloud.google.com/yum/doc/yum-key.gpg
+    gpgkey: https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg  
+    gpgcheck: true
+    state: present
+
+- name: Add Docker yum repo
+  yum_repository: 
+    name: Docker
+    description: Docker Community Edition
+    baseurl: https://download.docker.com/linux/centos/7/x86_64/stable
+    enabled: true
+    gpgcheck: false
+    state: present
+
+- name: Workaround to https://github.com/kubernetes/kubernetes/pull/33555
+  command: setenforce 0
+  ignore_errors: true
+
+- name: shutdown firewalld service
+  service: 
+    name: firewalld 
+    state: stopped
+
+- name: Check to see if CNI tools have been installed. 
+  stat:
+    path: /opt/cni/bin/cnitool
+  register: stat_result
+
+
+# hack for docker ce: 
+# ignore obsolutes: https://github.com/moby/moby/issues/33930
+# https://github.com/docker/for-linux/issues/20
+- name: Install Docker
+  command: yum -y install install -y --setopt=obsoletes=0 docker-ce-17.03.2.ce-1.el7.centos.x86_64 docker-ce-selinux-17.03.2.ce-1.el7.centos.noarch
+
+- name: clean the metadata
+  command: yum --enablerepo=Kubernetes clean metadata
+
+- name: Ensure NTP is installed
+  yum:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+    validate_certs: no
+  with_items:
+    - ntp
+    - ntpdate
+
+- name: Install Kubeadm and Dependencies
+  yum:
+    name: "{{ item }}-{{ kubernetes_version }} "
+    state: present
+    update_cache: true
+    validate_certs: no
+  with_items:
+    - kubelet
+    - kubeadm
+    - kubectl
+  environment: 
+    https_proxy: "{{ https_proxy }}"
+  when: stat_result.stat.exists == False
+
+- name: Copy ntp configuration
+  template: 
+    src: ../templates/ntp.conf.j2
+    dest: /etc/ntp.conf
+
+- name: synctime to NTP server
+  shell: service ntpd stop && ntpdate -s {{ ntp_server }}
+
+# hack from https://github.com/sjenning/kubeadm-playbook/blob/master/roles/common/tasks/main.yml
+# since kube 1.6.7 sucks and is broken.  wonk wonk. 
+
+- name: Remove existing kubelet args from drop-in unit
+  lineinfile:
+    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    regexp: '^Environment="KUBELET_EXTRA_ARGS'
+    state: absent
+
+- name: Remove existing kubelet args from drop-in unit
+  lineinfile:
+    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    regexp: '^Environment="KUBELET_CGROUP_ARGS'
+    state: absent
+
+- name: Use systemd kubelet cgroup driver
+  lineinfile:
+    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    insertafter: '^Environment=\"KUBELET_AUTHZ_ARGS'
+    line: 'Environment="KUBELET_EXTRA_ARGS=--cgroup-driver=cgroupfs"'
+  notify:
+  - Reload systemd
+  - Restart kubelet
+
+- name: Reset any existing cluster
+  command: /usr/bin/kubeadm reset
+
+- name: Enable and start kubeadm services
+  systemd: 
+    state: started 
+    enabled: yes 
+    name: '{{ item }}'
+  with_items:
+    - docker
+    - kubelet
+    - ntpd
