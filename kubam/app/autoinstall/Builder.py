@@ -46,17 +46,16 @@ def build_template(node, config):
         config["network"]["vlan"] = ""
     j2_env = Environment(loader=FileSystemLoader(template_dir),
                      trim_blocks=True)
-    proxy = ""
-    if "settings" in config and "proxy" in config["settings"]:
-        proxy = config["settings"]["proxy"]
-    
+    if not "proxy" in config:
+        config["proxy"] = ""
+
     f = j2_env.get_template(template_file).render(
         masterIP=config["kubam_ip"],
         ip=node["ip"],
         # grab the first k8s master or return blank if there is none.
         k8s_master=next( (x for x in config["hosts"] if x["role"] == "k8s master"), ""),
         name=node["name"],
-        proxy=proxy,
+        proxy=config["proxy"],
         role=node["role"],
         hosts=config["hosts"],
         netmask=config["network"]["netmask"],
