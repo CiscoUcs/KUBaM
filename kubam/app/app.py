@@ -453,6 +453,7 @@ def make_ucs():
 @app.route(API_ROOT + "/settings", methods=['POST'])
 @cross_origin()
 def update_settings():
+    app.logger.info(request.json)
     if not request.json:
         return jsonify({'error': 'expected kubam_ip and keys in json request'}), 400
     if not "kubam_ip" in request.json:
@@ -460,8 +461,8 @@ def update_settings():
     if not "keys" in request.json:
         return jsonify({'error': 'expected keys in json request.'}), 400
     if not "proxy" in request.json:
-        return jsonify({'error': 'expected keys in json request.'}), 400
-    #app.logger.info(request.json)
+        return jsonify({'error': 'expected proxy in json request.'}), 400
+    app.logger.info(request.json)
     # update the kubam_IP if it is changed.     
     ip = request.json['kubam_ip']
     err, msg = YamlDB.update_kubam_ip(KUBAM_CFG, ip)
