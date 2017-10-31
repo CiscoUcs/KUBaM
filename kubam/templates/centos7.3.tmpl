@@ -49,6 +49,7 @@ cat <<EOF >/root/.ssh/authorized_keys
 {% for key in keys %}
 {{ key }}
 {% endfor %}
+
 EOF
 
 chmod 0600 /root/.ssh/authorized_keys
@@ -62,6 +63,7 @@ cd ansible
 
 #---- Update Group Variables ----
 cat <<EOF2 >group_vars/all.yml
+
 # kubernetes version
 kubernetes_version: 1.7.1
 # you can define your own token or let the system
@@ -86,14 +88,17 @@ no_proxy: localhost,127.0.0.1,{{ masterIP }},{{ ip }},{{ k8s_master.ip }}
 
 # yum repository
 local_repo: http://{{ masterIP }}/kubam/centos7.3/
+
 EOF2
 
 #---- Populate /etc/hosts
 
 cat <<EOFHosts >>/etc/hosts
+
 {% for host in hosts %}
 {{ host.ip }} {{ host.name }}
 {% endfor %}
+
 EOFHosts
 
 
@@ -101,6 +106,7 @@ EOFHosts
 ### create the firstboot service script to fire when the node boots the first time. 
 
 cat <<EOF3 >>/etc/systemd/system/firstboot.service
+
 [Unit]
 Description=Example oneshot service executing before entering graphical interface
 ConditionPathExists=/root/firstboot
@@ -133,6 +139,7 @@ systemctl enable firstboot.service
 
 ### script that gets run on first boot is ansible
 cat <<EOF4 >/usr/local/bin/firstboot.sh 
+
 #!/usr/bin/bash
 cd /ansible
 {% if proxy != "" %}
