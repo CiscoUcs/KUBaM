@@ -107,6 +107,14 @@ class DBUnitTests(unittest.TestCase):
     def test_update_kubam_ip(self):
         err, msg = YamlDB.update_kubam_ip("/tmp/bfoo.yaml", "192.168.30.4")
         assert(err == 0)
+
+    def test_get_proxy(self):
+        err, msg, keys = YamlDB.get_proxy("/tmp/bfoo.yaml")
+        assert(err == 0)
+
+    def test_update_proxy(self):
+        err, msg = YamlDB.update_proxy("/tmp/bfoo.yaml", "https://proxy.esl.cisco.com:80")
+        assert(err == 0)
     
     def test_update_pks(self): 
         err, msg = YamlDB.update_public_keys("/tmp/bfoo.yaml", ["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDeV4/Sy+B8R21pKzODfGn5W/p9MC9/4ejFUJoI3RlobYOWWxbLmnHYbKmRHn8Jgpmm4xqv61uaFpbAZvxFTyKIqLdcYmxaHem35uzCJbgB8BvT+4aGg1pZREunX6YaE8+s3hFZRu4ti7UHQYWRD1tCizYz78YHL8snp+N3UAPmP9eTTNw62PHAJERi1Hbl6sRfYijqNlluO223Thqbmhtt3S8tnjkRsFnNxsDgxrfbR3GBQ5925hPth3lGejln2P1L9EIQw9NOmtMhF9UpXPWP9r234p3crmBTsw+E6IF0+OsGKOl8Ri4Im7GpnAgbY9I5THEDn142uNOm6vJATZZ3 root@devi-builder"])

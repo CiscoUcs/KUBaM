@@ -303,6 +303,28 @@ def update_hosts(file_name, ho_hash):
     err, msg = write_config(config, file_name)
     return err, msg
 
+# get the proxy value
+def get_proxy(file_name):
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg, ""
+    elif err == 2:
+        return 0, "", ""
+    elif not "proxy" in config:
+        return 0, "", ""
+    else:
+        return 0, "", config["proxy"]
+
+# update the proxy, should be something like http://proxy.com:80  needs port, etc. 
+# TODO verify that this is correct to do some error detection. 
+def update_proxy(file_name, proxy):
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    config["proxy"] = proxy
+    err, msg = write_config(config, file_name)
+    return err, msg
+
 def get_kubam_ip(file_name):
     err, msg, config = open_config(file_name)
     if err == 1:
@@ -313,6 +335,7 @@ def get_kubam_ip(file_name):
         return 0, "", ""
     else:
         return 0, "", config["kubam_ip"] 
+
 
 def update_kubam_ip(file_name, kubam_ip):
     err, msg = validate_ip(kubam_ip)

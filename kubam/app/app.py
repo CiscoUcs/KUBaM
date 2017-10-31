@@ -117,6 +117,32 @@ def update_kubam_ip():
         return jsonify({'error': msg}), 400
     return jsonify({'kubam_ip' : ip}), 201
 
+# get the proxy
+@app.route(API_ROOT + "/proxy", methods=['GET'])
+@cross_origin()
+def get_proxy():
+    err, msg, keys = YamlDB.get_proxy(KUBAM_CFG)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+    return jsonify({'proxy' : keys}), 200
+
+
+# update proxy
+@app.route(API_ROOT + "/proxy", methods=['POST'])
+@cross_origin()
+def update_proxy():
+    if not request.json:
+        return jsonify({'error': 'expected request with proxy '}), 400
+    if "proxy" not in request.json:
+        return jsonify({'error': 'expected request with proxy'}), 400
+
+    proxy = request.json['proxy']
+    err, msg = YamlDB.update_proxy(KUBAM_CFG, proxy)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+    return jsonify({'proxy' : proxy}), 201
+
+
 # get the public keys
 @app.route(API_ROOT + "/keys", methods=['GET'])
 @cross_origin()
@@ -433,18 +459,29 @@ def update_settings():
         return jsonify({'error': 'expected kubam_ip in json request.'}), 400
     if not "keys" in request.json:
         return jsonify({'error': 'expected keys in json request.'}), 400
+    if not "proxy" in request.json:
+        return jsonify({'error': 'expected keys in json request.'}), 400
     #app.logger.info(request.json)
     # update the kubam_IP if it is changed.     
     ip = request.json['kubam_ip']
     err, msg = YamlDB.update_kubam_ip(KUBAM_CFG, ip)
     if err != 0:
         return jsonify({'error': msg}), 400
+
+    proxy = request.json['proxy']
+    err, msg = YamlDB.update_proxy(KUBAM_CFG, proxy)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+
     # update the keys if changed. 
     keys = request.json['keys']
     app.logger.info(keys)
     err, msg = YamlDB.update_public_keys(KUBAM_CFG, keys)
     if err != 0:
         return jsonify({'error': msg}), 400
+
+
+
     return jsonify({"status": "ok"}), 201
 
 # the grand daddy of them all.  It is what deploys everything. 
