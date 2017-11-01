@@ -29,9 +29,10 @@
     gpgcheck: false
     state: present
 
-- name: Workaround to https://github.com/kubernetes/kubernetes/pull/33555
-  command: setenforce 0
-  ignore_errors: true
+# kickstart file shuts off selinux
+#- name: Workaround to https://github.com/kubernetes/kubernetes/pull/33555
+#  command: setenforce 0
+#  ignore_errors: true
 
 - name: shutdown firewalld service
   service: 
@@ -107,9 +108,6 @@
   notify:
   - Reload systemd
   - Restart kubelet
-
-- name: Reset any existing cluster
-  command: /usr/bin/kubeadm reset
 
 - name: Enable and start kubeadm services
   systemd: 

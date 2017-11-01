@@ -34,6 +34,13 @@
     src: contiv.yaml.j2
     dest: /tmp/contiv.yaml
 
+# curl -i https://localhost:6443/api/v1 --insecure
+- name: wait for kubernetes to become active.
+  wait_for:
+    port: 6443
+    delay: 10
+    timeout: 300
+
 - name: Apply etcd YAML configuration
   command: kubectl apply -f /tmp/etcd.yaml
 
@@ -59,6 +66,7 @@
   wait_for:
     port: 9999
     delay: 10 
+    timeout: 300 
 
 - name: Ensure contivh1 network is created. 
   command: netctl net ls -q 
