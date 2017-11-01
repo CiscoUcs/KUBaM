@@ -42,10 +42,10 @@
     timeout: 300
 
 - name: Apply etcd YAML configuration
-  command: kubectl apply -f /tmp/etcd.yaml
+  command: kubectl --kubeconfig /root/.kube/config apply -f /tmp/etcd.yaml
 
 - name: Apply contiv YAML configuration
-  command: kubectl apply -f /tmp/contiv.yaml
+  command: kubectl --kubeconfig /root/.kube/config apply -f /tmp/contiv.yaml
 
 - name: Copy over netctl command
   copy:
@@ -90,10 +90,10 @@
   when: contivh1.stdout == ""
 
 - name: Delete Daemon set to allow fwdMode change
-  command: kubectl -n kube-system delete daemonset contiv-netplugin 
+  command: kubectl --kubeconfig /root/.kube/config -n kube-system delete daemonset contiv-netplugin 
 
 - name: Restart Daemonset in fwdMode routing
-  command: kubectl apply -f /tmp/contiv.yaml
+  command: kubectl --kubeconfig /root/.kube/config apply -f /tmp/contiv.yaml
 
 # netctl global set --fwd-mode routing
 # netctl net create -n infra -s 132.1.1.0/24 -g 132.1.1.1 contivh1

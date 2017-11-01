@@ -2,13 +2,13 @@
 # tasks file for kubeadm_install
 
 - name: CentOS 7 install
-  include: CentOS.yml
+  include_tasks: CentOS.yml
   when: ansible_distribution == 'CentOS' and ansible_distribution_major_version == '7'
 
 - name: RedHat 7 install
-  include: RedHat.yml
+  include_tasks: RedHat.yml
   when: ansible_distribution == 'RedHat' and ansible_distribution_major_version == '7'
 
 - name: Ubuntu 16 install
-  include: Ubuntu.yml
+  include_tasks: Ubuntu.yml
   when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '16'
