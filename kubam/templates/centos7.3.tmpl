@@ -106,8 +106,7 @@ EOFHosts
 
 ### create the firstboot service script to fire when the node boots the first time. 
 
-cat <<EOF3 >>/etc/systemd/system/firstboot.service
-
+cat <<EOF3 >/etc/systemd/system/firstboot.service
 [Unit]
 Description=Ansible Firstboot scripts to bring up Kubernetes cluster
 ConditionPathExists=/root/firstboot
@@ -120,7 +119,7 @@ TTYPath=/dev/tty6
 ExecStartPre=/usr/bin/sleep 5
 ExecStartPre=/usr/bin/chvt 6
 ExecStartPre=/usr/bin/clear
-ExecStart=/usr/local/bin/firstboot.sh >>/var/logs/firstboot 2>&1
+ExecStart=/usr/local/bin/firstboot.sh 
 ExecStopPost=/usr/bin/chvt 1
 ExecStopPost=/usr/bin/rm -f /root/firstboot
 TimeoutSec=0
@@ -140,19 +139,19 @@ systemctl enable firstboot.service
 
 ### script that gets run on first boot is ansible
 cat <<EOF4 >/usr/local/bin/firstboot.sh 
-
 #!/usr/bin/bash
+set -x
 cd /ansible
 {% if proxy != "" %}
-ansible-playbook proxy.yml
+/usr/bin/ansible-playbook proxy.yml
 {% endif %}
-ansible-playbook common.yml
+/usr/bin/ansible-playbook common.yml
 {% if role == "k8s master"  %}
-ansible-playbook master.yml
-ansible-playbook contiv.yml
+/usr/bin/ansible-playbook master.yml
+/usr/bin/ansible-playbook contiv.yml
 {% endif %}
 {% if role == "k8s node" %}
-ansible-playbook node.yml
+/usr/bin/ansible-playbook node.yml
 {% endif %}
 
 EOF4
