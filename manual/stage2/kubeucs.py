@@ -17,7 +17,6 @@ def main():
     parser.add_argument("password", help='The password to connect to UCS: e.g.: cisco123') 
     parser.add_argument("server", help='UCS Manager: e.g: 192.168.3.1') 
     parser.add_argument('-d', "--delete", help='Deletes kubernetes resources from UCS', action="store_true") 
-    parser.add_argument('-D', "--domain", help='Adds a UCS domain for login', action="store_true") 
     parser.add_argument('-o', "--org", 
         type=str,
         default='root',
@@ -26,7 +25,7 @@ def main():
     args = parser.parse_args()
     org = args.org
     # loging
-    handle = UCSSession.login(args.user, args.password, args.server, args.domain)
+    handle = UCSSession.login(args.user, args.password, args.server)
     if handle == "":
         sys.exit(1)
     # see what's up with the org.
