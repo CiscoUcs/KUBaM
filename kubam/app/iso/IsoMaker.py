@@ -12,6 +12,11 @@ os_dict = {
         "key_string": "7.3",
         "dir": "centos7.3"
     },
+    "centos7.4": {
+        "key_file": ".discinfo",
+        "key_string": "7.4",
+        "dir": "centos7.4"
+    },
     "esxi6.5" : {
         "key_file": ".DISCINFO",
         "key_string": "Version: 6.5.0",
@@ -77,10 +82,10 @@ def get_os(os_dir):
 
 # mkboot for centos 7.3
 def mkboot_centos(version):
-    boot_iso = "/kubam/centos7.3-boot.iso"
+    boot_iso = "/kubam/centos" + version + "-boot.iso"
     if os.path.isfile(boot_iso):
         return 0, "boot iso was already created"
-    os_dir = "kubam/centos7.3"
+    os_dir = "kubam/centos" + version
     stage_dir = "/kubam/tmp/" + ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))
     o = call(["mkdir", "-p", stage_dir])
     if not o == 0:
@@ -90,7 +95,7 @@ def mkboot_centos(version):
     o = call(["cp", "-a", os_dir + "/LiveOS", stage_dir + "/isolinux/"])
     o = call(["cp", "-a", os_dir + "/images/", stage_dir + "/isolinux/"])
     o = call(["cp", "-a", 
-                "/usr/share/kubam/stage1/centos7.3/isolinux.cfg", 
+                "/usr/share/kubam/stage1/centos"+version+"/isolinux.cfg", 
                 stage_dir + "/isolinux/"])
 
     cwd = os.getcwd()
@@ -132,6 +137,8 @@ def mkboot_esxi(version):
 def mkboot(os):
     if os == "centos7.3":
         return mkboot_centos("7.3")
+    elif os == "centos7.4":
+        return mkboot_centos("7.4")
     return 0, "success"
     
 # determine version of OS and make boot dir. 

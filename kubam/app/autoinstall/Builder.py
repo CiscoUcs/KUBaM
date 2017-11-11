@@ -16,10 +16,12 @@ KUBAM_SHARE_DIR="/usr/share/kubam/"
 BASE_IMG=KUBAM_SHARE_DIR+"/stage1/ks.img"
 TEMPLATE_DIR=KUBAM_SHARE_DIR+"/templates/"
 
-
+# catalog has to be in sync with IsoMaker module. 
 catalog = {
     "centos7.3" : ["generic", "k8s master", "k8s node"],
+    "centos7.4" : ["generic", "k8s master", "k8s node"],
     "redhat7.3" : ["generic", "k8s master", "k8s node"],
+    "redhat7.4" : ["generic", "k8s master", "k8s node"],
     "esxi6.0" : ["generic"],
     "esxi6.5" : ["generic"],
 }

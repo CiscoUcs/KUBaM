@@ -10,7 +10,6 @@ from os import path
 from sshpubkeys import SSHKey, InvalidKeyException
 
 # constants.  
-supported_oses = ["centos7.3", "esxi6.0", "esxi6.5", "rh7.3"]
 
 # makes sure that the list of ISO images actually exists. 
 def validate_iso_images(iso_images):
@@ -19,8 +18,6 @@ def validate_iso_images(iso_images):
             return 1, "empty value not accepted."
         elif not "file" in i and not "os" in i:
             return 1, "iso must have an 'os' value and a 'file' value"
-        elif not i["os"] in supported_oses:
-            return 1, "%s is not a supported OS." % i["os"]
         elif not path.isfile(i["file"]):
             return 1, "%s file is not found." % i["file"]
     return 0, ""
@@ -45,14 +42,11 @@ def validate_pks(key_list):
         
 
 # takes in an OS and verifies it's something we support
+# TODO: Get this information from the catalog.  Maybe move builder external
 def validate_os(op_sys):
     rc = 0
     msg = ""
-    if not op_sys in supported_oses:
-        rc = 1
-        msg = "%s is not a supported OS.  Supported OSes are: %s" % (op_sys, " ".join(supported_oses))
     return rc, msg
-    
     
 # takes in a hash of configuration data and validates to make sure
 # it has the stuff we need in it. 
