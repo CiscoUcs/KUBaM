@@ -70,7 +70,7 @@ def build_template(node, config):
     return err, msg, f
     
 def build_boot_image(node, template):
-    if node["os"] in ["centos7.3"]:
+    if node["os"] in ["centos7.3", "centos7.4"]:
         return Kickstart.build_boot_image(node, template)
     if node["os"] in ["esxi6.0", "esxi6.5"]:
         return VMware.build_boot_image(node, template)
