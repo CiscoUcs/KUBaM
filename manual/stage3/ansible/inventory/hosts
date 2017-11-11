@@ -28,7 +28,5 @@ kube01
 [node]
 kube02
 kube03
-kube04
-kube05
 
 [node:vars]
