@@ -81,7 +81,7 @@ def reset_disks(handle, server):
             #print "parent is: %s" % parent
             mo = StorageLocalDisk(parent_mo_or_dn=parent, id=str(d.id),
                admin_action="unconfigured-good",
-               admin_virtual_drive_id="unspecified",
+               admin_virtual_drive_id="unspecified", # not in 2.2(8g)
                admin_action_trigger="triggered")
             handle.add_mo(mo, True)
             try:
@@ -545,12 +545,12 @@ def createStorageProfile(handle, org):
         local_disk_policy_name="kube_boot",
         auto_deploy="auto-deploy",
         expand_to_avail="yes",
-        lun_map_type="non-shared",
+        lun_map_type="non-shared", # this is not available in 2.2(8g)
         size="1",
         fractional_size="0",
         admin_state="online",
-        deferred_naming="no",
-        order="not-applicable",
+        deferred_naming="no", # this is not available in 2.2(8g)
+        order="not-applicable", # not available in 2.2(8g)
         name="KubeLUN")
     handle.add_mo(mo, modify_present=True)
     try: 
