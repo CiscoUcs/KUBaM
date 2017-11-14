@@ -4,6 +4,20 @@ import socket
 from urllib2 import HTTPError
 import os, sys
 
+# get the current firmware version.  Returns something like: 3.1(2b)
+def get_version(handle):
+    from ucsmsdk.mometa.firmware.FirmwareRunning import FirmwareRunning
+    dn = "sys/mgmt/fw-system"
+    firmware = handle.query_dn(dn)
+    return firmware.version
+
+def ensure_version(handle):
+    version = get_version(handle)
+    if version.startswith('3'):
+        return ""
+    return "Unsupported UCS firmware version: %s.  Please update to at least 3.0" % version 
+
+
 # returns handle, "error message"
 def login(username, password, server):
     # first see if reachable
@@ -29,7 +43,10 @@ def login(username, password, server):
     except:
         print "Issue logging in.  Please check that all parameters are correct"
         return "", "Issue logging in.  Please check that all parameters are correct."
-    return handle, ""
+
+    msg = ensure_version(handle)
+    return handle, msg
+
 
 def logout(handle):
     handle.logout()

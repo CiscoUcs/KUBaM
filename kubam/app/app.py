@@ -79,8 +79,10 @@ def login():
             creds = config["ucsm"]["credentials"]
             if "user" in creds and "password" in creds and "ip" in creds:
                 h, msg = UCSSession.login(creds["user"], creds["password"], creds["ip"])
+                if msg != "":
+                    return 1, msg, ""
                 if h != "":
-                    return 0, "", h
+                    return 0, msg, h
                 return 1, msg, ""
             else: 
                 msg = "kubam.yaml file does not include the user, password, and ip properties to login."

@@ -46,7 +46,7 @@ class AutoInstallUnitTests(unittest.TestCase):
                                              self.cfg)
         if err != 0:
             print msg
-        print f
+        #print f
         assert(err == 0)
 
 
