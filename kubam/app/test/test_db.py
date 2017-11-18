@@ -131,7 +131,14 @@ class DBUnitTests(unittest.TestCase):
         err, msg = YamlDB.update_iso_map("/tmp/bfoo.yaml", [{"os" : "centos7.3", "file" : "/Users/vallard/Downloads/kubam/CentOS-7-x86_64-Minimal-1611.iso"}, {"os": "esxi6.0", "file": "/Users/vallard/Downloads/kubam/Vmware-ESXi-6.0.0-5050593-Custom-Cisco-6.0.3.2.iso"}])
         assert(err == 0)
         
-        
+    def test_get_org(self):
+        err, msg, keys = YamlDB.get_org("/tmp/bfoo.yaml")
+        assert(err == 0)
+
+    def test_update_org(self):
+        err, msg = YamlDB.update_org("/tmp/bfoo.yaml", "kubam")
+        assert(err == 0)
+
 if __name__ == '__main__':
     unittest.main()
 

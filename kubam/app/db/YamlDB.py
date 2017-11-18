@@ -319,6 +319,36 @@ def update_proxy(file_name, proxy):
     err, msg = write_config(config, file_name)
     return err, msg
 
+# get the UCS org
+def get_org(file_name):
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg, ""
+    elif err == 2:
+        return 0, "", ""
+    if not "ucsm" in config:
+        return 0, "", ""
+    if not "org" in config["ucsm"]:
+        return 0, "", ""
+    else:
+        return 0, "", config["ucsm"]["org"]
+
+# Set UCS org
+def update_org(file_name, org):
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    if not "ucsm" in config:
+        config["ucsm"] = {}
+    # if org is empty update org. 
+    if not org:
+        config["ucsm"].pop("org", None)
+    else: 
+        config["ucsm"]["org"] = org
+    err, msg = write_config(config, file_name)
+    return err, msg
+
+# put in the IP address of master node. 
 def get_kubam_ip(file_name):
     err, msg, config = open_config(file_name)
     if err == 1:

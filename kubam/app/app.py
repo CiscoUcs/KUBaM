@@ -119,6 +119,31 @@ def update_kubam_ip():
         return jsonify({'error': msg}), 400
     return jsonify({'kubam_ip' : ip}), 201
 
+# get the org
+@app.route(API_ROOT + "/org", methods=['GET'])
+@cross_origin()
+def get_org():
+    err, msg, org = YamlDB.get_org(KUBAM_CFG)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+    return jsonify({'org' : org}), 200
+
+
+#update the org
+@app.route(API_ROOT + "/org", methods=['POST'])
+@cross_origin()
+def update_ucs_org():
+    if not request.json:
+        return jsonify({'error': 'expected request with org'}), 400
+    if "org" not in request.json:
+        return jsonify({'error': 'expected request with org'}), 400
+
+    org = request.json['org']
+    err, msg = YamlDB.update_org(KUBAM_CFG, org)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+    return jsonify({'org' : org}), 201
+
 # get the proxy
 @app.route(API_ROOT + "/proxy", methods=['GET'])
 @cross_origin()
@@ -417,16 +442,33 @@ def deploy_server_autoinstall_images():
         return jsonify({"error": msg})
     return jsonify({"status": "ok"}), 201
 
+
+def get_full_org(handle):
+    full_org = ""
+    err, msg, org = YamlDB.get_org(KUBAM_CFG)
+    if err != 0: 
+        return err, msg, org
+    if org == "":
+        org = "kubam" 
+
+    if org == "root":
+        full_org = "org-root"
+    else:
+        full_org = "org-root/org-"+org
+
+    if org != "root":
+        err, msg = UCSUtil.create_org(handle, org)
+    return err, msg, full_org
+    
 #stage2: make the UCS configuration using the kubam information. 
 def make_ucs():
     err, msg, handle = login()
     if err != 0: 
         return not_logged_in(msg) 
-    #TODO: make so we can specify orgs in kubam. Right now its hard coded. 
-    err, msg = UCSUtil.create_org(handle, "kubam")
+    err, msg, full_org = get_full_org(handle)
     if err != 0: 
-        logout(handle)
-        return err, msg 
+        return err, msg
+    
     err, msg, net_settings = YamlDB.get_ucs_network(KUBAM_CFG)
     selected_vlan = ""
     if "vlan" in net_settings:
@@ -434,7 +476,8 @@ def make_ucs():
     if selected_vlan == "":
         logout(handle)
         return 1, "No vlan selected in UCS configuration."
-    err, msg = UCSNet.createKubeNetworking(handle, "org-root/org-kubam", selected_vlan)
+
+    err, msg = UCSNet.createKubeNetworking(handle, full_org, selected_vlan)
     if err != 0:
         logout(handle)
         return err, msg
@@ -443,7 +486,7 @@ def make_ucs():
     err, msg, hosts = YamlDB.get_hosts(KUBAM_CFG)
     err, msg, servers = YamlDB.get_ucs_servers(KUBAM_CFG)
     err, msg, kubam_ip = YamlDB.get_kubam_ip(KUBAM_CFG)
-    err, msg = UCSServer.createKubeServers(handle, "org-root/org-kubam", hosts, servers, kubam_ip)
+    err, msg = UCSServer.createKubeServers(handle, full_org, hosts, servers, kubam_ip)
     if err != 0:
         logout(handle)
         return err, msg
@@ -459,20 +502,27 @@ def update_settings():
     if not request.json:
         return jsonify({'error': 'expected kubam_ip and keys in json request'}), 400
     if not "kubam_ip" in request.json:
-        return jsonify({'error': 'expected kubam_ip in json request.'}), 400
+        return jsonify({'error': 'Please enter the IP address of the kubam server'}), 400
     if not "keys" in request.json:
-        return jsonify({'error': 'expected keys in json request.'}), 400
-    if not "proxy" in request.json:
-        return jsonify({'error': 'expected proxy in json request.'}), 400
-    app.logger.info(request.json)
+        return jsonify({'error': 'Please specify keys.  See documentation for how this should look: https://ciscoucs.github.io/kubam/docs/settings.'}), 400
+    # proxy and org are not manditory.
+    
+
+    if "proxy" in request.json:
+        proxy = request.json['proxy']
+        err, msg = YamlDB.update_proxy(KUBAM_CFG, proxy)
+        if err != 0:
+            return jsonify({'error': msg}), 400
+
+    if "org" in request.json:
+        org = request.json['org']
+        err, msg = YamlDB.update_org(KUBAM_CFG, org)
+        if err != 0:
+            return jsonify({'error': msg}), 400
+
     # update the kubam_IP if it is changed.     
     ip = request.json['kubam_ip']
     err, msg = YamlDB.update_kubam_ip(KUBAM_CFG, ip)
-    if err != 0:
-        return jsonify({'error': msg}), 400
-
-    proxy = request.json['proxy']
-    err, msg = YamlDB.update_proxy(KUBAM_CFG, proxy)
     if err != 0:
         return jsonify({'error': msg}), 400
 
@@ -482,7 +532,6 @@ def update_settings():
     err, msg = YamlDB.update_public_keys(KUBAM_CFG, keys)
     if err != 0:
         return jsonify({'error': msg}), 400
-
 
 
     return jsonify({"status": "ok"}), 201
@@ -512,10 +561,14 @@ def destroy():
         return jsonify({'error': msg}), 400
     if len(hosts) == 0:
         return jsonify({"status": "no servers deployed"}),  200
-    err, msg = UCSServer.deleteKubeServers(handle, "org-root/org-kubam", hosts)
+    err, msg, full_org = get_full_org(handle)
+    if err != 0: 
+        return err, msg
+    
+    err, msg = UCSServer.deleteKubeServers(handle, full_org, hosts)
     if err != 0: 
         return jsonify({'error': msg}), 400
-    err, msg = UCSNet.deleteKubeNetworking(handle, "org-root/org-kubam")
+    err, msg = UCSNet.deleteKubeNetworking(handle, full_org )
     if err != 0: 
         return jsonify({'error': msg}), 400
     return jsonify({"status": "ok"}), 201
