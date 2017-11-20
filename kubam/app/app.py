@@ -486,6 +486,7 @@ def make_ucs():
     err, msg, hosts = YamlDB.get_hosts(KUBAM_CFG)
     err, msg, servers = YamlDB.get_ucs_servers(KUBAM_CFG)
     err, msg, kubam_ip = YamlDB.get_kubam_ip(KUBAM_CFG)
+    
     err, msg = UCSServer.createKubeServers(handle, full_org, hosts, servers, kubam_ip)
     if err != 0:
         logout(handle)

@@ -24,4 +24,3 @@ class ServerUnitTests(unittest.TestCase):
 #        err, msg = UCSServer.deleteKubeServers(self.handle, "org-root/org-kubam", [{"name" : "kubamTest01"}])
 #        print msg
 #        assert(err == 0)
-        

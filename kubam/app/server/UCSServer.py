@@ -383,12 +383,12 @@ def deleteServers(handle, org, hostnames):
                 return 1, k.name + ": " + err.error_descr
     return 0, ""
 
-def createKubeVirtualMedia(handle, org, kubam_ip):
+def createKubeVirtualMedia(handle, org, kubam_ip, hosts):
     print "Adding Virtual Media Policy"
     from urlparse import urlparse
     import os.path
     yn = False
-    url = "http://" + kubam_ip + "/kubam/centos7.3-boot.iso"            
+    url = "http://" + kubam_ip + "/kubam/" + hosts[0]["os"] + "-boot.iso"            
     o = urlparse(url)
     paths = os.path.split(o.path)
     scheme = o.scheme # http, https
@@ -591,7 +591,7 @@ def createKubeServers(handle, org, hosts, servers, kubam_ip):
     if err != 0:
         return err, msg
 
-    err, msg = createKubeVirtualMedia(handle, org, kubam_ip)
+    err, msg = createKubeVirtualMedia(handle, org, kubam_ip, hosts)
     if err != 0:
         return err, msg
 
