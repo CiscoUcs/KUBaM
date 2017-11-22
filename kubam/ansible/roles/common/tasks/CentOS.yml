@@ -1,5 +1,16 @@
 ---
 
+- name: Enable OpenVSwitch Kernel Module for Contiv
+  command: modprobe openvswitch
+  ignore_errors: true
+ 
+- name: Add OpenVSwitch to modules to be loaded for Contiv
+  command: echo openvswitch > /etc/modules-load.d/openvswitch.conf 
+  ignore_errors: true
+  notify:
+  - Reload systemd
+  - Restart kernel modules
+
 - name: Ensure there is a name for this machine in  /etc/hosts
   lineinfile:
     dest: /etc/hosts
@@ -118,3 +129,4 @@
     - docker
     - kubelet
     - ntpd
+
