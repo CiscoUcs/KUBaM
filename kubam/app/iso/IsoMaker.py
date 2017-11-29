@@ -17,6 +17,21 @@ os_dict = {
         "key_string": "7.4",
         "dir": "centos7.4"
     },
+    "redhat7.2": {
+        "key_file": ".discinfo",
+        "key_string": "7.2",
+        "dir": "redhat7.2"
+    },
+    "redhat7.3": {
+        "key_file": ".discinfo",
+        "key_string": "7.3",
+        "dir": "redhat7.3"
+    },
+    "redhat7.4": {
+        "key_file": ".discinfo",
+        "key_string": "7.4",
+        "dir": "redhat7.4"
+    },
     "esxi6.5" : {
         "key_file": ".DISCINFO",
         "key_string": "Version: 6.5.0",
@@ -80,12 +95,12 @@ def get_os(os_dir):
                     return odic
     return {}
 
-# mkboot for centos 7.3
-def mkboot_centos(version):
-    boot_iso = "/kubam/centos" + version + "-boot.iso"
+# mkboot for centos 
+def mkboot_centos(os_name, version):
+    boot_iso = "/kubam/" + os_name + version + "-boot.iso"
     if os.path.isfile(boot_iso):
         return 0, "boot iso was already created"
-    os_dir = "kubam/centos" + version
+    os_dir = "kubam/" + os_name + version
     stage_dir = "/kubam/tmp/" + ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))
     o = call(["mkdir", "-p", stage_dir])
     if not o == 0:
@@ -95,16 +110,25 @@ def mkboot_centos(version):
     o = call(["cp", "-a", os_dir + "/LiveOS", stage_dir + "/isolinux/"])
     o = call(["cp", "-a", os_dir + "/images/", stage_dir + "/isolinux/"])
     o = call(["cp", "-a", 
-                "/usr/share/kubam/stage1/centos"+version+"/isolinux.cfg", 
+                "/usr/share/kubam/stage1/"+os_name+version+"/isolinux.cfg", 
                 stage_dir + "/isolinux/"])
 
     cwd = os.getcwd()
     os.chdir("/kubam")
-    o = call(["mkisofs", "-o", boot_iso, "-b", "isolinux.bin",
+    o = 0
+    if os_name == "centos":
+        o = call(["mkisofs", "-o", boot_iso, "-b", "isolinux.bin",
                 "-c", "boot.cat", "-no-emul-boot", "-V",
                 "CentOS 7 x86_64", "-boot-load-size" , "4", 
                 "-boot-info-table", "-r", "-J", "-v", 
                 "-T", stage_dir + "/isolinux"])
+    elif os_name == "redhat":
+        o = call(["mkisofs", "-o", boot_iso, "-b", "isolinux.bin",
+                "-c", "boot.cat", "-no-emul-boot", "-V",
+                "RHEL-"+version+" x86_64", "-boot-load-size" , "4", 
+                "-boot-info-table", "-r", "-J", "-v", 
+                "-T", stage_dir + "/isolinux"])
+
     if not o == 0:
         return 1, "mkisofs failed for %s" % boot_iso
     os.chdir(cwd)
@@ -136,9 +160,15 @@ def mkboot_esxi(version):
 
 def mkboot(os):
     if os == "centos7.3":
-        return mkboot_centos("7.3")
+        return mkboot_centos("centos", "7.3")
     elif os == "centos7.4":
-        return mkboot_centos("7.4")
+        return mkboot_centos("centos", "7.4")
+    elif os == "redhat7.2":
+        return mkboot_centos("redhat", "7.2")
+    elif os == "redhat7.3":
+        return mkboot_centos("redhat", "7.3")
+    elif os == "redhat7.4":
+        return mkboot_centos("redhat", "7.4")
     return 0, "success"
     
 # determine version of OS and make boot dir. 

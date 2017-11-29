@@ -20,8 +20,7 @@ TEMPLATE_DIR=KUBAM_SHARE_DIR+"/templates/"
 catalog = {
     "centos7.3" : ["generic", "k8s master", "k8s node"],
     "centos7.4" : ["generic", "k8s master", "k8s node"],
-    "redhat7.3" : ["generic", "k8s master", "k8s node"],
-    "redhat7.4" : ["generic", "k8s master", "k8s node"],
+    "redhat7.2" : ["generic", "k8s master", "k8s node"],
     "esxi6.0" : ["generic"],
     "esxi6.5" : ["generic"],
 }
@@ -70,7 +69,7 @@ def build_template(node, config):
     return err, msg, f
     
 def build_boot_image(node, template):
-    if node["os"] in ["centos7.3", "centos7.4"]:
+    if node["os"] in ["centos7.3", "centos7.4", "redhat7.2"]:
         return Kickstart.build_boot_image(node, template)
     if node["os"] in ["esxi6.0", "esxi6.5"]:
         return VMware.build_boot_image(node, template)
