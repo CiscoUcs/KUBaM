@@ -21,6 +21,8 @@ catalog = {
     "centos7.3" : ["generic", "k8s master", "k8s node"],
     "centos7.4" : ["generic", "k8s master", "k8s node"],
     "redhat7.2" : ["generic", "k8s master", "k8s node"],
+    "redhat7.3" : ["generic", "k8s master", "k8s node"],
+    "redhat7.4" : ["generic", "k8s master", "k8s node"],
     "esxi6.0" : ["generic"],
     "esxi6.5" : ["generic"],
 }
