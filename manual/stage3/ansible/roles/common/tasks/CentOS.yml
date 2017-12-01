@@ -1,5 +1,16 @@
 ---
+- name: Enable OpenVSwitch Kernel Module for Contiv
+  command: modprobe openvswitch
+  ignore_errors: true
 
+- name: Add OpenVSwitch to modules to be loaded for Contiv
+  command: echo openvswitch > /etc/modules-load.d/openvswitch.conf
+  ignore_errors: true
+
+- name: reload systemd
+  sudo: yes
+  command: systemctl daemon-reload
+  
 - name: Ensure there is a name for this machine in  /etc/hosts
   lineinfile:
     dest: /etc/hosts
@@ -42,7 +53,6 @@
   stat:
     path: /opt/cni/bin/cnitool
   register: stat_result
-
 
 # hack for docker ce: 
 # ignore obsolutes: https://github.com/moby/moby/issues/33930
