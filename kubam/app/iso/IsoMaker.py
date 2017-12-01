@@ -76,23 +76,22 @@ def extract_iso(iso, mnt_dir):
     return err, "success"
 
 # cd into the OS directory and determine what OS it actually is. 
-def get_os(os_dir):
-    for o, odic in os_dict.iteritems():
-        fname = os_dir + "/" + odic["key_file"]
-        if os.path.isfile(fname):
-            try: 
+def get_os(os_dir, iso):
+    think_os = iso["os"]
+    fname = os_dir + "/" + os_dict[iso["os"]]["key_file"]
+    if os.path.isfile(fname):
+        try: 
+            f = open(fname, 'r')
+        except OSError as err:
+            # permission denied error on ISO image.
+            if err.errno == 13:
+                call(['chmod', '-R', '0755', os_dir])
+                call(['chmod', '0755', fname])
                 f = open(fname, 'r')
-            except OSError as err:
-                # permission denied error on ISO image.
-                if err.errno == 13:
-                    call(['chmod', '-R', '0755', os_dir])
-                    call(['chmod', '0755', fname])
-                    f = open(fname, 'r')
             
-            for line in f:
-                if re.search(odic["key_string"], line):
-                    print "match: " , odic["key_string"]
-                    return odic
+        for line in f:
+            if re.search(odic["key_string"], line):
+                return os_dict[iso["os"]]
     return {}
 
 # mkboot for centos 
@@ -125,7 +124,7 @@ def mkboot_centos(os_name, version):
     elif os_name == "redhat":
         o = call(["mkisofs", "-o", boot_iso, "-b", "isolinux.bin",
                 "-c", "boot.cat", "-no-emul-boot", "-V",
-                "RHEL-"+version+" x86_64", "-boot-load-size" , "4", 
+                "RHEL-"+version+" Server.x86_64", "-boot-load-size" , "4", 
                 "-boot-info-table", "-r", "-J", "-v", 
                 "-T", stage_dir + "/isolinux"])
 
@@ -181,11 +180,11 @@ def mkboot_iso(isos):
         err, err_msg = extract_iso(iso["file"], tmp_dir)
         if err != 0:
             return err_msg, err
-        o = get_os(tmp_dir)
+        o = get_os(tmp_dir, iso)
         if not o:
             return 1, "OS could not be determined with ISO image.  Perhaps this is not a supported OS?"
         if not o["dir"] == iso["os"]:
-            return 1, "This ISO image seems to be %s but you specified that it was %s.  Please change" % (o["dir"], os["os"])
+            return 1, "This ISO image seems to be %s but you specified that it was %s.  Please change" % (o["dir"], iso["os"])
         # if the directory is already there, we don't touch it. 
         if os.path.isdir("/kubam/" + o["dir"]):
             print "removing temp"
