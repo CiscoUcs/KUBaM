@@ -90,7 +90,7 @@ def get_os(os_dir, iso):
                 f = open(fname, 'r')
             
         for line in f:
-            if re.search(odic["key_string"], line):
+            if re.search(os_dict[iso["os"]]["key_string"], line):
                 return os_dict[iso["os"]]
     return {}
 
