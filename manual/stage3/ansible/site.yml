@@ -1,6 +1,6 @@
 ---
 # if you are not behind a proxy, don't include proxy. 
-- include: proxy.yml
+# include: proxy.yml
 - include: common.yml
 - include: master.yml
 - include: contiv.yml
