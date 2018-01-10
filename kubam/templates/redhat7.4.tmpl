@@ -66,13 +66,13 @@ cd ansible
 cat <<EOF2 >group_vars/all.yml
 
 # kubernetes version
-kubernetes_version: 1.7.1
+kubernetes_version: 1.9.1
 # you can define your own token or let the system
 # automatically generate one for you.
 kubeadm_token: 62af06.d28bf88c95be9639
 
 #contiv version
-contiv_version: 1.1.0
+contiv_version: 1.1.7
 ntp_server: {{ ntp }} 
 
 #contiv etcd information
