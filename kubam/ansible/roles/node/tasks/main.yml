@@ -9,4 +9,8 @@
   command: swapoff -a 
 
 - name: Join cluster
-  command: /usr/bin/kubeadm join {{ master }}:6443 --token {{ kubeadm_token }} --skip-preflight-checks
+  # 1.7
+  #command: /usr/bin/kubeadm join {{ master }}:6443 --token {{ kubeadm_token }} --skip-preflight-checks
+  # 1.9.1
+  command: /usr/bin/kubeadm join {{ master }}:6443 --token {{ kubeadm_token }} --ignore-preflight-errors=all --discovery-token-unsafe-skip-ca-verification
+
