@@ -8,6 +8,10 @@
 - set_fact: kubeadm_token={{ kubeadm_token_generate.stdout }}
   when: kubeadm_token is not defined
 
+# kubernetes 1.8+ doesn't work unless swap is disabled. 
+- name: Turn of Swap
+  command: swapoff -a 
+
 - name: Initialize Master
   command: kubeadm init --token {{ kubeadm_token }} --skip-preflight-checks=true --kubernetes-version v{{ kubernetes_version }} 
   args: 
