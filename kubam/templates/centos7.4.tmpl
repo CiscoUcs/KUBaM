@@ -96,6 +96,7 @@ EOF2
 
 cat <<EOFHosts >>/etc/hosts
 
+
 {% for host in hosts %}
 {{ host.ip }} {{ host.name }}
 {% endfor %}

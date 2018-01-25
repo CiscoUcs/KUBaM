@@ -4,5 +4,12 @@
 - set_fact: kubeadm_token={{ hostvars[groups['master'][0]]['kubeadm_token'] }}
   when: kubeadm_token is not defined
 
+# kubernetes 1.8+ doesn't work unless swap is disabled. 
+- name: Turn of Swap
+  command: swapoff -a 
+
 - name: Join cluster
-  command: /usr/bin/kubeadm join {{ groups['master'][0] }}:6443 --token {{ kubeadm_token }} --skip-preflight-checks
+  # 1.7
+  #command: /usr/bin/kubeadm join {{ master }}:6443 --token {{ kubeadm_token }} --skip-preflight-checks
+  # 1.9.1
+  command: /usr/bin/kubeadm join {{ master }}:6443 --token {{ kubeadm_token }} --ignore-preflight-errors=all --discovery-token-unsafe-skip-ca-verification
