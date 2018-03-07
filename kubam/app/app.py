@@ -17,6 +17,10 @@ API_ROOT="/api/v1"
 @app.route('/')
 @cross_origin()
 def index():
+    """
+    / basic test to see if site is up. 
+    should return { 'status' : 'ok'}
+    """
     return jsonify({'status': 'ok'})
 
 

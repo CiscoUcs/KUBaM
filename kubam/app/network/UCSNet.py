@@ -1,25 +1,10 @@
 from ucsmsdk.ucsexception import UcsException
 
 def listVLANs(handle):
-    #  <fabricVlan childAction="deleteNonPresent" cloud="ethlan" compressionType="included" configIssues="" defaultNet="no" dn="fabric/lan/net-10" epDn="" fltAggr="0" global="0" id="10" ifRole="network" ifType="virtual" local="0" locale="external" mcastPolicyName="" name="10" operMcastPolicyName="org-root/mc-policy-default" operState="ok" peerDn="" policyOwner="local" pubNwDn="" pubNwId="0" pubNwName="" sharing="none" switchId="dual" transport="ether" type="lan"/> 
-    # get only VLANs not appliance port vlans
     filter_string = '(dn, "fabric/lan/net-[A-Za-z0-9]+", type="re")'
     vlans = handle.query_classid("fabricVlan", filter_string)
     return vlans
-    #vlans = handle.query_classid("fabricVlan")
         
-def selectVLAN(handle):
-    vlans = listVLANs(handle)
-    val = -1
-    while val < 0 or val > len(vlans):
-        for i, vlan in enumerate(vlans):
-            print "[%d] VLAN %s" % (i+1, vlan.name)
-        print "-" * 80
-        val = raw_input("Please Select a VLAN for the Kubernetes Server to use: ")
-        val = int(val)  
-    val = val - 1
-    return vlans[val]
-
 def createKubeMacs(handle, org):
     from ucsmsdk.mometa.macpool.MacpoolPool import MacpoolPool
     from ucsmsdk.mometa.macpool.MacpoolBlock import MacpoolBlock
