@@ -112,7 +112,6 @@ def mkboot_centos(os_name, version):
                 "/usr/share/kubam/stage1/"+os_name+version+"/isolinux.cfg", 
                 stage_dir + "/isolinux/"])
 
-    cwd = os.getcwd()
     os.chdir("/kubam")
     o = 0
     if os_name == "centos":
@@ -130,7 +129,6 @@ def mkboot_centos(os_name, version):
 
     if not o == 0:
         return 1, "mkisofs failed for %s" % boot_iso
-    os.chdir(cwd)
     return 0, "success"
     
 def mkboot_esxi(version):
@@ -143,7 +141,6 @@ def mkboot_esxi(version):
                 "/usr/share/kubam/stage1/esxi6.5/BOOT.CFG", 
                 os_dir])
 
-    cwd = os.getcwd()
     os.chdir("/kubam")
     # https://docs.vmware.com/en/VMware-vSphere/6.5/com.vmware.vsphere.install.doc/GUID-C03EADEA-A192-4AB4-9B71-9256A9CB1F9C.html
     o = call(["mkisofs", "-relaxed-filenames", "-J", "-R", 
@@ -152,7 +149,6 @@ def mkboot_esxi(version):
                 "-boot-load-size" , "4", 
                 "-boot-info-table", "-no-emul-boot", os_dir])
 
-    os.chdir(cwd)
     return 0, "success"
     
 

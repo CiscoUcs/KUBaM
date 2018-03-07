@@ -48,7 +48,8 @@ def build_boot_image(node, template):
     # unmount the filesystem. 
     o = call(["umount", new_image_dir])            
     if not o == 0:
-        return 1, "unable to unmount %s" % new_image_dir
+        "" # we had a case in ubuntu where this errored and still worked.
+        #return 1, "unable to unmount %s" % new_image_dir
     # remove mount directory
     o = call(["rm", "-rf", new_image_dir])
     if not o == 0:
