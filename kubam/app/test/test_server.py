@@ -1,5 +1,5 @@
 import unittest
-from server import UCSServer
+#from server import UCSServer
 from session import UCSSession
 
 class ServerUnitTests(unittest.TestCase):
@@ -24,3 +24,6 @@ class ServerUnitTests(unittest.TestCase):
 #        err, msg = UCSServer.deleteKubeServers(self.handle, "org-root/org-kubam", [{"name" : "kubamTest01"}])
 #        print msg
 #        assert(err == 0)
+    def test_create_service_profile_template(self):
+        UCSServer.createServiceProfileTemplate(this.handle, "org-root")
+

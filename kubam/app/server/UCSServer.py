@@ -94,15 +94,15 @@ def reset_disks(handle, server):
                    print "error: %s" % err
     
     
-def createKubeBootPolicy(handle, org):
-    print "Creating Kube Boot Policy"
+def createBootPolicy(handle, org):
+    print "Creating KUBAM Boot Policy"
     from ucsmsdk.mometa.lsboot.LsbootPolicy import LsbootPolicy
     from ucsmsdk.mometa.lsboot.LsbootVirtualMedia import LsbootVirtualMedia
     from ucsmsdk.mometa.lsboot.LsbootStorage import LsbootStorage
     from ucsmsdk.mometa.lsboot.LsbootLocalStorage import LsbootLocalStorage
     from ucsmsdk.mometa.lsboot.LsbootDefaultLocalImage import LsbootDefaultLocalImage
 
-    mo = LsbootPolicy(parent_mo_or_dn=org, name="kube", descr="Kuberenetes", reboot_on_update="yes", policy_owner="local", enforce_vnic_name="yes", boot_mode="legacy")
+    mo = LsbootPolicy(parent_mo_or_dn=org, name="kubam", descr="kubam", reboot_on_update="yes", policy_owner="local", enforce_vnic_name="yes", boot_mode="legacy")
     mo_1 = LsbootVirtualMedia(parent_mo_or_dn=mo, access="read-only-remote-cimc", lun_id="0", order="2")
     mo_2 = LsbootStorage(parent_mo_or_dn=mo, order="1")
     mo_2_1 = LsbootLocalStorage(parent_mo_or_dn=mo_2, )
@@ -119,14 +119,14 @@ def createKubeBootPolicy(handle, org):
     return 0, ""
 
 def createBiosPolicy(handle, org):
-    print "Creating Kube Bios policy"
+    print "Creating Kubam Bios policy"
     from ucsmsdk.mometa.bios.BiosVProfile import BiosVProfile
     from ucsmsdk.mometa.bios.BiosVfConsistentDeviceNameControl import BiosVfConsistentDeviceNameControl
     from ucsmsdk.mometa.bios.BiosVfFrontPanelLockout import BiosVfFrontPanelLockout
     from ucsmsdk.mometa.bios.BiosVfPOSTErrorPause import BiosVfPOSTErrorPause
     from ucsmsdk.mometa.bios.BiosVfQuietBoot import BiosVfQuietBoot
     from ucsmsdk.mometa.bios.BiosVfResumeOnACPowerLoss import BiosVfResumeOnACPowerLoss
-    mo = BiosVProfile(parent_mo_or_dn=org, policy_owner="local", name="kube", descr="KUBaM Bios settings", reboot_on_update="yes")
+    mo = BiosVProfile(parent_mo_or_dn=org, policy_owner="local", name="kubam", descr="KUBAM Bios settings", reboot_on_update="yes")
     mo_1 = BiosVfConsistentDeviceNameControl(parent_mo_or_dn=mo, vp_cdn_control="enabled")
     mo_2 = BiosVfFrontPanelLockout(parent_mo_or_dn=mo, vp_front_panel_lockout="platform-default")
     mo_3 = BiosVfPOSTErrorPause(parent_mo_or_dn=mo, vp_post_error_pause="platform-default")
@@ -143,8 +143,8 @@ def createBiosPolicy(handle, org):
     return 0, ""
 
 def deleteBiosPolicy(handle, org):
-    print "Deleting Kubernetes Bios Policy"
-    mo = handle.query_dn(org + "/bios-prof-kube")
+    print "Deleting KUBAM Bios Policy"
+    mo = handle.query_dn(org + "/bios-prof-kubam")
     try:
         handle.remove_mo(mo)
         handle.commit()
@@ -155,8 +155,8 @@ def deleteBiosPolicy(handle, org):
     return 0, ""
 
 
-def deleteKubeBootPolicy(handle, org):
-    mo = handle.query_dn(org + "/boot-policy-kube")
+def deleteBootPolicy(handle, org):
+    mo = handle.query_dn(org + "/boot-policy-kubam")
     try:
         handle.remove_mo(mo)
         handle.commit()
@@ -166,11 +166,12 @@ def deleteKubeBootPolicy(handle, org):
         return 1, err.error_descr
     return 0, ""
 
-def createKubeLocalDiskPolicy(handle, org):
-    print "Creating Kube Local Disk Policy"
+def createLocalDiskPolicy(handle, org):
+    print "Creating KUBAM Local Disk Policy"
     from ucsmsdk.mometa.storage.StorageLocalDiskConfigPolicy import StorageLocalDiskConfigPolicy
 
-    mo = StorageLocalDiskConfigPolicy(parent_mo_or_dn=org, protect_config="no", name="kube", descr="Kubernetes", flex_flash_raid_reporting_state="disable", flex_flash_state="disable", policy_owner="local", mode="raid-mirrored")
+    #mo = StorageLocalDiskConfigPolicy(parent_mo_or_dn=org, protect_config="no", name="kube", descr="kubam", flex_flash_raid_reporting_state="disable", flex_flash_state="disable", policy_owner="local", mode="raid-mirrored")
+    mo = StorageLocalDiskConfigPolicy(parent_mo_or_dn=org, protect_config="no", name="kubam", descr="kubam", flex_flash_raid_reporting_state="disable", flex_flash_state="disable", policy_owner="local", mode="any-configuration")
     handle.add_mo(mo)
     try: 
         handle.commit()
@@ -181,9 +182,9 @@ def createKubeLocalDiskPolicy(handle, org):
             return 1, err.error_descr
     return 0, ""
 
-def deleteKubeLocalDiskPolicy(handle, org):
-    print "Deleting Kube Local Disk Policy"
-    mo = handle.query_dn(org + "/local-disk-config-kube")
+def deleteLocalDiskPolicy(handle, org):
+    print "Deleting KUBAM Local Disk Policy"
+    mo = handle.query_dn(org + "/local-disk-config-kubam")
     try:
         handle.remove_mo(mo)
         handle.commit()
@@ -193,11 +194,11 @@ def deleteKubeLocalDiskPolicy(handle, org):
         return 1, err.error_descr
     return 0, ""
 
-def createKubeUUIDPools(handle, org):
-    print "Creating Kube UUID Pools"
+def createUUIDPools(handle, org):
+    print "Creating UUID Pools"
     from ucsmsdk.mometa.uuidpool.UuidpoolPool import UuidpoolPool
     from ucsmsdk.mometa.uuidpool.UuidpoolBlock import UuidpoolBlock
-    mo = UuidpoolPool(parent_mo_or_dn=org, policy_owner="local", prefix="derived", descr="Kubernetes Pool", assignment_order="default", name="kube")
+    mo = UuidpoolPool(parent_mo_or_dn=org, policy_owner="local", prefix="derived", descr="KUBAM Pool", assignment_order="default", name="kubam")
     mo_1 = UuidpoolBlock(parent_mo_or_dn=mo, to="C888-888888888100", r_from="C888-888888888001")
     handle.add_mo(mo)
     try: 
@@ -209,9 +210,9 @@ def createKubeUUIDPools(handle, org):
             return 1, err.error_descr
     return 0, ""
 
-def deleteKubeUUIDPools(handle, org):
-    print "Deleting Kube UUID Pool"
-    mo = handle.query_dn(org + "/uuid-pool-kube")
+def deleteUUIDPools(handle, org):
+    print "Deleting KUBAM UUID Pool"
+    mo = handle.query_dn(org + "/uuid-pool-kubam")
     try:
         handle.remove_mo(mo)
         handle.commit()
@@ -221,10 +222,10 @@ def deleteKubeUUIDPools(handle, org):
         return 1, err.error_descr
     return 0, ""
 
-def createKubeServerPool(handle, org):
-    print "Creating Kubernetes Compute Pool"
+def createServerPool(handle, org):
+    print "Creating KUBAM Compute Pool"
     from ucsmsdk.mometa.compute.ComputePool import ComputePool
-    mo = ComputePool(parent_mo_or_dn=org, policy_owner="local", name="Kubernetes", descr="")
+    mo = ComputePool(parent_mo_or_dn=org, policy_owner="local", name="kubam", descr="")
     handle.add_mo(mo)
     try: 
         handle.commit()
@@ -235,16 +236,17 @@ def createKubeServerPool(handle, org):
             return 1, err.error_descr
     return 0, ""
 
-def addServersToKubePool(handle, servers, org):
-    print "Adding servers to Kubernetes Pool"
+def addServersToPool(handle, servers, org):
+    print "Adding servers to KUBAM Pool"
     from ucsmsdk.mometa.compute.ComputePool import ComputePool
     from ucsmsdk.mometa.compute.ComputePooledSlot import ComputePooledSlot
     from ucsmsdk.mometa.compute.ComputePooledRackUnit import ComputePooledRackUnit
-    mo = ComputePool(parent_mo_or_dn=org, policy_owner="local", name="Kubernetes", descr="")
+    mo = ComputePool(parent_mo_or_dn=org, policy_owner="local", name="kubam", descr="")
     blades = handle.query_classid("computeBlade")
     if "blades" in servers:
         for s in servers["blades"]:
-            reset_disks(handle, s)
+            # Don't reset disks, leave them the way they are. 
+            #reset_disks(handle, s)
             chassis, slot = s.split("/")
             ComputePooledSlot(parent_mo_or_dn=mo, slot_id=str(slot), chassis_id=str(chassis))
     if "rack_servers" in servers:
@@ -261,9 +263,9 @@ def addServersToKubePool(handle, servers, org):
     return 0, ""
 
 
-def deleteKubeServerPool(handle, org):
-    print "Deleting Kubernetes Compute Pool"
-    mo = handle.query_dn(org + "/compute-pool-Kubernetes")
+def deleteServerPool(handle, org):
+    print "Deleting KUBAM Compute Pool"
+    mo = handle.query_dn(org + "/compute-pool-kubam")
     try:
         handle.remove_mo(mo)
         handle.commit()
@@ -276,40 +278,41 @@ def deleteKubeServerPool(handle, org):
 
 
 def createServiceProfileTemplate(handle, org):
-    print "Creating Kubernetes Service Profile Template"
+    print "Creating KUBAM Service Profile Template"
     from ucsmsdk.mometa.ls.LsServer import LsServer
     from ucsmsdk.mometa.vnic.VnicConnDef import VnicConnDef
     from ucsmsdk.mometa.ls.LsRequirement import LsRequirement
     from ucsmsdk.mometa.lstorage.LstorageProfileBinding import LstorageProfileBinding
     mo = LsServer(parent_mo_or_dn=org, 
         policy_owner="local", 
-        name="Kubernetes", 
-        descr="Kubernetes Service Profile",
+        name="KUBAM", 
+        descr="KUBAM Service Profile Template",
         type="updating-template",
         # Boot using Kubernetes Boot policy: local Disk, then Remote DVD
-        boot_policy_name="kube",
+        boot_policy_name="kubam",
         # Default Maintenance Policy
         maint_policy_name="default",
         # scrub policy
-        scrub_policy_name="kube",
+        scrub_policy_name="kubam",
         # Bios Policy
-        bios_profile_name="kube",
+        bios_profile_name="kubam",
         # UUID Pool
-        ident_pool_name="kube",
+        ident_pool_name="kubam",
         # disks we use. 
-        #local_disk_policy_name="kube",
-        #storage_profile_name="kube",
+        local_disk_policy_name="kubam",
+
+        #storage_profile_name="kubam",
         # virtual media policy
-        vmedia_policy_name="kube"
+        vmedia_policy_name="kubam"
         )
     # create vNIC Connection Policy
     VnicConnDef(parent_mo_or_dn=mo,
-        lan_conn_policy_name="kube")
+        lan_conn_policy_name="kubam")
     # create server pool and add to template. 
-    LsRequirement(parent_mo_or_dn=mo, name="Kubernetes")
+    LsRequirement(parent_mo_or_dn=mo, name="kubam")
 
     # add storage profile. 
-    mo_1 = LstorageProfileBinding(parent_mo_or_dn=mo, storage_profile_name="kube")
+    #mo_1 = LstorageProfileBinding(parent_mo_or_dn=mo, storage_profile_name="kubam")
     handle.add_mo(mo, True)
     try: 
         handle.commit()
@@ -325,9 +328,8 @@ def createServiceProfileTemplate(handle, org):
 
 
 def deleteServiceProfileTemplate(handle, org):
-    print "Deleting Kubernetes Service Profile Template"
-    print "Deleting Kubernetes Compute Pool"
-    mo = handle.query_dn(org + "/ls-Kubernetes")
+    print "Deleting KUBAM Service Profile Template"
+    mo = handle.query_dn(org + "/ls-KUBAM")
     try:
         handle.remove_mo(mo)
         handle.commit()
@@ -339,7 +341,7 @@ def deleteServiceProfileTemplate(handle, org):
 
 
 def createServers(handle, hosts, org):
-    print "Creating Kubernetes Service Profiles"
+    print "Creating Service Profiles"
     from ucsmsdk.ucsmethodfactory import ls_instantiate_n_named_template
     from ucsmsdk.ucsbasetype import DnSet, Dn
 
@@ -350,7 +352,7 @@ def createServers(handle, hosts, org):
         dn.attr_set("value",sp_name)
         dn_set.child_add(dn)
         elem = ls_instantiate_n_named_template(cookie=handle.cookie, 
-            dn=org + "/ls-Kubernetes", 
+            dn=org + "/ls-KUBAM", 
             in_error_on_existing="true", 
             in_name_set=dn_set,     
             in_target_org=org, 
@@ -365,7 +367,7 @@ def createServers(handle, hosts, org):
     return 0, ""
 
 def deleteServers(handle, org, hostnames):
-    print "Deleting Kubernetes Nodes"
+    print "Deleting KUBAM Nodes"
     for host in hostnames: 
         #filter_string = '(dn, "%s/ls-kube[0-9]+", type="re")' % org
         filter_string = '(dn, "%s/ls-%s", type="re")' % (org, host["name"]) 
@@ -383,7 +385,7 @@ def deleteServers(handle, org, hostnames):
                 return 1, k.name + ": " + err.error_descr
     return 0, ""
 
-def createKubeVirtualMedia(handle, org, kubam_ip, hosts):
+def createVirtualMedia(handle, org, kubam_ip, hosts):
     print "Adding Virtual Media Policy"
     from urlparse import urlparse
     import os.path
@@ -401,11 +403,11 @@ def createKubeVirtualMedia(handle, org, kubam_ip, hosts):
 
     from ucsmsdk.mometa.cimcvmedia.CimcvmediaMountConfigPolicy import CimcvmediaMountConfigPolicy
     from ucsmsdk.mometa.cimcvmedia.CimcvmediaConfigMountEntry import CimcvmediaConfigMountEntry
-    mo = CimcvmediaMountConfigPolicy(name="kube",
+    mo = CimcvmediaMountConfigPolicy(name="kubam",
         retry_on_mount_fail="yes",
         parent_mo_or_dn=org, 
         policy_owner="local",
-        descr="Kubernetes Boot Media")
+        descr="KUBAM Boot Media")
 
     mo_1 = CimcvmediaConfigMountEntry(parent_mo_or_dn=mo,
         mapping_name=name,
@@ -434,8 +436,8 @@ def createKubeVirtualMedia(handle, org, kubam_ip, hosts):
     return 0, ""
     
 def deleteVirtualMedia(handle, org):
-    print "Deleting Kubernetes Virtual Media Policy"
-    mo = handle.query_dn(org + "/mnt-cfg-policy-kube")
+    print "Deleting KUBAM Virtual Media Policy"
+    mo = handle.query_dn(org + "/mnt-cfg-policy-kubam")
     try:
         handle.remove_mo(mo)
         handle.commit()
@@ -450,7 +452,7 @@ def createScrubPolicy(handle, org):
     from ucsmsdk.mometa.compute.ComputeScrubPolicy import ComputeScrubPolicy
     mo = ComputeScrubPolicy(flex_flash_scrub="no",
       parent_mo_or_dn=org, 
-      name="kube",
+      name="kubam",
       disk_scrub="yes",
       bios_settings_scrub="no",
       descr="Destroy data when SP is unassociated")
@@ -466,8 +468,8 @@ def createScrubPolicy(handle, org):
 
 
 def deleteScrubPolicy(handle, org):
-    print "Deleting Kubernetes Scrub Policy"
-    mo = handle.query_dn(org + "/scrub-kube")
+    print "Deleting KUBAM Scrub Policy"
+    mo = handle.query_dn(org + "/scrub-kubam")
     try:
         handle.remove_mo(mo)
         handle.commit()
@@ -479,7 +481,7 @@ def deleteScrubPolicy(handle, org):
 
 def deleteDiskGroupConfig(handle, org):
     print "Deleting Disk Group config"
-    mo = handle.query_dn(org + "/disk-group-config-Kube_Boot")
+    mo = handle.query_dn(org + "/disk-group-config-kubam_boot")
     try:
         handle.remove_mo(mo)
         handle.commit()
@@ -491,7 +493,7 @@ def deleteDiskGroupConfig(handle, org):
 
 def deleteStorageProfile(handle, org):
     print "Deleting Storage Profile"
-    mo = handle.query_dn(org + "/profile-kube")
+    mo = handle.query_dn(org + "/profile-kubam")
     try:
         handle.remove_mo(mo)
         handle.commit()
@@ -508,8 +510,8 @@ def createDiskGroupConfig(handle, org):
     from ucsmsdk.mometa.lstorage.LstorageVirtualDriveDef import LstorageVirtualDriveDef
     mo = LstorageDiskGroupConfigPolicy(parent_mo_or_dn=org, 
         policy_owner="local",
-        name="kube_boot",
-        descr="Kubernetes Boot Disk",
+        name="kubam_boot",
+        descr="KUBAM Boot Disk",
         raid_level="mirror")
     mo_1 = LstorageDiskGroupQualifier(parent_mo_or_dn=mo, 
         use_remaining_disks="no",
@@ -539,10 +541,10 @@ def createStorageProfile(handle, org):
     from ucsmsdk.mometa.lstorage.LstorageDasScsiLun import LstorageDasScsiLun
     mo = LstorageProfile(parent_mo_or_dn=org, 
         policy_owner="local",
-        name="kube",
-        descr="Kubernetes Storage Profile")
+        name="kubam",
+        descr="KUBAM Storage Profile")
     mo_1 = LstorageDasScsiLun(parent_mo_or_dn=mo,
-        local_disk_policy_name="kube_boot",
+        local_disk_policy_name="kubam_boot",
         auto_deploy="auto-deploy",
         expand_to_avail="yes",
         lun_map_type="non-shared", # this is not available in 2.2(8g)
@@ -562,8 +564,8 @@ def createStorageProfile(handle, org):
             return 1, err.error_descr
     return 0, ""
 
-def createKubeServers(handle, org, hosts, servers, kubam_ip):
-    err, msg = createKubeBootPolicy(handle, org)
+def createServerResources(handle, org, hosts, servers, kubam_ip):
+    err, msg = createBootPolicy(handle, org)
     if err != 0:
         return err, msg
 
@@ -571,31 +573,35 @@ def createKubeServers(handle, org, hosts, servers, kubam_ip):
     if err != 0:
         return err, msg
 
-    err, msg = createDiskGroupConfig(handle, org)
+    err, msg = createLocalDiskPolicy(handle, org)
     if err != 0:
         return err, msg
 
-    err, msg = createStorageProfile(handle, org)
-    if err != 0:
-        return err, msg
+    #err, msg = createDiskGroupConfig(handle, org)
+    #if err != 0:
+    #    return err, msg
+
+    #err, msg = createStorageProfile(handle, org)
+    #if err != 0:
+    #    return err, msg
 
     err, msg = createScrubPolicy(handle, org)
     if err != 0:
         return err, msg
 
-    err, msg = createKubeUUIDPools(handle, org)
+    err, msg = createUUIDPools(handle, org)
     if err != 0:
         return err, msg
 
-    err, msg = createKubeServerPool(handle, org)
+    err, msg = createServerPool(handle, org)
     if err != 0:
         return err, msg
 
-    err, msg = createKubeVirtualMedia(handle, org, kubam_ip, hosts)
+    err, msg = createVirtualMedia(handle, org, kubam_ip, hosts)
     if err != 0:
         return err, msg
 
-    err, msg = addServersToKubePool(handle, servers, org)
+    err, msg = addServersToPool(handle, servers, org)
     if err != 0:
         return err, msg
 
@@ -606,14 +612,14 @@ def createKubeServers(handle, org, hosts, servers, kubam_ip):
     err, msg = createServers(handle, hosts, org)
     return err, msg
 
-def deleteKubeServers(handle, org, hosts):
+def deleteServerResources(handle, org, hosts):
     err, msg = deleteServers(handle, org, hosts)
     if err != 0:
         return err, msg
     err, msg = deleteServiceProfileTemplate(handle, org)
     if err != 0:
         return err, msg
-    err, msg = deleteKubeServerPool(handle, org)
+    err, msg = deleteServerPool(handle, org)
     if err != 0:
         return err, msg
     err, msg = deleteVirtualMedia(handle, org)
@@ -622,19 +628,23 @@ def deleteKubeServers(handle, org, hosts):
     err, msg = deleteScrubPolicy(handle, org)
     if err != 0:
         return err, msg
-    err, msg = deleteKubeBootPolicy(handle, org)
+    err, msg = deleteBootPolicy(handle, org)
     if err != 0:
         return err, msg
-    err, msg = deleteStorageProfile(handle, org)
-    if err != 0:
-        return err, msg
+    #err, msg = deleteStorageProfile(handle, org)
+    #if err != 0:
+    #    return err, msg
     err, msg = deleteBiosPolicy(handle,org)
     if err != 0:
         return err, msg
-    err, msg = deleteDiskGroupConfig(handle, org)
+    #err, msg = deleteDiskGroupConfig(handle, org)
+    #if err != 0:
+    #    return err, msg
+    err, msg = deleteLocalDiskPolicy(handle, org)
     if err != 0:
         return err, msg
-    err, msg = deleteKubeUUIDPools(handle, org)
+
+    err, msg = deleteUUIDPools(handle, org)
     if err != 0:
         return err, msg
     return err, msg

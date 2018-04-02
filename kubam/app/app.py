@@ -474,7 +474,7 @@ def make_ucs():
     err, msg, servers = YamlDB.get_ucs_servers(KUBAM_CFG)
     err, msg, kubam_ip = YamlDB.get_kubam_ip(KUBAM_CFG)
     
-    err, msg = UCSServer.createKubeServers(handle, full_org, hosts, servers, kubam_ip)
+    err, msg = UCSServer.createServerResources(handle, full_org, hosts, servers, kubam_ip)
     if err != 0:
         logout(handle)
         return err, msg
@@ -553,7 +553,7 @@ def destroy():
     if err != 0: 
         return err, msg
     
-    err, msg = UCSServer.deleteKubeServers(handle, full_org, hosts)
+    err, msg = UCSServer.deleteServerResources(handle, full_org, hosts)
     if err != 0: 
         return jsonify({'error': msg}), 400
     err, msg = UCSNet.deleteKubeNetworking(handle, full_org )
