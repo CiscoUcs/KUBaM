@@ -1,5 +1,5 @@
 import unittest
-#from server import UCSServer
+from server import UCSServer
 from session import UCSSession
 
 class ServerUnitTests(unittest.TestCase):
