@@ -182,6 +182,17 @@ def parse_config(file_name, strict):
         return err, msg
     return validate_config(config, strict)
 
+
+
+def new_server_group(file_name, gh):
+    """
+    Credentials passed would be:
+    {"name", "ucs01", "type" : "ucsm", "credentials" : {"user": "admin", "password" : "secret-password", "server" : "172.28.225.163" }}
+    """    
+    if not isinstance(gh, dict):
+        return "No server group information was passed into the request."
+    return 1, "this is an error"
+
 # our database operations will all be open and update the file. 
 # creds_hash should be: {"ip": "172.28.225.164", "user": "admin", "password": "nbv12345"}}
 def update_ucs_creds(file_name, creds_hash):

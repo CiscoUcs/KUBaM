@@ -277,3 +277,9 @@ See this [post for help](https://stackoverflow.com/questions/1896918/running-uni
 cd app
 python -m unittest discover
 ```
+
+Or you can do it for individual unit test files
+
+```
+python2 -m unittest test.sg.SGUnitTests
+```

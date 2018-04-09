@@ -7,12 +7,14 @@ from util import UCSUtil
 from iso import IsoMaker
 from db import YamlDB
 from autoinstall import Builder
+from sg import sg
 
 app = Flask(__name__)
 CORS(app)
 
 KUBAM_CFG="/kubam/kubam.yaml"
 API_ROOT="/api/v1"
+API_ROOT2="/api/v2"
 
 @app.route('/')
 @cross_origin()
@@ -22,6 +24,27 @@ def index():
     should return { 'status' : 'ok'}
     """
     return jsonify({'status': 'ok'})
+
+
+
+# APIV2 methods
+@app.route(API_ROOT2 + "/server-groups", methods=['GET', 'POST', 'PUT', 'DELETE'])
+@cross_origin()
+def server_group_handler():
+    j = {}
+    rc = 200
+    if request.method == 'POST':
+        j, rc = sg.create(request.json)
+    elif request.method == 'PUT':
+        #j, rc = sg.update(request.json)
+        j, rc = sg.list()
+    elif request.method == 'DELETE':
+        j, rc = sg.list()
+    else:
+        j, rc = sg.list()
+    return jsonify(j), rc
+        
+
 
 
 # determine if we have credentials stored or not. 
