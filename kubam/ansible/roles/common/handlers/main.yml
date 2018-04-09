@@ -12,3 +12,5 @@
 - name: Restart kernel modules
   systemd: name=systemd-modules-load state=restarted
 
+- name: Restart sysctl
+  command: sysctl --system
