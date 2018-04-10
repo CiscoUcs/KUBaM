@@ -140,6 +140,11 @@ class DBUnitTests(unittest.TestCase):
         err, msg = YamlDB.update_org("/tmp/bfoo.yaml", "kubam")
         assert(err == 0)
 
+    def test_uuid(self):
+        uuid = YamlDB.new_uuid()
+        print uuid
+        assert(str(uuid))
+
 if __name__ == '__main__':
     unittest.main()
 

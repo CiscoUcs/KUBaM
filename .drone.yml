@@ -1,0 +1,7 @@
+pipeline:
+  backend: 
+    image: python:2
+    commands: 
+      - echo "Building.."
+      - cd kubam/app; python2 -m unittest discover
+

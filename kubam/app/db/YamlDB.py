@@ -8,6 +8,7 @@ from jinja2 import Environment, FileSystemLoader
 from subprocess import call
 from os import path
 from sshpubkeys import SSHKey, InvalidKeyException
+import uuid
 
 # constants.  
 
@@ -183,6 +184,9 @@ def parse_config(file_name, strict):
     return validate_config(config, strict)
 
 
+def new_uuid():
+    # create a random uuid string.
+    return str(uuid.uuid4())
 
 def new_server_group(file_name, gh):
     """
@@ -191,6 +195,11 @@ def new_server_group(file_name, gh):
     """    
     if not isinstance(gh, dict):
         return "No server group information was passed into the request."
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+
+
     return 1, "this is an error"
 
 # our database operations will all be open and update the file. 
