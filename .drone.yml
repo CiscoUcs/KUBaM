@@ -19,6 +19,7 @@ pipeline:
       - http_proxy=proxy.esl.cisco.com:80
     commands: 
       - echo "Building.."
+      - pwd
       - cd app; python -m unittest test.test_db.DBUnitTests
 
   docker:
