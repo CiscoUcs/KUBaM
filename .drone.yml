@@ -6,4 +6,6 @@ pipeline:
       - http_proxy=proxy.esl.cisco.com:80
     commands: 
       - echo "Building.."
+      - cd kubam/app; python -m unittest test.test_db.DBUnitTests
+      - cd ../../
 
