@@ -3,3 +3,4 @@ flask_cors
 sshpubkeys
 jinja2
 flask
+pyyaml
