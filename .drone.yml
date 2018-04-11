@@ -1,12 +1,16 @@
+workspace:
+  path: kubam
+
+
 pipeline:
-  notify:
-    image: vallard/drone-spark
-    room: "KUBAM Feedback"
-    template: "Starting build {{ build.number }} for {{ repo.owner }}/{{ repo.name }} for {{ build.author }}."
-    environment:
-      - https_proxy=proxy.esl.cisco.com:80
-      - http_proxy=proxy.esl.cisco.com:80
-    secrets: [ SPARK_TOKEN ]
+#  notify:
+#    image: vallard/drone-spark
+#    room: "KUBAM Feedback"
+#    template: "Starting build {{ build.number }} for {{ repo.owner }}/{{ repo.name }} for {{ build.author }}."
+#    environment:
+#      - https_proxy=proxy.esl.cisco.com:80
+#      - http_proxy=proxy.esl.cisco.com:80
+#    secrets: [ SPARK_TOKEN ]
 
   unittests: 
     image: kubam/python-test
@@ -15,6 +19,12 @@ pipeline:
       - http_proxy=proxy.esl.cisco.com:80
     commands: 
       - echo "Building.."
-      - cd kubam/app; python -m unittest test.test_db.DBUnitTests
-      - cd ../../
+      - cd app; python -m unittest test.test_db.DBUnitTests
+      - cd ../
 
+  docker:
+    image: plugins/docker
+    repo: kubam/kubam
+    tags: v2
+    user: kubam
+    secrets: [docker_username, docker_password]
