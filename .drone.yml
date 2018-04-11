@@ -1,5 +1,5 @@
 workspace:
-  path: kubam
+  path: src/github.com/CiscoUcs/KUBaM/kubam
 
 
 pipeline:
@@ -20,7 +20,6 @@ pipeline:
     commands: 
       - echo "Building.."
       - cd app; python -m unittest test.test_db.DBUnitTests
-      - cd ../
 
   docker:
     image: plugins/docker
