@@ -20,7 +20,8 @@ pipeline:
     commands: 
       - echo "Building.."
       - pwd
-      - cd app; python -m unittest test.test_db.DBUnitTests
+      - ls
+      - cd ./app; python -m unittest test.test_db.DBUnitTests
 
   docker:
     image: plugins/docker
