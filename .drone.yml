@@ -26,3 +26,5 @@ pipeline:
     context: kubam
     user: kubam
     secrets: [docker_username, docker_password]
+    when: 
+      branch: v2
