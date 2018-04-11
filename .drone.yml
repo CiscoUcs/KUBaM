@@ -1,7 +1,3 @@
-workspace:
-  path: ./kubam
-
-
 pipeline:
 #  notify:
 #    image: vallard/drone-spark
@@ -21,11 +17,12 @@ pipeline:
       - echo "Building.."
       - pwd
       - ls
-      - cd ./app; python -m unittest test.test_db.DBUnitTests
+      - cd kubam/app; python -m unittest test.test_db.DBUnitTests
 
   docker:
     image: plugins/docker
     repo: kubam/kubam
     tags: v2
+    context: kubam
     user: kubam
     secrets: [docker_username, docker_password]
