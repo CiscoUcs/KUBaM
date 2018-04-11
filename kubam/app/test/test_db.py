@@ -53,7 +53,6 @@ class DBUnitTests(unittest.TestCase):
     def test_write_config(self):
         err, msg = YamlDB.write_config(self.cfg, "/tmp/foo.yaml")
         assert(err == 0)
-    def test_open_config(self):
         err, msg, config = YamlDB.open_config("/tmp/blah.yaml")
         assert(err == 2)
         err, msg, config = YamlDB.open_config("/tmp/foo.yaml")

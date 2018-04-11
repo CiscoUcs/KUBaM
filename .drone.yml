@@ -1,5 +1,5 @@
 pipeline:
-  backend: 
+  unittests: 
     image: kubam/python-test
     environment:
       - https_proxy=proxy.esl.cisco.com:80
