@@ -1,4 +1,13 @@
 pipeline:
+  notify:
+    image: vallard/drone-spark
+    room: "KUBAM Feedback"
+    template: "Starting build {{ build.number }} for {{ repo.owner }}/{{ repo.name }} for {{ build.author }}."
+    environment:
+      - https_proxy=proxy.esl.cisco.com:80
+      - http_proxy=proxy.esl.cisco.com:80
+    secrets: [ SPARK_TOKEN, SPARK_ROOM ]
+
   unittests: 
     image: kubam/python-test
     environment:
