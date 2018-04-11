@@ -1,7 +1,7 @@
 pipeline:
   notify:
     image: vallard/drone-spark
-    room: "KUBAM Feedback"
+    #room: "KUBAM Feedback"
     template: "Starting build {{ build.number }} for {{ repo.owner }}/{{ repo.name }} for {{ build.author }}."
     environment:
       - https_proxy=proxy.esl.cisco.com:80
