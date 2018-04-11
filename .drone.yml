@@ -1,5 +1,5 @@
 workspace:
-  path: src/github.com/CiscoUcs/KUBaM/kubam
+  path: ./kubam
 
 
 pipeline:
