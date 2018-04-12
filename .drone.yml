@@ -1,13 +1,27 @@
 pipeline:
-#  notify:
-#    image: vallard/drone-spark
-#    room: "KUBAM Feedback"
-#    template: "Starting build {{ build.number }} for {{ repo.owner }}/{{ repo.name }} for {{ build.author }}. Build happening at {{ build.url }} "
-#    environment:
-#      - https_proxy=proxy.esl.cisco.com:80
-#      - http_proxy=proxy.esl.cisco.com:80
-#    secrets: [ SPARK_TOKEN ]
   # build our test image and deploy it for testing
+  unittests: 
+    image: kubam/python-test
+    environment:
+      - https_proxy=proxy.esl.cisco.com:80
+      - http_proxy=proxy.esl.cisco.com:80
+    commands: 
+      - echo "Building.."
+      - pwd
+      - ls
+      - cd kubam/app; python -m unittest test.test_db.DBUnitTests
+  
+  # publish docker image to docker hub
+  docker:
+    image: plugins/docker
+    repo: kubam/kubam
+    tags: v2
+    user: kubam
+    secrets: [docker_username, docker_password]
+    when: 
+      branch: v2.0
+
+  # bring up our test machine so it has the latest API. 
   ssh:
     image: appleboy/drone-ssh
     host: 10.93.234.96
@@ -19,27 +33,7 @@ pipeline:
       - docker pull kubam/kubam:v2
       - docker run -p 8001:80 -d -v /home/vallard/kubam:/kubam --device /dev/fuse --cap-add SYS_ADMIN --name kubam kubam/kubam:v2
 
-  unittests: 
-    image: kubam/python-test
-    environment:
-      - https_proxy=proxy.esl.cisco.com:80
-      - http_proxy=proxy.esl.cisco.com:80
-    commands: 
-      - echo "Building.."
-      - pwd
-      - ls
-      - cd kubam/app; python -m unittest test.test_db.DBUnitTests
-
-  docker:
-    image: plugins/docker
-    repo: kubam/kubam
-    tags: v2
-    user: kubam
-    secrets: [docker_username, docker_password]
-    when: 
-      branch: v2.0
-
-
+  # use Cisco Spark to notify that build was successful. 
   notify:
     image: vallard/drone-spark
     room: "KUBAM Feedback"
