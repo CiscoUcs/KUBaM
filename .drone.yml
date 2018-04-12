@@ -1,12 +1,12 @@
 pipeline:
-  notify:
-    image: vallard/drone-spark
-    room: "KUBAM Feedback"
-    template: "Starting build {{ build.number }} for {{ repo.owner }}/{{ repo.name }} for {{ build.author }}. Build happening at {{ build.url }} "
-    environment:
-      - https_proxy=proxy.esl.cisco.com:80
-      - http_proxy=proxy.esl.cisco.com:80
-    secrets: [ SPARK_TOKEN ]
+#  notify:
+#    image: vallard/drone-spark
+#    room: "KUBAM Feedback"
+#    template: "Starting build {{ build.number }} for {{ repo.owner }}/{{ repo.name }} for {{ build.author }}. Build happening at {{ build.url }} "
+#    environment:
+#      - https_proxy=proxy.esl.cisco.com:80
+#      - http_proxy=proxy.esl.cisco.com:80
+#    secrets: [ SPARK_TOKEN ]
 
   unittests: 
     image: kubam/python-test
@@ -22,7 +22,7 @@ pipeline:
   docker:
     image: plugins/docker
     repo: kubam/kubam
-    tags: v2
+    tags: v2-"${DRONE_BUILD_NUMBER}"
     user: kubam
     secrets: [docker_username, docker_password]
     environment:
@@ -31,12 +31,12 @@ pipeline:
     when: 
       branch: v2.0
 
-  notify:
-    image: vallard/drone-spark
-    room: "KUBAM Feedback"
-    environment:
-      - https_proxy=proxy.esl.cisco.com:80
+#  notify:
+#    image: vallard/drone-spark
+#    room: "KUBAM Feedback"
+#    environment:
+#      - https_proxy=proxy.esl.cisco.com:80
       - http_proxy=proxy.esl.cisco.com:80
-    secrets: [ SPARK_TOKEN ]
-    when:
-      status: [success, failure]
+#    secrets: [ SPARK_TOKEN ]
+#    when:
+#      status: [success, failure]
