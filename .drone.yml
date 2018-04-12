@@ -7,6 +7,17 @@ pipeline:
 #      - https_proxy=proxy.esl.cisco.com:80
 #      - http_proxy=proxy.esl.cisco.com:80
 #    secrets: [ SPARK_TOKEN ]
+  # build our test image and deploy it for testing
+  ssh:
+    image: appleboy/drone-ssh
+    host: 10.93.234.96
+    username: vallard
+    port: 22
+    secrets: [ ssh_password ]
+    script: 
+      - docker rm -f kubam || true
+      - docker pull kubam/kubam:v2
+      - docker run -p 8001:80 -d -v /home/vallard/kubam:/kubam --device /dev/fuse --cap-add SYS_ADMIN --name kubam kubam/kubam:v2
 
   unittests: 
     image: kubam/python-test
@@ -27,6 +38,7 @@ pipeline:
     secrets: [docker_username, docker_password]
     when: 
       branch: v2.0
+
 
   notify:
     image: vallard/drone-spark
