@@ -28,12 +28,12 @@ pipeline:
     when: 
       branch: v2.0
 
-#  notify:
-#    image: vallard/drone-spark
-#    room: "KUBAM Feedback"
-#    environment:
-#      - https_proxy=proxy.esl.cisco.com:80
-#      - http_proxy=proxy.esl.cisco.com:80
-#    secrets: [ SPARK_TOKEN ]
-#    when:
-#      status: [success, failure]
+  notify:
+    image: vallard/drone-spark
+    room: "KUBAM Feedback"
+    environment:
+      - https_proxy=proxy.esl.cisco.com:80
+      - http_proxy=proxy.esl.cisco.com:80
+    secrets: [ SPARK_TOKEN ]
+    when:
+      status: [success, failure]
