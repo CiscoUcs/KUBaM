@@ -1,5 +1,7 @@
 # KUBAM!
 
+![Build Status](http://1db27123.ngrok.io/api/badges/CiscoUcs/KUBaM/status.svg?branch=v2.0)
+
 Deploy Solutions on Cisco UCS with a Simple Open Source Light-Weight Bare Metal Installer
 
 No PXE, DHCP, TFTP, or complicated network setup required. You don't even have to map MAC addresses. KUBAM turns your bare metal into liquid that can be molded and modified to satisfy all your deepest darkest datacenter requirements.

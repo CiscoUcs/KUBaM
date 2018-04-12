@@ -25,9 +25,9 @@ pipeline:
     tags: v2-"${DRONE_BUILD_NUMBER}"
     user: kubam
     secrets: [docker_username, docker_password]
-    environment:
-      - https_proxy=proxy.esl.cisco.com:80
-      - http_proxy=proxy.esl.cisco.com:80
+#    environment:
+#      - https_proxy=proxy.esl.cisco.com:80
+#      - http_proxy=proxy.esl.cisco.com:80
     when: 
       branch: v2.0
 
