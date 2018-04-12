@@ -22,7 +22,7 @@ pipeline:
   docker:
     image: plugins/docker
     repo: kubam/kubam
-    tags: "v2-{$DRONE_TAG}"
+    tags: "v2-${DRONE_TAG}"
     user: kubam
     secrets: [docker_username, docker_password]
     when: 
