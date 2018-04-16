@@ -206,17 +206,8 @@ def delete_server_group(file_name, guid):
     # now that it is removed, write the config file back out. 
     err, msg = write_config(config, file_name)
     return err, msg
-    
-def new_server_group(file_name, gh):
-    """
-    Credentials passed would be:
-    {"name", "ucs01", "type" : "ucsm", "credentials" : {"user": "admin", "password" : "secret-password", "server" : "172.28.225.163" }}
-    """    
-    if not isinstance(gh, dict):
-        return 1, "No server group information was passed into the request."
-    err, msg, config = open_config(file_name)
-    if err == 1:
-        return err, msg
+
+def check_valid_server_group(gh):
     if not "type" in gh:
         return 1, "Please specify the type of server group: 'imc' or 'ucsm'"
     else: 
@@ -237,14 +228,56 @@ def new_server_group(file_name, gh):
         return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
     if not 'user' in creds: 
         return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+    return 0, ""
 
-    # make sure name is unique
-    # make sure IP address or server is pingable. 
+def update_server_group(file_name, gh):
+    # check if valid config. 
+    err, msg = check_valid_server_group(gh)
+    if err == 1:
+        return err, msg
+    # make sure there is an id
+    if not "id" in gh:
+        return 1, "server group id not given"
+    
+    # get all server groups
+    err, msg, groups = list_server_group(file_name)
+    if err == 1:
+        return err, msg
+    print groups
+    # check that it exists. 
+    found = False
+    old_group = {}
+    for g in groups:
+        if g['id'] == gh['id']:
+            found = True
+            groups.remove(g)
+            groups.append(gh)
+            err, msg, config = open_config(file_name)
+            config['server_groups'] = groups
+            err, msg = write_config(config, file_name)
+            if err == 1:
+                return err, msg
+    if not found:
+        return 1, "nothing to update, no server group %s is found" % gh['name']
+
+    return 0, "%s has been updated" % gh['name']
+    
+    
+def new_server_group(file_name, gh):
+    """
+    Credentials passed would be:
+    {"name", "ucs01", "type" : "ucsm", "credentials" : {"user": "admin", "password" : "secret-password", "server" : "172.28.225.163" }}
+    """    
+    if not isinstance(gh, dict):
+        return 1, "No server group information was passed into the request."
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    err, msg = check_valid_server_group(gh)
+    if err == 1:
+        return err, msg
     # create a new uuid
     gh["id"] = new_uuid()
-    # add it to the group name. 
-    # make sure it has a type
-
     # nothing in here yet, first entry.
     if not "server_groups" in config:
         config["server_groups"] = []
@@ -257,7 +290,6 @@ def new_server_group(file_name, gh):
     config["server_groups"].append(gh)
     err, msg = write_config(config, file_name)
     return err, msg
-
 
 def list_server_group(file_name):
     """
@@ -272,6 +304,8 @@ def list_server_group(file_name):
     if not "server_groups" in config:
         return 0, "", {}
     return 0, "", config["server_groups"]
+
+
 
 # our database operations will all be open and update the file. 
 # creds_hash should be: {"ip": "172.28.225.164", "user": "admin", "password": "nbv12345"}}

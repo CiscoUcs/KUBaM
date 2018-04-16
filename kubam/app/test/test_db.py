@@ -89,7 +89,6 @@ class DBUnitTests(unittest.TestCase):
         assert(err > 0)
     def test_get_hosts(self):
         err, msg, hosts = YamlDB.get_hosts("/tmp/bfoo.yaml")
-        print hosts 
         assert(err == 0)
     
     def test_update_hosts(self):
@@ -141,9 +140,9 @@ class DBUnitTests(unittest.TestCase):
 
     def test_uuid(self):
         uuid = YamlDB.new_uuid()
-        print uuid
         assert(str(uuid))
     def test_server_group(self):
+        test_file = "/tmp/k_test"
         err, msg = YamlDB.new_server_group("", "")
         # don't pass any values should return nothing.
         assert(err == 1)
@@ -155,27 +154,43 @@ class DBUnitTests(unittest.TestCase):
         # no name passed, should generate error
         err, msg = YamlDB.new_server_group("", {'type' : 'imc'})
         assert(err == 1)
-        err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard'})
+        err, msg = YamlDB.new_server_group(test_file, {'type' : 'ucsm', 'name': 'blackbeard'})
         assert(err == 1)
-        err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : 'foo'})
+        err, msg = YamlDB.new_server_group(test_file, {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : 'foo'})
         assert(err == 1)
-        err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {}})
+        err, msg = YamlDB.new_server_group(test_file, {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {}})
         assert(err == 1)
-        err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {'user': 'admin'}})
+        err, msg = YamlDB.new_server_group(test_file, {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {'user': 'admin'}})
         assert(err == 1)
-        err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {'user': 'admin', 'password': 'f00bar'}})
+        err, msg = YamlDB.new_server_group(test_file, {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {'user': 'admin', 'password': 'f00bar'}})
         assert(err == 1)
         # add a new one. This should work as all the credentials are entered in. 
-        err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {'user': 'admin', 'password': 'f00bar', 'ip': '123.34.23.2'}})
+        err, msg = YamlDB.new_server_group(test_file, {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {'user': 'admin', 'password': 'f00bar', 'ip': '123.34.23.2'}})
         assert(err == 0)
         # this should fail because it has the same name as the other one.  Names need to be unique
-        err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {'user': 'admin', 'password': 'f00bar', 'ip': '123.34.23.2'}})
+        err, msg = YamlDB.new_server_group(test_file, {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {'user': 'admin', 'password': 'f00bar', 'ip': '123.34.23.2'}})
         assert(err == 1)
         # get all the 
-        err, msg, sg = YamlDB.list_server_group("kubam_test")
+        err, msg, sg = YamlDB.list_server_group(test_file)
         assert(err == 0)
         assert(len(sg) == 1)
-        err, msg = YamlDB.delete_server_group("kubam_test", sg[0]["id"])
+
+        # change it
+        fg = sg[0]
+        # do a copy so we have the object and can manipulate it. 
+        bad_group = sg[0].copy()
+        bad_group['id'] = "Ilovepeanutbuttersandwiches"
+        fg["name"] = "new name"
+        # make sure if we try to update something that doesn't exist, it fails. 
+        err, msg = YamlDB.update_server_group(test_file, bad_group)
+        print err, msg
+        assert(err == 1)
+
+        err, msg = YamlDB.update_server_group(test_file, fg)
+        print err, msg
+        assert(err == 0)
+        
+        err, msg = YamlDB.delete_server_group(test_file, fg["id"])
         assert(err == 0)
         
 
