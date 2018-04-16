@@ -36,10 +36,9 @@ def server_group_handler():
     if request.method == 'POST':
         j, rc = sg.create(request.json)
     elif request.method == 'PUT':
-        #j, rc = sg.update(request.json)
-        j, rc = sg.list()
+        j, rc = sg.update(request.json)
     elif request.method == 'DELETE':
-        j, rc = sg.list()
+        j, rc = sg.delete(request.json)
     else:
         j, rc = sg.list()
     return jsonify(j), rc

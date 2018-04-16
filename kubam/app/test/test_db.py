@@ -174,7 +174,6 @@ class DBUnitTests(unittest.TestCase):
         err, msg, sg = YamlDB.list_server_group(test_file)
         assert(err == 0)
         assert(len(sg) == 1)
-
         # change it
         fg = sg[0]
         # do a copy so we have the object and can manipulate it. 
@@ -183,14 +182,15 @@ class DBUnitTests(unittest.TestCase):
         fg["name"] = "new name"
         # make sure if we try to update something that doesn't exist, it fails. 
         err, msg = YamlDB.update_server_group(test_file, bad_group)
-        print err, msg
         assert(err == 1)
-
         err, msg = YamlDB.update_server_group(test_file, fg)
-        print err, msg
         assert(err == 0)
-        
-        err, msg = YamlDB.delete_server_group(test_file, fg["id"])
+        #err, msg = YamlDB.delete_server_group(test_file, fg["id"])
+        #assert(err == 0)
+    
+    def test_decoderkey(self):
+        file_name = "/tmp/kubam.yaml"
+        err, msg, key = YamlDB.get_decoder_key(file_name)
         assert(err == 0)
         
 

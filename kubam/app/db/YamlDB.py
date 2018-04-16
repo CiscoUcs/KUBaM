@@ -199,10 +199,13 @@ def delete_server_group(file_name, guid):
     if not "server_groups" in config:
         return 1, "no servers created yet"
     # get the group
+    found = False
     for group in config["server_groups"]:
         print "group: ", group
         if group["id"] == guid:
+            found = True 
             config["server_groups"].remove(group)
+            break
     # now that it is removed, write the config file back out. 
     err, msg = write_config(config, file_name)
     return err, msg
@@ -278,6 +281,13 @@ def new_server_group(file_name, gh):
         return err, msg
     # create a new uuid
     gh["id"] = new_uuid()
+    # encrypt the password: 
+    err, msg, key = get_decoder_key(file_name)
+    if err == 1:
+        return err, msg
+    f = Fernet(key)
+    gh['credentials']['password'] = f.encrypt(bytes(gh['credentials']['password']))
+   
     # nothing in here yet, first entry.
     if not "server_groups" in config:
         config["server_groups"] = []
@@ -285,7 +295,7 @@ def new_server_group(file_name, gh):
         # check if name already exists
         for group in config["server_groups"]:
             if group["name"] == gh["name"]:
-                return 1, "Name already exists in here.  Not adding"
+                return 1, "server group '%s' already exists.  Can not add another." % gh["name"]
 
     config["server_groups"].append(gh)
     err, msg = write_config(config, file_name)
@@ -555,3 +565,44 @@ def update_iso_map(file_name, iso_images):
     config["iso_map"] = iso_images
     err, msg = write_config(config, file_name)
     return err, msg
+
+
+def create_key(file_name):
+    """
+    create the key in a file name, write it out and return the key
+    """
+    key = Fernet.generate_key()
+    try: 
+        with open(file_name, "w") as f:
+            f.write(key)
+    except IOError as err:
+        return 1, err.strerror + " " + out_file, ""
+    f.close()
+    return 0, "", key
+    
+def get_key(file_name):
+    """
+    return the decoder key
+    """
+    key = ""
+    with open(file_name, "r") as f:
+        key = f.read()
+    return key 
+
+
+def get_decoder_key(file_name):
+    """
+    Create encryption key file in the same directory as the kubam.yaml if it doesn't exist.
+    but we store it in the .kubam file
+    The file passed in should be the kubam.yaml file so we can tell where it is. 
+    """
+    dir_name = path.dirname(file_name)
+    secret_file = path.join(dir_name, ".kubam")
+    err = 0
+    msg = ""
+    if path.isfile(secret_file):
+        key = get_key(secret_file)
+    else:
+        # create the key
+        err, msg, key = create_key(secret_file)
+    return err, msg, key
