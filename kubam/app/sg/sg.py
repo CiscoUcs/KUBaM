@@ -31,14 +31,7 @@ def create(request):
     if h == "":
         return {'error': err}, 401
     UCSSession.logout(h)
-
-    # test that the name doesn't already exist (has to be unique names)
-     
-    # make sure type is specified. 
-    
-    # write datafile.
     err, msg = YamlDB.new_server_group(KUBAM_CFG, credentials)
     if err != "":
         return {'error': msg}, 401
-    
     return {'status': "new server group created!"}, 201

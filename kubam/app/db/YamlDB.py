@@ -8,6 +8,7 @@ from jinja2 import Environment, FileSystemLoader
 from subprocess import call
 from os import path
 from sshpubkeys import SSHKey, InvalidKeyException
+from cryptography.fernet import Fernet
 import uuid
 
 # constants.  
@@ -188,19 +189,89 @@ def new_uuid():
     # create a random uuid string.
     return str(uuid.uuid4())
 
+def delete_server_group(file_name, guid):
+    """
+    Deletes a server group from the list of servers.  Just pass in the ID.
+    """
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    if not "server_groups" in config:
+        return 1, "no servers created yet"
+    # get the group
+    for index, group in config["server_groups"]:
+        print index, group
+        if group["id"] == guid:
+            config["server_groups"].remove(index)
+    # now that it is removed, write the config file back out. 
+    err, msg = write_config(config, file_name)
+    return err, msg
+    
 def new_server_group(file_name, gh):
     """
     Credentials passed would be:
     {"name", "ucs01", "type" : "ucsm", "credentials" : {"user": "admin", "password" : "secret-password", "server" : "172.28.225.163" }}
     """    
     if not isinstance(gh, dict):
-        return "No server group information was passed into the request."
+        return 1, "No server group information was passed into the request."
     err, msg, config = open_config(file_name)
     if err == 1:
         return err, msg
+    if not "type" in gh:
+        return 1, "Please specify the type of server group: 'imc' or 'ucsm'"
+    else: 
+        if gh["type"] not in ["imc", "ucsm"]:
+            return 1, "server group type should be 'imc' or 'ucsm'"
+            
+    if not "name" in gh:
+        return 1, "Please specify the name of the server group.  This should be unique."
+    if not "credentials" in gh: 
+        return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+    
+    creds = gh['credentials']
+    if not isinstance(creds, dict):
+        return 1, "Credentials should be a dictionary of ip, password, and user."
+    if not 'ip' in creds:
+        return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+    if not 'password' in creds:
+        return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+    if not 'user' in creds: 
+        return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+
+    # make sure name is unique
+    # make sure IP address or server is pingable. 
+    # create a new uuid
+    gh["id"] = new_uuid()
+    # add it to the group name. 
+    # make sure it has a type
+
+    # nothing in here yet, first entry.
+    if not "server_groups" in config:
+        config["server_groups"] = []
+    else:
+        # check if name already exists
+        for group in config["server_groups"]:
+            if group["name"] == gh["name"]:
+                return 1, "Name already exists in here.  Not adding"
+
+    config["server_groups"].append(gh)
+    err, msg = write_config(config, file_name)
+    return err, msg
 
 
-    return 1, "this is an error"
+def list_server_group(file_name):
+    """
+    get all the server group details for each server group.
+    """
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg, ""
+    # err code 2 means no entries 
+    if err == 2:
+        return 0, "", {}
+    if not "server_groups" in config:
+        return 0, "", {}
+    return 0, "", config["server_groups"]
 
 # our database operations will all be open and update the file. 
 # creds_hash should be: {"ip": "172.28.225.164", "user": "admin", "password": "nbv12345"}}

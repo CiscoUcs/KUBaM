@@ -143,6 +143,42 @@ class DBUnitTests(unittest.TestCase):
         uuid = YamlDB.new_uuid()
         print uuid
         assert(str(uuid))
+    def test_server_group(self):
+        err, msg = YamlDB.new_server_group("", "")
+        # don't pass any values should return nothing.
+        assert(err == 1)
+        # pass something without a name. 
+        err, msg = YamlDB.new_server_group("", {})
+        assert(err == 1)
+        err, msg = YamlDB.new_server_group("", {'type' : 'beatlejuice'})
+        assert(err == 1)
+        # no name passed, should generate error
+        err, msg = YamlDB.new_server_group("", {'type' : 'imc'})
+        assert(err == 1)
+        err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard'})
+        assert(err == 1)
+        err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : 'foo'})
+        assert(err == 1)
+        err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {}})
+        assert(err == 1)
+        err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {'user': 'admin'}})
+        assert(err == 1)
+        err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {'user': 'admin', 'password': 'f00bar'}})
+        assert(err == 1)
+        # add a new one. This should work as all the credentials are entered in. 
+        err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {'user': 'admin', 'password': 'f00bar', 'ip': '123.34.23.2'}})
+        assert(err == 0)
+        # this should fail because it has the same name as the other one.  Names need to be unique
+        err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {'user': 'admin', 'password': 'f00bar', 'ip': '123.34.23.2'}})
+        assert(err == 1)
+        err, msg, sg = YamlDB.list_server_group("kubam_test")
+        assert(err == 0)
+        err, msg = YamlDB.delete_server_group("kubam_test", sg["id"])
+        assert(err == 0)
+        
+        print err, msg
+        
+        
 
 if __name__ == '__main__':
     unittest.main()
