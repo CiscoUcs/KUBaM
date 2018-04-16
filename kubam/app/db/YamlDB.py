@@ -199,10 +199,10 @@ def delete_server_group(file_name, guid):
     if not "server_groups" in config:
         return 1, "no servers created yet"
     # get the group
-    for index, group in config["server_groups"]:
-        print index, group
+    for group in config["server_groups"]:
+        print "group: ", group
         if group["id"] == guid:
-            config["server_groups"].remove(index)
+            config["server_groups"].remove(group)
     # now that it is removed, write the config file back out. 
     err, msg = write_config(config, file_name)
     return err, msg

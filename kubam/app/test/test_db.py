@@ -171,13 +171,12 @@ class DBUnitTests(unittest.TestCase):
         # this should fail because it has the same name as the other one.  Names need to be unique
         err, msg = YamlDB.new_server_group("kubam_test", {'type' : 'ucsm', 'name': 'blackbeard', 'credentials' : {'user': 'admin', 'password': 'f00bar', 'ip': '123.34.23.2'}})
         assert(err == 1)
+        # get all the 
         err, msg, sg = YamlDB.list_server_group("kubam_test")
         assert(err == 0)
-        err, msg = YamlDB.delete_server_group("kubam_test", sg["id"])
+        assert(len(sg) == 1)
+        err, msg = YamlDB.delete_server_group("kubam_test", sg[0]["id"])
         assert(err == 0)
-        
-        print err, msg
-        
         
 
 if __name__ == '__main__':
