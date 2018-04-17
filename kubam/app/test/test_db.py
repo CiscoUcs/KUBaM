@@ -144,7 +144,6 @@ class DBUnitTests(unittest.TestCase):
     def test_server_group(self):
         test_file = "/tmp/k_test"
         err, msg = YamlDB.new_server_group("", "")
-        # don't pass any values should return nothing.
         assert(err == 1)
         # pass something without a name. 
         err, msg = YamlDB.new_server_group("", {})
@@ -185,12 +184,57 @@ class DBUnitTests(unittest.TestCase):
         assert(err == 1)
         err, msg = YamlDB.update_server_group(test_file, fg)
         assert(err == 0)
-        #err, msg = YamlDB.delete_server_group(test_file, fg["id"])
-        #assert(err == 0)
+        err, msg = YamlDB.delete_server_group(test_file, fg["id"])
+        assert(err == 0)
     
     def test_decoderkey(self):
         file_name = "/tmp/kubam.yaml"
         err, msg, key = YamlDB.get_decoder_key(file_name)
+        assert(err == 0)
+    
+    def test_aci(self):
+        test_file = "/tmp/k_test"
+        err, msg = YamlDB.new_aci("", "")
+        assert(err == 1)
+        # pass something without a name. 
+        err, msg = YamlDB.new_aci("", {})
+        assert(err == 1)
+        err, msg = YamlDB.new_aci("", {'name' : 'aci01'})
+        assert(err == 1)
+        err, msg = YamlDB.new_aci("", {'name' : 'aci01', })
+        assert(err == 1)
+        err, msg = YamlDB.new_aci(test_file, {'name': 'aci01', 'credentials' : 'foo'})
+        assert(err == 1)
+        err, msg = YamlDB.new_aci(test_file, {'name': 'aci01', 'credentials' : 'foo'})
+        assert(err == 1)
+        err, msg = YamlDB.new_aci(test_file, {'name': 'aci01', 'credentials' : {"ip" : "foo"}})
+        assert(err == 1)
+        err, msg = YamlDB.new_aci(test_file, {'name': 'aci01', 'credentials' : {"ip" : "foo", "user" : "admin"}})
+        assert(err == 1)
+        err, msg = YamlDB.new_aci(test_file, {'name': 'aci01', 'credentials' : {"ip" : "foo", "user" : "admin", "password" : "password"}})
+        assert(err == 1)
+        err, msg = YamlDB.new_aci(test_file, {'name': 'aci01', 'credentials' : {"ip" : "foo", "user" : "admin", "password" : "password"}, "tenant_name" : "blue"})
+        assert(err == 1)
+        err, msg = YamlDB.new_aci(test_file, {'name': 'aci01', 'credentials' : {"ip" : "foo", "user" : "admin", "password" : "password"}, "tenant_name" : "blue", "vrf_name" : "lagoon"})
+        assert(err == 1)
+        err, msg = YamlDB.new_aci(test_file, {'name': 'aci01', 'credentials' : {"ip" : "foo", "user" : "admin", "password" : "password"}, "tenant_name" : "blue", "vrf_name" : "lagoon", "bridge_domain" : "3"})
+        assert(err == 0)
+        # get all the 
+        err, msg, sg = YamlDB.list_aci(test_file)
+        assert(err == 0)
+        assert(len(sg) == 1)
+        # change it
+        fg = sg[0]
+        # do a copy so we have the object and can manipulate it. 
+        bad_group = sg[0].copy()
+        bad_group['id'] = "Ilovepeanutbuttersandwiches"
+        fg["name"] = "new name"
+        # make sure if we try to update something that doesn't exist, it fails. 
+        err, msg = YamlDB.update_aci(test_file, bad_group)
+        assert(err == 1)
+        err, msg = YamlDB.update_aci(test_file, fg)
+        assert(err == 0)
+        err, msg = YamlDB.delete_aci(test_file, fg["id"])
         assert(err == 0)
         
 

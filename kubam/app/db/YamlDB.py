@@ -168,7 +168,6 @@ def open_config(file_name):
                 config = yaml.load(stream)
             except yaml.YAMLError as exc:
                 msg = "Error parsing %s config file: " % file_name
-                #print(exc)
                 return 1, msg, {}
         stream.close()
     except IOError as err:
@@ -201,7 +200,6 @@ def delete_server_group(file_name, guid):
     # get the group
     found = False
     for group in config["server_groups"]:
-        print "group: ", group
         if group["id"] == guid:
             found = True 
             config["server_groups"].remove(group)
@@ -246,10 +244,8 @@ def update_server_group(file_name, gh):
     err, msg, groups = list_server_group(file_name)
     if err == 1:
         return err, msg
-    print groups
     # check that it exists. 
     found = False
-    old_group = {}
     for g in groups:
         if g['id'] == gh['id']:
             found = True
@@ -606,3 +602,142 @@ def get_decoder_key(file_name):
         # create the key
         err, msg, key = create_key(secret_file)
     return err, msg, key
+
+
+def list_aci(file_name):
+    """
+    get all the aci details for each aci group
+    """
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg, ""
+    # err code 2 means no entries 
+    if err == 2:
+        return 0, "", {}
+    if not "aci" in config:
+        return 0, "", {}
+    return 0, "", config["aci"]
+
+def check_valid_aci(gh):
+    if not "name" in gh:
+        return 1, "Please specify the name of the server group.  This should be unique."
+    if not "credentials" in gh: 
+        return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+    
+    creds = gh['credentials']
+    if not isinstance(creds, dict):
+        return 1, "Credentials should be a dictionary of ip, password, and user."
+    if not 'ip' in creds:
+        return 1, "Please specify the login credentials of ACI : 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+    if not 'password' in creds:
+        return 1, "Please specify the login credentials of ACI: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+    if not 'user' in creds: 
+        return 1, "Please specify the login credentials of ACI: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+
+    if not 'tenant_name' in gh:
+        return 1, "Please specify the tenant name for the ACI group"
+    if not 'vrf_name' in gh:
+        return 1, "Please specify the VRF name for the ACI group"
+    if not 'bridge_domain' in gh:
+        return 1, "Please specify the bridge Domain name for the ACI group"
+    return 0, ""
+
+def new_aci(file_name, gh):
+    """
+    Create a new ACI group
+    { "name": "ACI group name",
+      "credentials":
+        "ip": <ip>
+        "password": <secret-password>
+        "user": <admin>
+    },
+    "tenant_name": <tenant name> 
+    "tenant_descr": <tenant description>
+    "vrf_name": <vrf name>
+    "vrf_description": <vrf descr>
+    "bridge_domain": <name of bridge domain>
+    """    
+    if not isinstance(gh, dict):
+        return 1, "No information was passed into the request."
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    err, msg = check_valid_aci(gh)
+    if err == 1:
+        return err, msg
+    # create a new uuid
+    gh["id"] = new_uuid()
+    # encrypt the password: 
+    err, msg, key = get_decoder_key(file_name)
+    if err == 1:
+        return err, msg
+    f = Fernet(key)
+    gh['credentials']['password'] = f.encrypt(bytes(gh['credentials']['password']))
+   
+    # nothing in here yet, first entry.
+    if not "aci" in config:
+        config["aci"] = []
+    else:
+        # check if name already exists
+        for group in config["aci"]:
+            if group["name"] == gh["name"]:
+                return 1, "ACI group '%s' already exists.  Can not add another." % gh["name"]
+
+    config["aci"].append(gh)
+    err, msg = write_config(config, file_name)
+    return err, msg
+
+def update_aci(file_name, gh):
+    """
+    Update an ACI group
+    """
+    # check if valid config. 
+    err, msg = check_valid_aci(gh)
+    if err == 1:
+        return err, msg
+    # make sure there is an id
+    if not "id" in gh:
+        return 1, "ACI group id not given"
+    
+    # get all server groups
+    err, msg, groups = list_aci(file_name)
+    if err == 1:
+        return err, msg
+    # check that it exists. 
+    found = False
+    for g in groups:
+        if g['id'] == gh['id']:
+            found = True
+            groups.remove(g)
+            groups.append(gh)
+            err, msg, config = open_config(file_name)
+            config['aci'] = groups
+            err, msg = write_config(config, file_name)
+            if err == 1:
+                return err, msg
+    if not found:
+        return 1, "nothing to update, no server group %s is found" % gh['name']
+
+    return 0, "%s has been updated" % gh['name']
+
+def delete_aci(file_name, guid):
+    """
+    Deletes an ACI group from the Database.  Just pass in the ID.
+    """
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    if not "aci" in config:
+        return 1, "no servers created yet"
+    # get the group
+    found = False
+    for group in config["aci"]:
+        if group["id"] == guid:
+            found = True 
+            config["aci"].remove(group)
+            break
+    # now that it is removed, write the config file back out. 
+    err, msg = write_config(config, file_name)
+    return err, msg
+
+
