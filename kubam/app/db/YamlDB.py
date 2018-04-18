@@ -149,8 +149,8 @@ def write_config(config, out_file):
                 msg = "Error writing %s config file: %s" % (out_file, err)
                 err = 1
     except IOError as err:
-        err = 1
         msg = err.strerror + " " + out_file
+        err = 1
 
     return err, msg
 
@@ -192,6 +192,7 @@ def delete_server_group(file_name, guid):
     """
     Deletes a server group from the list of servers.  Just pass in the ID.
     """
+    #TODO: Make sure no host depends upon a physical group.
     err, msg, config = open_config(file_name)
     if err == 1:
         return err, msg
@@ -646,16 +647,17 @@ def new_aci(file_name, gh):
     """
     Create a new ACI group
     { "name": "ACI group name",
-      "credentials":
+      "credentials": {
         "ip": <ip>
         "password": <secret-password>
         "user": <admin>
-    },
+       },
     "tenant_name": <tenant name> 
     "tenant_descr": <tenant description>
     "vrf_name": <vrf name>
     "vrf_description": <vrf descr>
     "bridge_domain": <name of bridge domain>
+    }
     """    
     if not isinstance(gh, dict):
         return 1, "No information was passed into the request."
@@ -724,6 +726,7 @@ def delete_aci(file_name, guid):
     """
     Deletes an ACI group from the Database.  Just pass in the ID.
     """
+    #TODO: make sure no network group depends upon an aci group. 
     err, msg, config = open_config(file_name)
     if err == 1:
         return err, msg
@@ -740,4 +743,129 @@ def delete_aci(file_name, guid):
     err, msg = write_config(config, file_name)
     return err, msg
 
+
+def check_valid_network(gh):
+    """
+    Checks that all the right parameters are in the network hash
+    """
+    if not "name" in gh:
+        return 1, "Please specify the name of the network group.  This should be unique."
+    err, msg = validate_network(gh)
+    if err > 0:
+        return err, msg
+
+    if "aci_group" in gh:
+        #TODO, make sure aci group exists. 
+        1
+    return 0, ""
+
+# net information
+def new_network_group(file_name, gh):
+    """
+    Create a new net group
+    { 
+    "name" : <unique name>,
+    "gateway": <netmask>,
+    "nameserver" : <ip>,
+    "ntpserver" : <ip / host>,
+    "vlan" : <optional value>,
+    "proxy" : <optional ip with port or url>,
+    "aci_group" : <value that exists in config already for ACI>
+    }
+    """    
+    if not isinstance(gh, dict):
+        return 1, "No information was passed into the request."
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    err, msg = check_valid_network(gh)
+    if err > 0:
+        return 1, msg
+    # create a new uuid
+    gh["id"] = new_uuid()
+    # encrypt the password: 
+
+    # nothing in here yet, first entry.
+    if not "network_groups" in config:
+        config["network_groups"] = []
+    else:
+        # check if name already exists
+        for group in config["network_groups"]:
+            if group["name"] == gh["name"]:
+                return 1, "Network group '%s' already exists.  Can not add another." % gh["name"]
+
+    config["network_groups"].append(gh)
+    err, msg = write_config(config, file_name)
+    return err, msg
+
+
+def list_network_group(file_name):
+    """
+    get all the network group details for each group.
+    """
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg, ""
+    # err code 2 means no entries 
+    if err == 2:
+        return 0, "", {}
+    if not "network_groups" in config:
+        return 0, "", {}
+    return 0, "", config["network_groups"]
+
+def update_network_group(file_name, gh):
+    """
+    Update an existing network group to something else. 
+    """
+    # check if valid config. 
+    
+    err, msg = check_valid_network(gh)
+    if err > 0:
+        return 1, msg
+    # make sure there is an id
+    if not "id" in gh:
+        return 1, "network group id not given"
+    
+    # get all server groups
+    err, msg, groups = list_network_group(file_name)
+    if err == 1:
+        return err, msg
+    # check that it exists. 
+    found = False
+    for g in groups:
+        if g['id'] == gh['id']:
+            found = True
+            groups.remove(g)
+            groups.append(gh)
+            err, msg, config = open_config(file_name)
+            config['network_groups'] = groups
+            err, msg = write_config(config, file_name)
+            if err == 1:
+                return err, msg
+    if not found:
+        return 1, "nothing to update, no network group %s is found" % gh['name']
+
+    return 0, "%s has been updated" % gh['name']
+    
+
+def delete_network_group(file_name, guid):
+    """
+    Deletes a Network group from the Database.  Just pass in the ID.
+    """
+    #TODO: make sure no host group uses a network group
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    if not "aci" in config:
+        return 1, "no servers created yet"
+    # get the group
+    found = False
+    for group in config["network_groups"]:
+        if group["id"] == guid:
+            found = True 
+            config["network_groups"].remove(group)
+            break
+    # now that it is removed, write the config file back out. 
+    err, msg = write_config(config, file_name)
+    return err, msg
 

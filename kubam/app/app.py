@@ -8,6 +8,7 @@ from iso import IsoMaker
 from db import YamlDB
 from autoinstall import Builder
 from sg import sg
+from aci import aci
 
 app = Flask(__name__)
 CORS(app)
@@ -28,9 +29,9 @@ def index():
 
 
 # APIV2 methods
-@app.route(API_ROOT2 + "/server-groups", methods=['GET', 'POST', 'PUT', 'DELETE'])
+@app.route(API_ROOT2 + "/servers", methods=['GET', 'POST', 'PUT', 'DELETE'])
 @cross_origin()
-def server_group_handler():
+def server_handler():
     j = {}
     rc = 200
     if request.method == 'POST':
@@ -41,6 +42,21 @@ def server_group_handler():
         j, rc = sg.delete(request.json)
     else:
         j, rc = sg.list()
+    return jsonify(j), rc
+
+@app.route(API_ROOT2 + "/aci", methods=['GET', 'POST', 'PUT', 'DELETE'])
+@cross_origin()
+def aci_handler():
+    j = {}
+    rc = 200
+    if request.method == 'POST':
+        j, rc = aci.create(request.json)
+    elif request.method == 'PUT':
+        j, rc = aci.update(request.json)
+    elif request.method == 'DELETE':
+        j, rc = aci.delete(request.json)
+    else:
+        j, rc = aci.list()
     return jsonify(j), rc
         
 

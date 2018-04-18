@@ -236,7 +236,43 @@ class DBUnitTests(unittest.TestCase):
         assert(err == 0)
         err, msg = YamlDB.delete_aci(test_file, fg["id"])
         assert(err == 0)
-        
+     
+    def test_network_group(self):
+        test_file = "/tmp/k_test"
+        err, msg = YamlDB.new_network_group("", "")
+        assert(err == 1)
+        # pass something without a name. 
+        err, msg = YamlDB.new_network_group("", {})
+        assert(err == 1)
+        err, msg = YamlDB.new_network_group("", {'name' : 'net01'})
+        assert(err == 1)
+        err, msg = YamlDB.new_network_group("", {'name' : 'net01', })
+        assert(err == 1)
+        err, msg = YamlDB.new_network_group(test_file, {'name': 'net01', 'netmask' : 'foo'})
+        assert(err == 1)
+        err, msg = YamlDB.new_network_group(test_file, {'name': 'net01', 'netmask':'255.255.255.0', 'gateway' : '192.168.1.1'})
+        assert(err == 1)
+        err, msg = YamlDB.new_network_group(test_file, {'name': 'net01', 'netmask':'255.255.255.0', 'gateway' : '192.168.1.1', 'nameserver' : '8.8.8.8'})
+        assert(err == 1)
+        err, msg = YamlDB.new_network_group(test_file, {'name': 'net01', 'netmask':'255.255.255.0', 'gateway' : '192.168.1.1', 'nameserver' : '8.8.8.8', 'ntpserver' : 'ntp.esl.cisco.com'})
+        assert(err == 0)
+        # get all the 
+        err, msg, sg = YamlDB.list_network_group(test_file)
+        assert(err == 0)
+        assert(len(sg) == 1)
+        # change it
+        fg = sg[0]
+        # do a copy so we have the object and can manipulate it. 
+        bad_group = sg[0].copy()
+        bad_group['id'] = "Ilovepeanutbuttersandwiches"
+        fg["name"] = "new name"
+        # make sure if we try to update something that doesn't exist, it fails. 
+        err, msg = YamlDB.update_network_group(test_file, bad_group)
+        assert(err == 1)
+        err, msg = YamlDB.update_network_group(test_file, fg)
+        assert(err == 0)
+        err, msg = YamlDB.delete_network_group(test_file, fg["id"])
+        assert(err == 0)
 
 if __name__ == '__main__':
     unittest.main()
