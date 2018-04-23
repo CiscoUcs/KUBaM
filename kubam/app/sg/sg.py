@@ -19,6 +19,9 @@ def check_login(request):
         return {'error' : "improper request sent"}, 401
     if not 'credentials' in request:
         return {'error' : "no credentials found in request"}, 401
+    for v in ['user', 'password', 'ip']:
+        if not v in request['credentials']:
+            return {'error' : "credentials should include %s" % v}, 401
     user = request['credentials']['user']
     pw = request['credentials']['password']
     ip = request['credentials']['ip']
