@@ -12,8 +12,7 @@ from sg import sg
 from aci import aci
 
 app = Flask(__name__)
-CORS(app)
-app.config['CORS_HEADERS'] = 'Content-Type'
+CORS(app, resources=r'/api/*', headers='Content-Type')
 
 KUBAM_CFG="/kubam/kubam.yaml"
 API_ROOT="/api/v1"
