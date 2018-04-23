@@ -15,6 +15,8 @@ def list():
     return (sg, 200)
 
 def check_login(request):
+    if not isinstance(request, dict):
+        return {'error' : "improper request sent"}, 401
     if not 'credentials' in request:
         return {'error' : "no credentials found in request"}, 401
     user = request['credentials']['user']
@@ -35,8 +37,8 @@ def create(request):
     Format of request should be JSON that looks like:
     {"name", "ucs01", "type" : "ucsm", "credentials" : {"user": "admin", "password" : "secret-password", "ip" : "172.28.225.163" }}
     """
-    print request
     # make sure we can log in first. 
+  
     msg, code = check_login(request)
     if code == 401:
         return msg, code
