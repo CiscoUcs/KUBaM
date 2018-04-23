@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, abort
 from flask_cors import CORS, cross_origin
 from network import UCSNet
+from monitor import UCSStatus
 from server import UCSServer
 from session import UCSSession
 from util import UCSUtil
@@ -294,6 +295,19 @@ def update_networks():
     if err != 0:
         return jsonify({'error': msg}), 400
     return get_networks()
+
+
+# get the FSM from UCS
+@app.route(API_ROOT + "/monitor", methods=['GET'])
+@cross_origin()
+def get_fsm_status():
+    err, msg, handle = login()
+    if err != 0:
+        return not_logged_in(msg)
+    status = UCSStatus.get_status(handle, "sys/chassis-1/blade-5")
+    logout(handle)
+
+    return jsonify(status), 200
 
     
 # see if there are any selected servers in the database 
