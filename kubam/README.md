@@ -283,4 +283,5 @@ Or you can do it for individual unit test files
 ```
 python2 -m unittest test.sg.SGUnitTests
 python2 -m unittest test.test_db.DBUnitTests
+python2 -m unittest test.test_app.FlaskTestCase
 ```

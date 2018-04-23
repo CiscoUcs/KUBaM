@@ -2,12 +2,23 @@ from app  import app
 import unittest
 import json
 
+API_ROOT2 = '/api/v2'
+
 class FlaskTestCase(unittest.TestCase):
 
     def test_api(self):
         tester=app.test_client(self)
         response = tester.get('/', content_type='application/json')
         self.assertEqual(response.status_code,200)
+
+
+    def test_aci(self):
+        tester = app.test_client(self)
+ 
+        response = tester.get(API_ROOT2 + '/aci', content_type='application/json')
+        print response.data
+        tester.post(API_ROOT2 + '/aci', content_type='application/json')
+        print response.data
 
 
     def test_currentsession(self):
