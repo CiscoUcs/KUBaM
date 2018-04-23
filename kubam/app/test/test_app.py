@@ -20,6 +20,10 @@ class FlaskTestCase(unittest.TestCase):
         tester.post(API_ROOT2 + '/aci', content_type='application/json')
         print response.data
 
+    def test_host(self):
+        tester = app.test_client(self)
+        response = tester.get(API_ROOT2 + '/hosts', content_type='application/json')
+        print response
 
     def test_currentsession(self):
         tester = app.test_client(self)
