@@ -16,20 +16,20 @@ def list():
 
 def check_login(request):
     if not isinstance(request, dict):
-        return {'error' : "improper request sent"}, 401
+        return {'error' : "improper request sent"}, 400
     if not 'credentials' in request:
-        return {'error' : "no credentials found in request"}, 401
+        return {'error' : "no credentials found in request"}, 400
     for v in ['user', 'password', 'ip']:
         if not v in request['credentials']:
-            return {'error' : "credentials should include %s" % v}, 401
+            return {'error' : "credentials should include %s" % v}, 400
     user = request['credentials']['user']
     pw = request['credentials']['password']
     ip = request['credentials']['ip']
     if ip == "":
-        return {'error': "Please enter a valid UCSM IP address."}, 401
+        return {'error': "Please enter a valid UCSM IP address."}, 400
     h, err = UCSSession.login(user, pw, ip)
     if h == "":
-        return {'error': err}, 401
+        return {'error': err}, 400
     UCSSession.logout(h)
     return "", 200
     
@@ -43,11 +43,11 @@ def create(request):
     # make sure we can log in first. 
   
     msg, code = check_login(request)
-    if code == 401:
+    if code == 400:
         return msg, code
     err, msg = YamlDB.new_server_group(KUBAM_CFG, request)
     if err == 1:
-        return {'error': msg}, 401
+        return {'error': msg}, 400
     return {'status': "new server group %s created!" % request["name"]}, 201
 
 def update(request):
@@ -55,11 +55,11 @@ def update(request):
     Update a server group
     """
     msg, code = check_login(request)
-    if code == 401:
+    if code == 400:
         return msg, code
     err, msg = YamlDB.update_server_group(KUBAM_CFG, request)
     if err == 1:
-        return {'error': msg}, 401
+        return {'error': msg}, 400
     return {'status': "server group %s updated!" % request["name"]}, 201
       
 def delete(request):
@@ -69,7 +69,7 @@ def delete(request):
     uuid = request['id']
     err, msg = YamlDB.delete_server_group(KUBAM_CFG, uuid)
     if err == 1:
-        return {'error': msg}, 401
+        return {'error': msg}, 400
     else:
         return {'status': "server group deleted"}, 201
     
