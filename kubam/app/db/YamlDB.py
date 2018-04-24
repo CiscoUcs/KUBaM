@@ -573,7 +573,7 @@ def create_key(file_name):
         with open(file_name, "w") as f:
             f.write(key)
     except IOError as err:
-        return 1, err.strerror + " " + out_file, ""
+        return 1, err.strerror + " " + file_name, ""
     f.close()
     return 0, "", key
     
