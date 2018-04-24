@@ -274,27 +274,47 @@ class DBUnitTests(unittest.TestCase):
         err, msg = YamlDB.delete_network_group(test_file, fg["id"])
         assert(err == 0)
 
-#    def test_hosts(self):
-#        test_file = "/tmp/k_test"
-#        err, msg = YamlDB.new_hosts("", "")
-#        assert(err == 1)
-#        # pass something without a name. 
-#        err, msg = YamlDB.new_hosts("", {})
-#        assert(err == 1)
-#        err, msg = YamlDB.new_hosts("", [])
-#        assert(err == 1)
-#        err, msg = YamlDB.new_hosts(test_file, [{'ip' : '172.20.30.1'}])
-#        assert(err == 1)
-#        err, msg = YamlDB.new_hosts(test_file, [{'name': 'kube01', 'ip' : '172.20.30.1'}])
-#        assert(err == 1)
-#        err, msg = YamlDB.new_hosts(test_file, [{'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.4'}])
-#        assert(err == 1)
-#        err, msg = YamlDB.new_hosts(test_file, [{'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.4', 'role': 'generic'}])
-#        assert(err == 0)
-#        err, msg = YamlDB.new_hosts(test_file, [{'name': 'kube01', 'ip' : '172.20.30.1.1', 'os' : 'centos7.4', 'role': 'generic'}])
-#        assert(err == 1)
-#        err, msg = YamlDB.new_hosts(test_file, [{'name': 'kube01 am', 'ip' : '172.20.30.1', 'os' : 'centos7.4', 'role': 'generic'}])
-#        assert(err == 1)
+    def test_hosts(self):
+        test_file = "/tmp/k_test"
+        err, msg = YamlDB.new_hosts("", "")
+        assert(err == 1)
+        # pass something without a name. 
+        err, msg = YamlDB.new_hosts("", {})
+        assert(err == 1)
+        err, msg = YamlDB.new_hosts("", [])
+        assert(err == 1)
+        err, msg = YamlDB.new_hosts(test_file, [{'ip' : '172.20.30.1'}])
+        assert(err == 1)
+        err, msg = YamlDB.new_hosts(test_file, [{'name': 'kube01', 'ip' : '172.20.30.1'}])
+        assert(err == 1)
+        err, msg = YamlDB.new_hosts(test_file, [{'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.4'}])
+        assert(err == 1)
+        err, msg = YamlDB.new_hosts(test_file, [{'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.4', 'role': 'generic'}])
+        assert(err == 0)
+        err, msg = YamlDB.new_hosts(test_file, [{'name': 'kube01', 'ip' : '172.20.30.1.1', 'os' : 'centos7.4', 'role': 'generic'}])
+        assert(err == 1)
+        err, msg = YamlDB.new_hosts(test_file, [{'name': 'kube01 am', 'ip' : '172.20.30.1', 'os' : 'centos7.4', 'role': 'generic'}])
+        print "hostnames should not have spaces in them"
+        assert(err == 1)
+        err, msg = YamlDB.new_hosts(test_file, [
+            {'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.4', 'role': 'generic'}
+            {'name': 'kube01', 'ip' : '172.20.30.2', 'os' : 'centos7.4', 'role': 'generic'}
+            ])
+        print "names should be unique"
+        assert(err == 1)
+        err, msg = YamlDB.new_hosts(test_file, [
+            {'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.4', 'role': 'generic'}
+            {'name': 'kube02', 'ip' : '172.20.30.1', 'os' : 'centos7.4', 'role': 'generic'}
+            ])
+        print "ip addreses should be unique"
+        assert(err == 1)
+
+        err, msg = YamlDB.new_hosts(test_file, [
+            {'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.8', 'role': 'generic'}
+            {'name': 'kube02', 'ip' : '172.20.30.2', 'os' : 'centos7.4', 'role': 'generic'}
+            ])
+        print "OS should be a supported type"
+        assert(err == 1)
 
 if __name__ == '__main__':
     unittest.main()
