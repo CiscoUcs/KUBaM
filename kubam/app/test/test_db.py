@@ -172,6 +172,7 @@ class DBUnitTests(unittest.TestCase):
         # get all the 
         err, msg, sg = YamlDB.list_server_group(test_file)
         assert(err == 0)
+        print  sg
         assert(len(sg) == 1)
         # change it
         fg = sg[0]
@@ -297,20 +298,20 @@ class DBUnitTests(unittest.TestCase):
         print "hostnames should not have spaces in them"
         assert(err == 1)
         err, msg = YamlDB.new_hosts(test_file, [
-            {'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.4', 'role': 'generic'}
+            {'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.4', 'role': 'generic'},
             {'name': 'kube01', 'ip' : '172.20.30.2', 'os' : 'centos7.4', 'role': 'generic'}
             ])
         print "names should be unique"
         assert(err == 1)
         err, msg = YamlDB.new_hosts(test_file, [
-            {'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.4', 'role': 'generic'}
+            {'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.4', 'role': 'generic'},
             {'name': 'kube02', 'ip' : '172.20.30.1', 'os' : 'centos7.4', 'role': 'generic'}
             ])
         print "ip addreses should be unique"
         assert(err == 1)
 
         err, msg = YamlDB.new_hosts(test_file, [
-            {'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.8', 'role': 'generic'}
+            {'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.8', 'role': 'generic'},
             {'name': 'kube02', 'ip' : '172.20.30.2', 'os' : 'centos7.4', 'role': 'generic'}
             ])
         print "OS should be a supported type"
