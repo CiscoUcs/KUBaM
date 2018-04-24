@@ -1,7 +1,8 @@
 from session import UCSSession
 from db import YamlDB
+import os
 
-KUBAM_CFG="/kubam/kubam.yaml"
+KUBAM_CFG = os.environ.get("KUBAM_DIR") or "/kubam/kubam.yaml"
 
 # list the server group information
 def list():
@@ -12,7 +13,7 @@ def list():
     err, msg, sg = YamlDB.list_server_group(KUBAM_CFG)
     if err == 1:
         return ({'error': msg}, 500)
-    return (sg, 200)
+    return {"servers" : sg }, 200
 
 def check_login(request):
     if not isinstance(request, dict):

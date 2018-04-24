@@ -13,7 +13,7 @@ from aci import aci
 from hosts import hosts
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "*"}}, headers='Content-Type')
+CORS(app)
 
 KUBAM_CFG="/kubam/kubam.yaml"
 API_ROOT="/api/v1"
@@ -76,8 +76,6 @@ def aci_handler():
         j, rc = aci.list()
     return jsonify(j), rc
         
-
-
 
 # determine if we have credentials stored or not. 
 @app.route(API_ROOT + "/session", methods=['GET'])

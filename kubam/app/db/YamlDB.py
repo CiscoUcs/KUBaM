@@ -418,8 +418,9 @@ def new_server_group(file_name, gh):
         return err, msg
     f = Fernet(key)
     gh['credentials']['password'] = f.encrypt(bytes(gh['credentials']['password']))
-   
     # nothing in here yet, first entry.
+    if not isinstance(config, dict):
+        config = {}
     if not "server_groups" in config:
         config["server_groups"] = []
     else:
@@ -441,6 +442,9 @@ def list_server_group(file_name):
         return err, msg, ""
     # err code 2 means no entries 
     if err == 2:
+        return 0, "", {}
+    # if there is an empty file
+    if not isinstance(config, dict):
         return 0, "", {}
     if not "server_groups" in config:
         return 0, "", {}
@@ -707,7 +711,7 @@ def create_key(file_name):
         with open(file_name, "w") as f:
             f.write(key)
     except IOError as err:
-        return 1, err.strerror + " " + out_file, ""
+        return 1, err.strerror + " " + file_name, ""
     f.close()
     return 0, "", key
     

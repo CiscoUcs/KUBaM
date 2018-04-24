@@ -172,6 +172,7 @@ class DBUnitTests(unittest.TestCase):
         # get all the 
         err, msg, sg = YamlDB.list_server_group(test_file)
         assert(err == 0)
+        print  sg
         assert(len(sg) == 1)
         # change it
         fg = sg[0]
