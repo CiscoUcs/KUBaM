@@ -7,10 +7,10 @@ API_ROOT2 = '/api/v2'
 class FlaskTestCase(unittest.TestCase):
     gdata = {
         "credentials" : { 
-            "ip": "172.28.225.163", "password": "nbv12345", "user": "admin"
+            "ip": "10.93.234.238", "password": "oicu812!", "user": "admin"
         },
        "type": "ucsm", 
-       "name": "sjc"
+       "name": "werners machine"
     }
 
     def test_api(self):
