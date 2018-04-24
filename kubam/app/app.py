@@ -61,8 +61,6 @@ def aci_handler():
     return jsonify(j), rc
         
 
-
-
 # determine if we have credentials stored or not. 
 @app.route(API_ROOT + "/session", methods=['GET'])
 @cross_origin()

@@ -12,7 +12,7 @@ def list():
     err, msg, sg = YamlDB.list_aci(KUBAM_CFG)
     if err == 1:
         return ({'error': msg}, 500)
-    return (sg, 200)
+    return { "aci" : sg} , 200
 
 def check_login(request):
     if not 'credentials' in request:
