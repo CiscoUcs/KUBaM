@@ -284,8 +284,9 @@ def new_server_group(file_name, gh):
         return err, msg
     f = Fernet(key)
     gh['credentials']['password'] = f.encrypt(bytes(gh['credentials']['password']))
-   
     # nothing in here yet, first entry.
+    if not isinstance(config, dict):
+        config = {}
     if not "server_groups" in config:
         config["server_groups"] = []
     else:
