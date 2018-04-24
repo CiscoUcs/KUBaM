@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request, abort
 from flask_cors import CORS, cross_origin
 from network import UCSNet
-from monitor import UCSStatus
+from monitor import UCSMonitor
 from server import UCSServer
 from session import UCSSession
 from util import UCSUtil
@@ -312,17 +312,51 @@ def update_networks():
     return get_networks()
 
 
-# get the FSM from UCS
-@app.route(API_ROOT + "/monitor", methods=['GET'])
+# get the server name from the URL parameters
+def get_server_name():
+    server_type = request.args.get('type')
+    chassis_id = request.args.get('chassis_id')
+    slot = request.args.get('slot')
+    rack_id = request.args.get('rack_id')
+    server_name = None
+    if server_type == "blade":
+        server_name = "sys/chassis-{0}/blade-{1}".format(chassis_id, slot)
+    elif server_type == "rack":
+        server_name = "sys/rack-unit-{0}".format(rack_id)
+
+    return server_name
+
+
+# get the overall status of the server from UCSM FSM
+@app.route(API_ROOT2 + "/status", methods=['GET'])
 @cross_origin()
-def get_fsm_status():
+def get_server_status():
+
     err, msg, handle = login()
     if err != 0:
         return not_logged_in(msg)
-    status = UCSStatus.get_status(handle, "sys/chassis-1/blade-5")
+    status = UCSMonitor.get_status(handle, get_server_name())
+    logout(handle)
+    if not status:
+        return jsonify({"error": "Bad blade or rack server specified"}), 404
+    else:
+        return jsonify(status), 200
+
+
+# get the detailed status of the server stages from UCSM FSM
+@app.route(API_ROOT2 + "/fsm", methods=['GET'])
+@cross_origin()
+def get_server_fsm():
+    err, msg, handle = login()
+    if err != 0:
+        return not_logged_in(msg)
+    fsm = UCSMonitor.get_fsm(handle, get_server_name())
     logout(handle)
 
-    return jsonify(status), 200
+    if not fsm:
+        return jsonify({"error": "Bad blade or rack server specified"}), 404
+    else:
+        return jsonify(fsm), 200
 
     
 # see if there are any selected servers in the database 
