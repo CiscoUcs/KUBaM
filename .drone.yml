@@ -10,6 +10,7 @@ pipeline:
       - cd kubam/app; python -m unittest test.test_db.DBUnitTests
       - pwd
       - python -m unittest test.test_app.FlaskTestCase
+      - python -m unittest test.test_sg.SGUnitTests
   
   # publish docker image to docker hub
   docker:
