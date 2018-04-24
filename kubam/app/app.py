@@ -42,8 +42,7 @@ def server_handler():
     elif request.method == 'DELETE':
         j, rc = sg.delete(request.json)
     else:
-        rv, rc = sg.list()
-        return jsonify({"servers" : rv}), rc
+        j, rc = sg.list()
     return jsonify(j), rc
 
 @app.route(API_ROOT2 + "/aci", methods=['GET', 'POST', 'PUT', 'DELETE'])
