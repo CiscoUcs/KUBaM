@@ -308,6 +308,9 @@ def list_server_group(file_name):
     # err code 2 means no entries 
     if err == 2:
         return 0, "", {}
+    # if there is an empty file
+    if not isinstance(config, dict):
+        return 0, "", {}
     if not "server_groups" in config:
         return 0, "", {}
     return 0, "", config["server_groups"]
