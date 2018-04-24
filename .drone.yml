@@ -2,10 +2,10 @@ pipeline:
   # build our test image and deploy it for testing
   unittests: 
     image: kubam/python-test
-    environment:
-      - https_proxy=proxy.esl.cisco.com:80
-      - http_proxy=proxy.esl.cisco.com:80
-      - noproxy=10.93.234.238
+#    environment:
+#      - https_proxy=proxy.esl.cisco.com:80
+#      - http_proxy=proxy.esl.cisco.com:80
+#      - noproxy=10.93.234.238
     commands: 
       - echo "Building.."
       - cd kubam/app
