@@ -8,6 +8,7 @@ pipeline:
 #      - noproxy=10.93.234.238
     commands: 
       - echo "Building.."
+      - mkdir -p /kubam
       - cd kubam/app
       #-  python -m unittest test.test_db.DBUnitTests
       - pwd
