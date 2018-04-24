@@ -10,6 +10,7 @@ from db import YamlDB
 from autoinstall import Builder
 from sg import sg
 from aci import aci
+from hosts import hosts
 
 app = Flask(__name__)
 CORS(app)
@@ -30,6 +31,21 @@ def index():
 
 
 # APIV2 methods
+@app.route(API_ROOT2 + "/hosts", methods=['GET', 'POST', 'PUT', 'DELETE'])
+@cross_origin()
+def host_handler():
+    j = {}
+    rc = 200
+    if request.method == 'POST':
+        j, rc = hosts.create(request.json)
+    elif request.method == 'PUT':
+        j, rc = hosts.update(request.json)
+    elif request.method == 'DELETE':
+        j, rc = hosts.delete(request.json)
+    else:
+        j, rc = hosts.list()
+    return jsonify(j), rc
+
 @app.route(API_ROOT2 + "/servers", methods=['GET', 'POST', 'PUT', 'DELETE'])
 @cross_origin()
 def server_handler():
