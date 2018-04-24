@@ -8,7 +8,7 @@ from jinja2 import Environment, FileSystemLoader
 from subprocess import call
 from os import path, chdir
 import Kickstart, VMware
-from db import YamlDB 
+from db import YamlDB
 
 # constants.  
 KUBAM_DIR="/kubam/"

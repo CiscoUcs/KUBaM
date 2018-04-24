@@ -4,12 +4,12 @@
 # 2.  Create a kickstart file based on a template
 # 3.  Create an image from that kickstart file to be used to boot a UCS.
 from socket import inet_aton, error as Serror
-from jinja2 import Environment, FileSystemLoader
 from subprocess import call
 from os import path
 from sshpubkeys import SSHKey, InvalidKeyException
 from cryptography.fernet import Fernet
 import uuid
+#from autoinstall import Builder
 
 # constants.  
 
@@ -188,9 +188,9 @@ def new_uuid():
     # create a random uuid string.
     return str(uuid.uuid4())
 
-def delete_hosts(file_name, guid):
+def delete_hosts(file_name, name):
     """
-    Deletes a host from the list of servers.  Just pass in the ID.
+    Deletes a host from the list of hosts.  Just pass in the ID.
     """
     # TODO: Make sure no host depends upon a physical group.
     err, msg, config = open_config(file_name)
@@ -201,7 +201,7 @@ def delete_hosts(file_name, guid):
     # get the group
     found = False
     for group in config["hosts"]:
-        if group["id"] == guid:
+        if group["name"] == name:
             found = True
             config["hosts"].remove(group)
             break
@@ -210,62 +210,107 @@ def delete_hosts(file_name, guid):
     return err, msg
 
 
-def check_valid_hosts(gh):
-    if not "type" in gh:
-        return 1, "Please specify the type of server group: 'imc' or 'ucsm'"
-    else:
-        if gh["type"] not in ["imc", "ucsm"]:
-            return 1, "server group type should be 'imc' or 'ucsm'"
-
-    if not "name" in gh:
-        return 1, "Please specify the name of the server group.  This should be unique."
-    if not "credentials" in gh:
-        return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
-
-    creds = gh['credentials']
-    if not isinstance(creds, dict):
-        return 1, "Credentials should be a dictionary of ip, password, and user."
-    if not 'ip' in creds:
-        return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
-    if not 'password' in creds:
-        return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
-    if not 'user' in creds:
-        return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+def check_uniqueness(obj, elem):
+    for o in obj:
+        val = 0
+        for i in obj:
+            if o[elem] == i[elem]:
+                val += 1
+        if val > 1:
+            return 1, "Field " + elem + " has to be unique."
     return 0, ""
 
+
+def check_valid_hosts(gh):
+
+    if not "ip" in gh:
+        return 1, "Please specify the ip address of the host."
+    else:
+        er1, msg1 = validate_ip(gh["ip"])
+        if er1 == 1:
+            return 1, "Please provide valid IP address."
+
+    catalog = {
+        "centos7.3": ["generic", "k8s master", "k8s node"],
+        "centos7.4": ["generic", "k8s master", "k8s node"],
+        "redhat7.2": ["generic", "k8s master", "k8s node"],
+        "redhat7.3": ["generic", "k8s master", "k8s node"],
+        "redhat7.4": ["generic", "k8s master", "k8s node"],
+        "esxi6.0": ["generic"],
+        "esxi6.5": ["generic"],
+    }
+
+    if not "os" in gh:
+        return 1, "Please specify the OS of the host."
+    else:
+        flag = False
+        for c in catalog:
+            if c == gh["os"]:
+                flag = True
+        if not flag:
+            return 1, "OS should be a supported type"
+
+    if not "name" in gh:
+        return 1, "Please specify the name of the host / service profile name.  This should be unique."
+    else:
+        if ' ' in gh["name"]:
+            return 1, "The name should not contain spaces."
+
+
+    if not "role" in gh:
+        return 1, "Please specify the role of the host."
+    else:
+        if gh["role"] not in catalog[gh["os"]]:
+            return 1, "Host role should match the os capabilities"
+
+    #if not "network_group" in gh:
+    #    return 1, "Please specify the network_group of the host."
+
+    #if not "server_group" in gh:
+    #    return 1, "Please specify the server_group of the host."
+
+    return 0, ""
+
+
 def new_hosts(file_name, gh):
-    """
-    Credentials passed would be:
-    {"name", "ucs01", "type" : "ucsm", "credentials" : {"user": "admin", "password" : "secret-password", "server" : "172.28.225.163" }}
-    """
-    if not isinstance(gh, dict):
-        return 1, "No hosts information was passed into the request."
+    print("###############")
+    if not isinstance(gh, list):
+        return 1, "The hosts information must be passed using a list."
+    if not gh:
+        return 1, "The list can't be empty."
+    for h in gh:
+        if not isinstance(h, dict):
+            return 1, "The hosts information must be passed using a dictionary."
+
     err, msg, config = open_config(file_name)
+
     if err == 1:
         return err, msg
-    #err, msg = check_valid_server_group(gh)
-    #if err == 1:
-    #    return err, msg
-    # create a new uuid
-    gh["id"] = new_uuid()
 
-    # nothing in here yet, first entry.
-    if not "hosts" in config:
-        config["hosts"] = []
-    else:
-        # check if name already exists
-        for group in config["hosts"]:
-            if group["name"] == gh["name"]:
-                return 1, "host '%s' already exists.  Can not add another." % gh["name"]
+    for h in gh:
+        err, msg = check_valid_hosts(h)
+        if err == 1:
+            return err, msg
 
-    config["hosts"].append(gh)
+    if err == 1:
+        return err, msg
+
+    err, msg = check_uniqueness(gh, "name")
+    if err == 1:
+        return err, msg
+
+    err, msg = check_uniqueness(gh, "ip")
+    if err == 1:
+        return err, msg
+
+    config["hosts"] = gh
     err, msg = write_config(config, file_name)
     return err, msg
 
 
 def list_hosts(file_name):
     """
-    get all the server group details for each server group.
+    get all the hosts details for each server group.
     """
     err, msg, config = open_config(file_name)
     if err == 1:
@@ -273,9 +318,9 @@ def list_hosts(file_name):
     # err code 2 means no entries
     if err == 2:
         return 0, "", {}
-    if not "server_groups" in config:
+    if not "hosts" in config:
         return 0, "", {}
-    return 0, "", config["server_groups"]
+    return 0, "", config["hosts"]
 
 def delete_server_group(file_name, guid):
     """
