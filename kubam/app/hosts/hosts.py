@@ -12,7 +12,7 @@ def list():
     err, msg, hosts = YamlDB.list_hosts(KUBAM_CFG)
     if err == 1:
         return ({'error': msg}, 500)
-    return (hosts, 200)
+    return {"hosts": hosts}, 200
 
 
 # create a new server group
