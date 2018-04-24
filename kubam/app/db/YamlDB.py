@@ -188,6 +188,95 @@ def new_uuid():
     # create a random uuid string.
     return str(uuid.uuid4())
 
+def delete_hosts(file_name, guid):
+    """
+    Deletes a host from the list of servers.  Just pass in the ID.
+    """
+    # TODO: Make sure no host depends upon a physical group.
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    if not "hosts" in config:
+        return 1, "no hosts created yet"
+    # get the group
+    found = False
+    for group in config["hosts"]:
+        if group["id"] == guid:
+            found = True
+            config["hosts"].remove(group)
+            break
+    # now that it is removed, write the config file back out.
+    err, msg = write_config(config, file_name)
+    return err, msg
+
+
+def check_valid_hosts(gh):
+    if not "type" in gh:
+        return 1, "Please specify the type of server group: 'imc' or 'ucsm'"
+    else:
+        if gh["type"] not in ["imc", "ucsm"]:
+            return 1, "server group type should be 'imc' or 'ucsm'"
+
+    if not "name" in gh:
+        return 1, "Please specify the name of the server group.  This should be unique."
+    if not "credentials" in gh:
+        return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+
+    creds = gh['credentials']
+    if not isinstance(creds, dict):
+        return 1, "Credentials should be a dictionary of ip, password, and user."
+    if not 'ip' in creds:
+        return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+    if not 'password' in creds:
+        return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+    if not 'user' in creds:
+        return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+    return 0, ""
+
+def new_hosts(file_name, gh):
+    """
+    Credentials passed would be:
+    {"name", "ucs01", "type" : "ucsm", "credentials" : {"user": "admin", "password" : "secret-password", "server" : "172.28.225.163" }}
+    """
+    if not isinstance(gh, dict):
+        return 1, "No hosts information was passed into the request."
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg
+    #err, msg = check_valid_server_group(gh)
+    #if err == 1:
+    #    return err, msg
+    # create a new uuid
+    gh["id"] = new_uuid()
+
+    # nothing in here yet, first entry.
+    if not "hosts" in config:
+        config["hosts"] = []
+    else:
+        # check if name already exists
+        for group in config["hosts"]:
+            if group["name"] == gh["name"]:
+                return 1, "host '%s' already exists.  Can not add another." % gh["name"]
+
+    config["hosts"].append(gh)
+    err, msg = write_config(config, file_name)
+    return err, msg
+
+
+def list_hosts(file_name):
+    """
+    get all the server group details for each server group.
+    """
+    err, msg, config = open_config(file_name)
+    if err == 1:
+        return err, msg, ""
+    # err code 2 means no entries
+    if err == 2:
+        return 0, "", {}
+    if not "server_groups" in config:
+        return 0, "", {}
+    return 0, "", config["server_groups"]
+
 def delete_server_group(file_name, guid):
     """
     Deletes a server group from the list of servers.  Just pass in the ID.
