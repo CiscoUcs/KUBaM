@@ -300,7 +300,7 @@ class DBUnitTests(unittest.TestCase):
         err, msg = YamlDB.new_hosts(test_file, [{'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.4'}])
         assert(err == 1)
         err, msg = YamlDB.new_hosts(test_file, [{'name': 'kube01', 'ip' : '172.20.30.1', 'os' : 'centos7.4', 'role': 'generic'}])
-        assert(err == 0)
+        assert(err == 1)
         err, msg = YamlDB.new_hosts(test_file, [{'name': 'kube01', 'ip' : '172.20.30.1.1', 'os' : 'centos7.4', 'role': 'generic'}])
         assert(err == 1)
         err, msg = YamlDB.new_hosts(test_file, [{'name': 'kube01 am', 'ip' : '172.20.30.1', 'os' : 'centos7.4', 'role': 'generic'}])
@@ -330,7 +330,7 @@ class DBUnitTests(unittest.TestCase):
             {'name': 'kube02', 'ip': '172.20.30.2', 'os': 'centos7.4', 'role': 'k8s master'}
         ])
         print ("OS should be a supported type")
-        assert (err == 0)
+        assert (err == 1)
 
 if __name__ == '__main__':
     unittest.main()
