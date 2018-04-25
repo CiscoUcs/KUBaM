@@ -143,6 +143,8 @@ class DBUnitTests(unittest.TestCase):
         assert(str(uuid))
     def test_server_group(self):
         test_file = "/tmp/k_test"
+        if os.path.isfile(test_file):
+            os.remove(test_file)
         err, msg = YamlDB.new_server_group("", "")
         assert(err == 1)
         # pass something without a name. 
@@ -195,6 +197,8 @@ class DBUnitTests(unittest.TestCase):
     
     def test_aci(self):
         test_file = "/tmp/k_test"
+        if os.path.isfile(test_file):
+            os.remove(test_file)
         err, msg = YamlDB.new_aci("", "")
         assert(err == 1)
         # pass something without a name. 
@@ -240,6 +244,8 @@ class DBUnitTests(unittest.TestCase):
      
     def test_network_group(self):
         test_file = "/tmp/k_test"
+        if os.path.isfile(test_file):
+            os.remove(test_file)
         err, msg = YamlDB.new_network_group("", "")
         assert(err == 1)
         # pass something without a name. 
@@ -277,6 +283,8 @@ class DBUnitTests(unittest.TestCase):
 
     def test_hosts(self):
         test_file = "/tmp/k_test"
+        if os.path.isfile(test_file):
+            os.remove(test_file)
         err, msg = YamlDB.new_hosts("", "")
         assert(err == 1)
         # pass something without a name. 

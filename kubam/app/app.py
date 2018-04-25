@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS, cross_origin
-from network import UCSNet
+from network import UCSNet, network
 from hosts import hosts
 from monitor import monitor
 from server import servers
@@ -18,6 +18,7 @@ app = Flask(__name__)
 app.register_blueprint(hosts)
 app.register_blueprint(monitor)
 app.register_blueprint(servers)
+app.register_blueprint(network)
 CORS(app)
 
 
