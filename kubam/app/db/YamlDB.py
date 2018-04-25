@@ -348,9 +348,10 @@ def delete_server_group(file_name, guid):
     found = False
     for group in config["server_groups"]:
         if group["id"] == guid:
-            for host in config["hosts"]:
-                if host["server_group"] == group["name"]:
-                    return 1, "Can't delete server_group: there is a host tied to it."
+            if "hosts" in config:
+                for host in config["hosts"]:
+                    if host["server_group"] == group["name"]:
+                        return 1, "Can't delete server_group: there is a host tied to it."
             found = True 
             config["server_groups"].remove(group)
             break
@@ -1009,15 +1010,16 @@ def delete_network_group(file_name, guid):
     err, msg, config = open_config(file_name)
     if err == 1:
         return err, msg
-    if not "aci" in config:
-        return 1, "no servers created yet"
+    if not "network_groups" in config:
+        return 1, "no networks created yet"
     # get the group
     found = False
     for group in config["network_groups"]:
         if group["id"] == guid:
-            for host in config["hosts"]:
-                if host["network_group"] == group["name"]:
-                    return 1, "Can't delete network_group: there is a host tied to it."
+            if "hosts" in config:
+                for host in config["hosts"]:
+                    if host["network_group"] == group["name"]:
+                        return 1, "Can't delete network_group: there is a host tied to it."
             found = True 
             config["network_groups"].remove(group)
             break
