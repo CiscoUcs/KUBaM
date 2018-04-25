@@ -38,7 +38,7 @@ class FlaskTestCase(unittest.TestCase):
     def test_network(self):
         tester=app.test_client(self)
         response = tester.post(API_ROOT2+'/networks', content_type='application/json', data=json.dumps(self.newnet))
-        self.assertEqual(response.status_code,201)
+        self.assertEqual(response.status_code,400)
         response = tester.get(API_ROOT2+'/networks', content_type='capplication/json')
         print response
         
