@@ -1,5 +1,6 @@
-import unittest
+import unittest, os
 from db import YamlDB
+
 
 class DBUnitTests(unittest.TestCase):
     """Tests for `Autoinstall.py`."""
