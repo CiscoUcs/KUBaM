@@ -1,14 +1,17 @@
 import unittest
-from session import UCSSession
+from ucs import UCSSession
+
 
 class SessionUnitTests(unittest.TestCase):
     """Tests for `UCSServer.py`."""
-    handle, err = UCSSession.login("admin",
+    ucs_session = UCSSession()
+    handle, err = ucs_session.login("admin",
                                    "nbv12345",
                                    "172.28.225.163")
 
     def test_serverlist(self):
-        msg = UCSSession.ensure_version(self.handle)
+        session = UCSSession()
+        msg = session.ensure_version(self.handle)
         assert(msg == "")
-        version = UCSSession.get_version(self.handle)
+        version = session.get_version(self.handle)
         assert(version.startswith('3'))

@@ -1,4 +1,4 @@
-from session import UCSSession
+from ucs import UCSSession
 from db import YamlDB
 import os
 
@@ -28,7 +28,8 @@ def check_login(request):
     ip = request['credentials']['ip']
     if ip == "":
         return {'error': "Please enter a valid UCSM IP address."}, 400
-    h, err = UCSSession.login(user, pw, ip)
+    ucs_session = UCSSession()
+    h, err = ucs_session.login(user, pw, ip)
     if h == "":
         return {'error': err}, 400
     UCSSession.logout(h)

@@ -1,4 +1,3 @@
-from session import UCSSession
 from db import YamlDB
 
 KUBAM_CFG="/kubam/kubam.yaml"

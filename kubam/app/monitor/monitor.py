@@ -1,7 +1,7 @@
 from UCSMonitor import UCSMonitor
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
-from util import UCSUtil
+from ucs import UCSUtil
 from config import Const
 
 monitor = Blueprint("monitor", __name__)
@@ -26,11 +26,11 @@ def get_server_name():
 @monitor.route(Const.API_ROOT2 + "/status", methods=['GET'])
 @cross_origin()
 def get_server_status():
-    err, msg, handle = UCSUtil.login()
+    err, msg, handle = UCSUtil.ucs_login()
     if err != 0:
         return UCSUtil.not_logged_in(msg)
     status = UCSMonitor.get_status(handle, get_server_name())
-    UCSUtil.logout(handle)
+    UCSUtil.ucs_logout(handle)
     if not status:
         return jsonify({"error": "Bad blade or rack server specified"}), 404
     else:
@@ -41,11 +41,11 @@ def get_server_status():
 @monitor.route(Const.API_ROOT2 + "/fsm", methods=['GET'])
 @cross_origin()
 def get_server_fsm():
-    err, msg, handle = UCSUtil.login()
+    err, msg, handle = UCSUtil.ucs_login()
     if err != 0:
         return UCSUtil.not_logged_in(msg)
     fsm = UCSMonitor.get_fsm(handle, get_server_name())
-    UCSUtil.logout(handle)
+    UCSUtil.ucs_logout(handle)
 
     if not fsm:
         return jsonify({"error": "Bad blade or rack server specified"}), 404
