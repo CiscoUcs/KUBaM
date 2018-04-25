@@ -73,4 +73,3 @@ def delete(request):
         return {'error': msg}, 400
     else:
         return {'status': "server group deleted"}, 201
-    
