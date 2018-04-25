@@ -188,6 +188,18 @@ def new_uuid():
     # create a random uuid string.
     return str(uuid.uuid4())
 
+
+def check_uniqueness(obj, elem):
+    for o in obj:
+        val = 0
+        for i in obj:
+            if o[elem] == i[elem]:
+                val += 1
+        if val > 1:
+            return 1, "Field " + elem + " has to be unique."
+    return 0, ""
+
+
 def delete_hosts(file_name, name):
     """
     Deletes a host from the list of hosts.  Just pass in the ID.
@@ -210,18 +222,7 @@ def delete_hosts(file_name, name):
     return err, msg
 
 
-def check_uniqueness(obj, elem):
-    for o in obj:
-        val = 0
-        for i in obj:
-            if o[elem] == i[elem]:
-                val += 1
-        if val > 1:
-            return 1, "Field " + elem + " has to be unique."
-    return 0, ""
-
-
-def check_valid_hosts(gh):
+def check_valid_hosts(gh, config):
 
     if not "ip" in gh:
         return 1, "Please specify the ip address of the host."
@@ -256,24 +257,34 @@ def check_valid_hosts(gh):
         if ' ' in gh["name"]:
             return 1, "The name should not contain spaces."
 
-
     if not "role" in gh:
         return 1, "Please specify the role of the host."
     else:
         if gh["role"] not in catalog[gh["os"]]:
             return 1, "Host role should match the os capabilities"
 
-    #if not "network_group" in gh:
-    #    return 1, "Please specify the network_group of the host."
+    if not "network_group" in gh:
+        return 1, "Please specify the network_group of the host."
+    else:
+        flag = False
+        for group in config["network_groups"]:
+            if gh["network_group"] == group["name"]:
+                flag = True
+        if not flag:
+            return 1, "Please specify an already existing network_group of the host."
 
-    #if not "server_group" in gh:
-    #    return 1, "Please specify the server_group of the host."
+    if "server_group" in gh:
+        flag = False
+        for group in config["server_groups"]:
+            if gh["server_group"] == group["name"]:
+                flag = True
+        if not flag:
+            return 1, "Please specify an already existing server_group of the host."
 
     return 0, ""
 
 
 def new_hosts(file_name, gh):
-    print("###############")
     if not isinstance(gh, list):
         return 1, "The hosts information must be passed using a list."
     if not gh:
@@ -288,7 +299,7 @@ def new_hosts(file_name, gh):
         return err, msg
 
     for h in gh:
-        err, msg = check_valid_hosts(h)
+        err, msg = check_valid_hosts(h, config)
         if err == 1:
             return err, msg
 
@@ -332,10 +343,14 @@ def delete_server_group(file_name, guid):
         return err, msg
     if not "server_groups" in config:
         return 1, "no servers created yet"
+
     # get the group
     found = False
     for group in config["server_groups"]:
         if group["id"] == guid:
+            for host in config["hosts"]:
+                if host["server_group"] == group["name"]:
+                    return 1, "Can't delete server_group: there is a host tied to it."
             found = True 
             config["server_groups"].remove(group)
             break
@@ -1000,10 +1015,12 @@ def delete_network_group(file_name, guid):
     found = False
     for group in config["network_groups"]:
         if group["id"] == guid:
+            for host in config["hosts"]:
+                if host["network_group"] == group["name"]:
+                    return 1, "Can't delete network_group: there is a host tied to it."
             found = True 
             config["network_groups"].remove(group)
             break
     # now that it is removed, write the config file back out. 
     err, msg = write_config(config, file_name)
     return err, msg
-
