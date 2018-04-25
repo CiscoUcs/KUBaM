@@ -13,6 +13,14 @@ class FlaskTestCase(unittest.TestCase):
        "name": "werners machine"
     }
 
+    newnet = {
+        "router" : "192.168.1.1",
+        "netmask" : "255.255.255.0",
+        "dnsserver": "8.8.8.8",
+        "ntpserver" : "ntp.cisco.com",
+        "vlan" : "5"
+    }
+
     def test_api(self):
         tester=app.test_client(self)
         response = tester.get('/', content_type='application/json')
@@ -26,6 +34,13 @@ class FlaskTestCase(unittest.TestCase):
         response = tester.get(API_ROOT2 + '/servers', content_type='application/json')
         print response.data
         self.assertEqual(response.status_code,200)
+
+    def test_network(self):
+        tester=app.test_client(self)
+        response = tester.post(API_ROOT2+'/networks', content_type='application/json', data=json.dumps(self.newnet))
+        self.assertEqual(response.status_code,201)
+        response = tester.get(API_ROOT2+'/networks', content_type='capplication/json')
+        print response
         
     def test_aci(self):
         tester = app.test_client(self)
