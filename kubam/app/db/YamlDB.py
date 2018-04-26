@@ -9,7 +9,7 @@ from os import path
 from sshpubkeys import SSHKey, InvalidKeyException
 from cryptography.fernet import Fernet
 import uuid
-#from autoinstall import Builder
+from config import Const
 
 
 # makes sure that the list of ISO images actually exists. 
@@ -227,15 +227,7 @@ def check_valid_hosts(gh, config):
         if er1 == 1:
             return 1, "Please provide valid IP address."
 
-    catalog = {
-        "centos7.3": ["generic", "k8s master", "k8s node"],
-        "centos7.4": ["generic", "k8s master", "k8s node"],
-        "redhat7.2": ["generic", "k8s master", "k8s node"],
-        "redhat7.3": ["generic", "k8s master", "k8s node"],
-        "redhat7.4": ["generic", "k8s master", "k8s node"],
-        "esxi6.0": ["generic"],
-        "esxi6.5": ["generic"],
-    }
+    catalog = Const.CATALOG
 
     if not "os" in gh:
         return 1, "Please specify the OS of the host."
