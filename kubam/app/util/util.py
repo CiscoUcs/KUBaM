@@ -1,7 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
 from config import Const
-from autoinstall import Builder
 from db import YamlDB
 
 util = Blueprint("util", __name__)
@@ -11,7 +10,7 @@ util = Blueprint("util", __name__)
 @util.route(Const.API_ROOT + "/catalog", methods=['GET'])
 @cross_origin()
 def get_catalog():
-    catalog = Builder.catalog
+    catalog = Const.CATALOG
     return jsonify(catalog), 200
 
 

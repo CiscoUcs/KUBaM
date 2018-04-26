@@ -32,7 +32,8 @@ def mkboot_iso():
     if err != 0:
         return jsonify({"error": msg}), 400
 
-    err, msg = Builder.deploy_server_images(Const.KUBAM_CFG)
+    builder = Builder()
+    err, msg = builder.deploy_server_images(Const.KUBAM_CFG)
     if err != 0:
         return jsonify({"error": msg}), 400
     return jsonify({"status": "ok"}), 201
