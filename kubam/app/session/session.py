@@ -38,7 +38,7 @@ def create_credentials():
     # session.logger.info("starting login attempt to UCS.")
     ucs_session = UCSSession()
     h, err = ucs_session.login(credentials['user'], credentials['password'], credentials['ip'])
-    if h == "":
+    if not h:
         return jsonify({'error': err}), 401
     # Write datafile
     YamlDB.update_ucs_creds(Const.KUBAM_CFG, credentials)

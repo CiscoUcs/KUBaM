@@ -4,3 +4,4 @@ ucsmsdk
 jinja2
 sshpubkeys
 cryptography
+pyyaml

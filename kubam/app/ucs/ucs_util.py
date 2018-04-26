@@ -1,6 +1,5 @@
 from ucsmsdk.ucsexception import UcsException
 from ucs_session import UCSSession
-from flask import jsonify
 from db import YamlDB
 from config import Const
 
@@ -16,18 +15,18 @@ class UCSUtil(object):
                 if "user" in credentials and "password" in credentials and "ip" in credentials:
                     ucs_session = UCSSession()
                     h, msg = ucs_session.login(credentials["user"], credentials["password"], credentials["ip"])
-                    if msg != "":
-                        return 1, msg, ""
-                    if h != "":
+                    if msg:
+                        return 1, msg, None
+                    if h:
                         return 0, msg, h
-                    return 1, msg, ""
+                    return 1, msg, None
                 else:
                     msg = "kubam.yaml file does not include the user, password, and ip properties to login."
                     err = 1
             else:
                 msg = "UCS Credentials have not been entered.  Please login to UCS to continue."
                 err = 1
-        return err, msg, ""
+        return err, msg, None
 
     # Logout from the the UCSM
     @staticmethod
@@ -39,7 +38,7 @@ class UCSUtil(object):
     def not_logged_in(msg):
         if msg == "":
             msg = "not logged in to UCS"
-        return jsonify({'error': msg}), 401
+        return msg
 
     @staticmethod
     def check_aci_login(request):
@@ -53,11 +52,13 @@ class UCSUtil(object):
         ip = request['credentials']['ip']
         if ip == "":
             return 1, "Please enter a valid ACI IP address."
+
         # TODO: implement ACI APIs to log in and configure
-        # h, err = UCSSession.login(user, pw, ip)
-        # if h == "":
-        #    return {'error': err}, 400
-        # UCSSession.logout(h)
+        ucs_session = UCSSession()
+        h, err = ucs_session.login(user, pw, ip)
+        if not h:
+            return 1, err
+        UCSSession.logout(h)
         return 0, None
 
     @staticmethod
@@ -76,7 +77,7 @@ class UCSUtil(object):
             return 1, "Please enter a valid UCSM IP address."
         ucs_session = UCSSession()
         h, err = ucs_session.login(user, pw, ip)
-        if h == "":
+        if not h:
             return 1, err
         UCSSession.logout(h)
         return 0, None

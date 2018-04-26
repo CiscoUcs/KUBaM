@@ -73,7 +73,8 @@ def network_handler():
 def get_networks():
     err, msg, handle = UCSUtil.ucs_login()
     if err != 0:
-        return UCSUtil.not_logged_in(msg)
+        msg = UCSUtil.not_logged_in(msg)
+        return jsonify({'error': msg}), 401
     vlans = UCSNet.list_vlans(handle)
     UCSUtil.ucs_logout(handle)
     err, msg, net_hash = YamlDB.get_network(Const.KUBAM_CFG)
@@ -94,7 +95,8 @@ def select_vlan():
         return jsonify({'error': 'expected hash of VLANs'}), 400
     err, msg, handle = UCSUtil.ucs_login()
     if err != 0:
-        return UCSUtil.not_logged_in(msg)
+        msg = UCSUtil.not_logged_in(msg)
+        return jsonify({'error': msg}), 401
     # app.logger.info("Request is: ")
     # app.logger.info(request)
     vlan = request.json['vlan']
@@ -112,7 +114,8 @@ def update_networks():
         return jsonify({'error': 'expected hash of network settings'}), 400
     err, msg, handle = UCSUtil.ucs_login()
     if err != 0:
-        return UCSUtil.not_logged_in(msg)
+        msg = UCSUtil.not_logged_in(msg)
+        return jsonify({'error': msg}), 401
     # app.logger.info("request is")
     # app.logger.info(request.json)
     vlan = request.json['vlan']

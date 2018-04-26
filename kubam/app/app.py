@@ -2,8 +2,8 @@ from flask import Flask, jsonify
 from flask_cors import CORS, cross_origin
 from aci import aci
 from deploy import deploy
-from hosts import hosts
-from isos import isos
+from host import hosts
+from iso import isos
 from monitor import monitor
 from network import networks
 from server import servers

@@ -27,7 +27,8 @@ def get_server_name():
 def get_server_status():
     err, msg, handle = UCSUtil.ucs_login()
     if err != 0:
-        return UCSUtil.not_logged_in(msg)
+        msg = UCSUtil.not_logged_in(msg)
+        return jsonify({'error': msg}), 401
     status = UCSMonitor.get_status(handle, get_server_name())
     UCSUtil.ucs_logout(handle)
     if not status:
@@ -42,7 +43,8 @@ def get_server_status():
 def get_server_fsm():
     err, msg, handle = UCSUtil.ucs_login()
     if err != 0:
-        return UCSUtil.not_logged_in(msg)
+        msg = UCSUtil.not_logged_in(msg)
+        return jsonify({'error': msg}), 401
     fsm = UCSMonitor.get_fsm(handle, get_server_name())
     UCSUtil.ucs_logout(handle)
 

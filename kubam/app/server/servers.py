@@ -85,7 +85,8 @@ def server_handler():
 def get_servers():
     err, msg, handle = UCSUtil.ucs_login()
     if err != 0:
-        return UCSUtil.not_logged_in(msg)
+        msg = UCSUtil.not_logged_in(msg)
+        return jsonify({'error': msg}), 401
     ucs_servers = UCSServer.list_servers(handle)
     UCSUtil.ucs_logout(handle)
 
@@ -108,7 +109,8 @@ def select_servers():
         return jsonify({'error': 'expected hash of servers'}), 400
     err, msg, handle = UCSUtil.ucs_login()
     if err != 0:
-        return UCSUtil.not_logged_in(msg)
+        msg = UCSUtil.not_logged_in(msg)
+        return jsonify({'error': msg}), 401
     ucs_servers = request.json['servers']
     # Gets a hash of severs of form:
     # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}

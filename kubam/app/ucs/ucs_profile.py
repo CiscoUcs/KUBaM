@@ -11,7 +11,7 @@ class UCSProfile(object):
     def make_ucs():
         err, msg, handle = UCSUtil.ucs_login()
         if err != 0:
-            return UCSUtil.not_logged_in(msg)
+            return err, UCSUtil.not_logged_in(msg)
         err, msg, full_org = UCSUtil.get_full_org(handle)
         if err != 0:
             return err, msg
@@ -50,7 +50,7 @@ class UCSProfile(object):
         ucs_util = UCSUtil()
         err, msg, handle = ucs_util.ucs_login()
         if err != 0:
-            return ucs_util.not_logged_in(msg)
+            return err, ucs_util.not_logged_in(msg)
         err, msg, hosts = YamlDB.get_hosts(Const.KUBAM_CFG)
         if err != 0:
             return 1, msg
