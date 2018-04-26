@@ -11,8 +11,8 @@ class Hosts(object):
     @staticmethod
     def list_hosts():
         """
-        / basic test to see if site is up.
-        should return { 'status' : 'ok'}
+        Basic test to see if site is up.
+        Should return { 'status' : 'ok'}
         """
         err, msg, host_list = YamlDB.list_hosts(Const.KUBAM_CFG)
         if err == 1:

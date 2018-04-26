@@ -2,8 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
 from db import YamlDB
 from config import Const
-from iso import IsoMaker
-from autoinstall import Builder
+from autoinstall import Builder, IsoMaker
 
 isos = Blueprint("isos", __name__)
 
@@ -28,7 +27,8 @@ def mkboot_iso():
         return jsonify({"error": msg}), 400
     if len(iso_images) == 0:
         return jsonify({"error": "No ISOS have been mapped.  Please map an ISO image with an OS"}), 400
-    err, msg = IsoMaker.mkboot_iso(isos)
+    iso_maker = IsoMaker()
+    err, msg = iso_maker.mkboot_iso(isos)
     if err != 0:
         return jsonify({"error": msg}), 400
 

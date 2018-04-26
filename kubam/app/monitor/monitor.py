@@ -1,7 +1,6 @@
-from UCSMonitor import UCSMonitor
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
-from ucs import UCSUtil
+from ucs import UCSUtil, UCSMonitor
 from config import Const
 
 monitor = Blueprint("monitor", __name__)
