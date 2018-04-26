@@ -76,7 +76,8 @@ def select_servers():
 @servers.route(Const.API_ROOT + "/servers/images", methods=['POST'])
 @cross_origin()
 def deploy_server_autoinstall_images():
-    err, msg = Builder.deploy_server_images(Const.KUBAM_CFG)
+    builder = Builder()
+    err, msg = builder.deploy_server_images(Const.KUBAM_CFG)
     if not err == 0:
         return jsonify({"error": msg})
     return jsonify({"status": "ok"}), 201

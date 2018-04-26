@@ -38,11 +38,13 @@ class AutoInstallUnitTests(unittest.TestCase):
 
     def test_find_template(self):
         node = self.cfg["hosts"][0]
-        err, msg, template, template_dir = Builder.find_template(node) 
+        builder = Builder()
+        err, msg, template, template_dir = builder.find_template(node)
     
     # need to have a template file in ~/kubam/centos7.3.tmpl for this to work. 
     def test_build_template(self):
-        err, msg, f = Builder.build_template(self.cfg["hosts"][0], 
+        builder = Builder()
+        err, msg, f = builder.build_template(self.cfg["hosts"][0],
                                              self.cfg)
         if err != 0:
             print msg
