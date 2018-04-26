@@ -1,10 +1,11 @@
 import unittest
-from server import UCSServer
-from session import UCSSession
+from ucs import UCSServer, UCSSession
+
 
 class ServerUnitTests(unittest.TestCase):
     """Tests for `UCSServer.py`."""
-    handle, err = UCSSession.login("admin",
+    ucs_session = UCSSession()
+    handle, err = ucs_session.login("admin",
                                    "nbv12345",
                                    "172.28.225.163")
 
@@ -25,5 +26,5 @@ class ServerUnitTests(unittest.TestCase):
 #        print msg
 #        assert(err == 0)
     def test_create_service_profile_template(self):
-        UCSServer.createServiceProfileTemplate(this.handle, "org-root")
+        UCSServer.create_service_profile_template(this.handle, "org-root")
 

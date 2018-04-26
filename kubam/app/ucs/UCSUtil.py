@@ -1,7 +1,5 @@
 from ucsmsdk.ucsexception import UcsException
-from server import UCSServer
-from network import UCSNet
-from session import UCSSession
+from ucs import UCSServer, UCSSession, UCSNet
 from flask import jsonify
 from db import YamlDB
 from config import Const
@@ -10,13 +8,14 @@ from config import Const
 class UCSUtil(object):
     # Login to the UCSM
     @staticmethod
-    def login():
+    def ucs_login():
         err, msg, config = YamlDB.open_config(Const.KUBAM_CFG)
         if err == 0:
             if "ucsm" in config and "credentials" in config["ucsm"]:
-                creds = config["ucsm"]["credentials"]
-                if "user" in creds and "password" in creds and "ip" in creds:
-                    h, msg = UCSSession.login(creds["user"], creds["password"], creds["ip"])
+                credentials = config["ucsm"]["credentials"]
+                if "user" in credentials and "password" in credentials and "ip" in credentials:
+                    ucs_session = UCSSession()
+                    h, msg = ucs_session.login(credentials["user"], credentials["password"], credentials["ip"])
                     if msg != "":
                         return 1, msg, ""
                     if h != "":
@@ -32,13 +31,13 @@ class UCSUtil(object):
 
     # Logout from the the UCSM
     @staticmethod
-    def logout(handle):
+    def ucs_logout(handle):
         UCSSession.logout(handle)
 
     # Check if the login was successful
     @staticmethod
     def not_logged_in(msg):
-        if not msg:
+        if msg == "":
             msg = "not logged in to UCS"
         return jsonify({'error': msg}), 401
 
@@ -97,9 +96,9 @@ class UCSUtil(object):
             err, msg = self.create_org(handle, org)
         return err, msg, full_org
 
-    # Make the UCS configuration using the Kubam information.
+    # Make the UCS configuration using the Kubam information
     def make_ucs(self):
-        err, msg, handle = self.login()
+        err, msg, handle = self.ucs_login()
         if err != 0:
             return self.not_logged_in(msg)
         err, msg, full_org = self.get_full_org(handle)
@@ -111,12 +110,13 @@ class UCSUtil(object):
         if "vlan" in net_settings:
             selected_vlan = net_settings["vlan"]
         if selected_vlan == "":
-            self.logout(handle)
+            self.ucs_logout(handle)
             return 1, "No vlan selected in UCS configuration."
 
-        err, msg = UCSNet.createKubeNetworking(handle, full_org, selected_vlan)
+        ucs_net = UCSNet()
+        err, msg = ucs_net.create_kube_networking(handle, full_org, selected_vlan)
         if err != 0:
-            self.logout(handle)
+            self.ucs_logout(handle)
             return err, msg
 
         # get the selected servers, and hosts.
@@ -124,10 +124,35 @@ class UCSUtil(object):
         err, msg, servers = YamlDB.get_ucs_servers(Const.KUBAM_CFG)
         err, msg, kubam_ip = YamlDB.get_kubam_ip(Const.KUBAM_CFG)
 
-        err, msg = UCSServer.createServerResources(handle, full_org, hosts, servers, kubam_ip)
+        ucs_server = UCSServer()
+        err, msg = ucs_server.create_server_resources(handle, full_org, hosts, servers, kubam_ip)
         if err != 0:
-            self.logout(handle)
+            self.ucs_logout(handle)
             return err, msg
 
-        self.logout(handle)
+        self.ucs_logout(handle)
         return err, msg
+
+    # Destroy the UCS configuration
+    def destroy_ucs(self):
+        err, msg, handle = UCSUtil.ucs_login()
+        if err != 0:
+            return UCSUtil.not_logged_in(msg)
+        err, msg, hosts = YamlDB.get_hosts(Const.KUBAM_CFG)
+        if err != 0:
+            return 1, msg
+        if len(hosts) == 0:
+            return 0, "no servers deployed"
+        err, msg, full_org = self.get_full_org(handle)
+        if err != 0:
+            return err, msg
+
+        ucs_server = UCSServer()
+        err, msg = ucs_server.delete_server_resources(handle, full_org, hosts)
+        if err != 0:
+            return 1, msg
+        ucs_net = UCSNet()
+        err, msg = ucs_net.delete_kube_networking(handle, full_org)
+        if err != 0:
+            return 1, msg
+        return 0, "ok"
