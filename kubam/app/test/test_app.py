@@ -14,9 +14,10 @@ class FlaskTestCase(unittest.TestCase):
     }
 
     newnet = {
-        "router" : "192.168.1.1",
+        "name" : "newnet",
+        "gateway" : "192.168.1.1",
         "netmask" : "255.255.255.0",
-        "dnsserver": "8.8.8.8",
+        "nameserver": "8.8.8.8",
         "ntpserver" : "ntp.cisco.com",
         "vlan" : "5"
     }
@@ -38,10 +39,10 @@ class FlaskTestCase(unittest.TestCase):
     def test_server(self):
         tester=app.test_client(self)
         response = tester.post(API_ROOT2 + '/servers', content_type='application/json', data=json.dumps(self.gdata))
-        print response.data
-        #self.assertEqual(response.status_code,201)
+        #print response.data
+        self.assertEqual(response.status_code,201)
         response = tester.get(API_ROOT2 + '/servers', content_type='application/json')
-        print response.data
+        #print response.data
         self.assertEqual(response.status_code,200)
         d = json.loads(response.get_data(as_text=True))
         delete_me = ""
@@ -49,19 +50,36 @@ class FlaskTestCase(unittest.TestCase):
             if a['name'] == self.gdata['name']:
                 delete_me = a
         if not delete_me == "":
-            tester.delete(API_ROOT2 + '/servers', content_type='application/json', data=json.dumps({"id" : delete_me['id']}))
+            response = tester.delete(API_ROOT2 + '/servers', content_type='application/json', data=json.dumps({"id" : delete_me['id']}))
+            self.assertEqual(response.status_code,201)
+        else: 
+            print "test server group not found.  Should have been found and deleted."
 
     def test_network(self):
         tester=app.test_client(self)
         response = tester.post(API_ROOT2+'/networks', content_type='application/json', data=json.dumps(self.newnet))
-        self.assertEqual(response.status_code,400)
-        response = tester.get(API_ROOT2+'/networks', content_type='capplication/json')
-        print response
-        
+        self.assertEqual(response.status_code,201)
+        response = tester.get(API_ROOT2+'/networks', content_type='application/json')
+        #print response
+        self.assertEqual(response.status_code,200)
+        d = json.loads(response.get_data(as_text=True))
+        delete_me = ""
+        print d['networks']
+        for a in  d['networks']:
+            if a['name'] == self.newnet['name']:
+                delete_me = a
+        if not delete_me == "":
+            response = tester.delete(API_ROOT2 + '/networks', content_type='application/json', data=json.dumps({"id" : delete_me['id']}))
+            self.assertEqual(response.status_code,201)
+        else:
+            print "test network name not found. SHould have been found and deleted."
+
     def test_aci(self):
         tester = app.test_client(self)
         response = tester.post(API_ROOT2+'/aci', content_type='application/json', data=json.dumps(self.newaci))
-        print response.data
+        # make sure it was able to create it. 
+        self.assertEqual(response.status_code,201)
+        #print response.data
         response = tester.get(API_ROOT2 + '/aci', content_type='application/json')
         d = json.loads(response.get_data(as_text=True))
         dAci = ""
@@ -69,12 +87,11 @@ class FlaskTestCase(unittest.TestCase):
             if a['name'] == self.newaci['name']:
                 dAci = a
         if not dAci == "":
-            tester.delete(API_ROOT2 + '/aci', content_type='application/json', data=json.dumps({"id" : dAci['id']}))
+            response = tester.delete(API_ROOT2 + '/aci', content_type='application/json', data=json.dumps({"id" : dAci['id']}))
+            self.assertEqual(response.status_code,201)
+        else: 
+            print "aci name not found and not deleted.  Shoudl have been"
             
-
-                
-        
-#        self.assertIn(b'success', response.data)
 
 if __name__ == '__main__':
     unittest.main()

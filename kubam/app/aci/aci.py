@@ -8,10 +8,10 @@ def list():
     / basic test to see if site is up.
     should return { 'status' : 'ok'}
     """
-    err, msg, sg = YamlDB.list_aci(KUBAM_CFG)
+    err, msg, aci = YamlDB.list_aci(KUBAM_CFG)
     if err == 1:
         return ({'error': msg}, 500)
-    return { "aci" : sg} , 200
+    return { "aci" : aci} , 200
 
 def check_login(request):
     if not 'credentials' in request:

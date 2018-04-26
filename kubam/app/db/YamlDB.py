@@ -1019,8 +1019,9 @@ def delete_network_group(file_name, guid):
         if group["id"] == guid:
             if "hosts" in config:
                 for host in config["hosts"]:
-                    if host["network_group"] == group["name"]:
-                        return 1, "Can't delete network_group: there is a host tied to it."
+                    if "network_group" in host: 
+                        if host["network_group"] == group["name"]:
+                            return 1, "Can't delete network_group: there is a host tied to it."
             found = True 
             config["network_groups"].remove(group)
             break

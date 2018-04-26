@@ -38,7 +38,7 @@ class Network(object):
         err, msg = YamlDB.update_network_group(Const.KUBAM_CFG, req)
         if err == 1:
             return {'error': msg}, 400
-        return {"status": "ok"}, 200
+        return {"status": "ok"}, 201
 
     @staticmethod
     def delete_network(req):
