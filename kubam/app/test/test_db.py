@@ -2,7 +2,6 @@ import os
 import unittest
 from db import YamlDB
 
-
 class DBUnitTests(unittest.TestCase):
     """Tests for `Autoinstall.py`."""
     cfg = { "hosts" : [{
@@ -26,9 +25,9 @@ class DBUnitTests(unittest.TestCase):
     bad1 = { "foo" : "bar" }
     bad_node = {"name" : "badname", "os" : "bados", "ip": "20" }
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(DBUnitTests, self).__init__(*args, **kwargs)
         self.db = YamlDB()
-
 
     def test_validate_os(self):
         err, msg = self.db.validate_os("bad")
