@@ -11,7 +11,6 @@ from cryptography.fernet import Fernet
 import uuid
 #from autoinstall import Builder
 
-# constants.  
 
 # makes sure that the list of ISO images actually exists. 
 def validate_iso_images(iso_images):
@@ -23,8 +22,6 @@ def validate_iso_images(iso_images):
         elif not path.isfile(i["file"]):
             return 1, "%s file is not found." % i["file"]
     return 0, ""
-        
-        
 
 # validate list of public keys
 def validate_pks(key_list):
@@ -41,7 +38,6 @@ def validate_pks(key_list):
             err +=1
             msg = msg + "\nInvalid SSH Public Key:" % k
     return err, msg
-        
 
 # takes in an OS and verifies it's something we support
 # TODO: Get this information from the catalog.  Maybe move builder external
@@ -268,7 +264,7 @@ def check_valid_hosts(gh, config):
     else:
         flag = False
         for group in config["network_groups"]:
-            if gh["network_group"] == group["name"]:
+            if gh["network_group"] == group["id"]:
                 flag = True
         if not flag:
             return 1, "Please specify an already existing network_group of the host."
@@ -276,7 +272,7 @@ def check_valid_hosts(gh, config):
     if "server_group" in gh:
         flag = False
         for group in config["server_groups"]:
-            if gh["server_group"] == group["name"]:
+            if gh["server_group"] == group["id"]:
                 flag = True
         if not flag:
             return 1, "Please specify an already existing server_group of the host."

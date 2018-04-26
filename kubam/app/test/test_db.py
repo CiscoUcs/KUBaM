@@ -286,6 +286,14 @@ class DBUnitTests(unittest.TestCase):
         test_file = "/tmp/k_test"
         if os.path.isfile(test_file):
             os.remove(test_file)
+        # first create a network to test with. 
+        err, msg = YamlDB.new_network_group(test_file, {'name': 'net01', 'netmask':'255.255.255.0', 'gateway' : '192.168.1.1', 'nameserver' : '8.8.8.8', 'ntpserver' : 'ntp.esl.cisco.com'})
+        assert(err == 0)
+        err, msg, nets = YamlDB.list_network_group(test_file)
+        assert(err == 0)
+        assert(len(nets) == 1)
+        net = nets[0]
+        net_id = net["id"]
         err, msg = YamlDB.new_hosts("", "")
         assert(err == 1)
         # pass something without a name. 
@@ -325,12 +333,15 @@ class DBUnitTests(unittest.TestCase):
             ])
         print ("OS should be a supported type")
         assert(err == 1)
-        err, msg = YamlDB.new_hosts(test_file, [
-            {'name': 'kube01', 'ip': '172.20.30.1', 'os': 'centos7.4', 'role': 'generic'},
-            {'name': 'kube02', 'ip': '172.20.30.2', 'os': 'centos7.4', 'role': 'k8s master'}
-        ])
-        print ("OS should be a supported type")
-        assert (err == 1)
+        good_array = [
+            {'name': 'kube01', 'ip': '172.20.30.1', 'os': 'centos7.4', 'role': 'generic', 'network_group' : net_id },
+            {'name': 'kube02', 'ip': '172.20.30.2', 'os': 'centos7.4', 'role': 'k8s master', 'network_group': net_id}
+        ]
+        err, msg = YamlDB.new_hosts(test_file, good_array)
+        print ("network should always have a network_group associated")
+        assert (err == 0)
+        err, msg = YamlDB.delete_network_group(test_file, net_id)
+        assert(err == 0)
 
 if __name__ == '__main__':
     unittest.main()

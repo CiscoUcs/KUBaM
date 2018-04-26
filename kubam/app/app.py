@@ -222,7 +222,6 @@ def update_iso_map():
     return get_iso_map()
 
 
-
 @app.route(Const.API_ROOT + "/settings", methods=['POST'])
 @cross_origin()
 def update_settings():
