@@ -1,8 +1,8 @@
 from jinja2 import Environment, FileSystemLoader
 from subprocess import call
 from os import path, chdir
-import Kickstart
-import VMware
+from kickstart import Kickstart
+from vmware import VMware
 from db import YamlDB
 from config import Const
 

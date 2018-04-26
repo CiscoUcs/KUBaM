@@ -4,22 +4,79 @@ from ucs import UCSUtil, UCSServer
 from autoinstall import Builder
 from config import Const
 from db import YamlDB
-from sg import sg
 
 servers = Blueprint("servers", __name__)
+
+
+class Servers(object):
+    # List the server group information
+    @staticmethod
+    def list_servers():
+        """
+        / basic test to see if site is up.
+        should return { 'status' : 'ok'}
+        """
+        err, msg, sg = YamlDB.list_server_group(Const.KUBAM_CFG)
+        if err == 1:
+            return {'error': msg}, 500
+        return {"servers": sg}, 200
+
+    # Create a new server group
+    @staticmethod
+    def create_servers(req):
+        """
+        Create a new UCS Domain
+        Format of request should be JSON that looks like:
+        {"name", "ucs01", "type" : "ucsm", "credentials":
+            {"user": "admin", "password": "secret-password", "ip" : "172.28.225.163" }}
+        """
+        # Make sure we can log in first.
+
+        err, msg = UCSUtil.check_ucs_login(req)
+        if err == 1:
+            return {'error:': msg}, 400
+        err, msg = YamlDB.new_server_group(Const.KUBAM_CFG, req)
+        if err == 1:
+            return {'error': msg}, 400
+        return {'status': "new server group {0} created!".format(req["name"])}, 201
+
+    @staticmethod
+    def update_servers(req):
+        """
+        Update a server group
+        """
+        err, msg = UCSUtil.check_ucs_login(req)
+        if err == 1:
+            return {'error:': msg}, 400
+        err, msg = YamlDB.update_server_group(Const.KUBAM_CFG, req)
+        if err == 1:
+            return {'error': msg}, 400
+        return {'status': "server group %s updated!" % req["name"]}, 201
+
+    @staticmethod
+    def delete_servers(req):
+        """
+        Delete the UCS server group or CIMC from the config.
+        """
+        uuid = req['id']
+        err, msg = YamlDB.delete_server_group(Const.KUBAM_CFG, uuid)
+        if err == 1:
+            return {'error': msg}, 400
+        else:
+            return {'status': "server group deleted"}, 201
 
 
 @servers.route(Const.API_ROOT2 + "/servers", methods=['GET', 'POST', 'PUT', 'DELETE'])
 @cross_origin()
 def server_handler():
     if request.method == 'POST':
-        j, rc = sg.create(request.json)
+        j, rc = Servers.create_servers(request.json)
     elif request.method == 'PUT':
-        j, rc = sg.update(request.json)
+        j, rc = Servers.update_servers(request.json)
     elif request.method == 'DELETE':
-        j, rc = sg.delete(request.json)
+        j, rc = Servers.delete_servers(request.json)
     else:
-        j, rc = sg.list()
+        j, rc = Servers.list_servers()
     return jsonify(j), rc
 
 

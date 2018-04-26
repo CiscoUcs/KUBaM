@@ -30,7 +30,7 @@ class ACI(object):
         "ip" : "172.28.225.163" }, ...}
         """
         # Make sure we can log in first.
-        msg, code = UCSUtil.check_login(req)
+        msg, code = UCSUtil.check_aci_login(req)
         if code == 400:
             return msg, code
         err, msg = YamlDB.new_aci(Const.KUBAM_CFG, req)
@@ -43,7 +43,7 @@ class ACI(object):
         """
         Update an ACI group
         """
-        err, msg = UCSUtil.check_login(req)
+        err, msg = UCSUtil.check_aci_login(req)
         if err == 1:
             return jsonify({'error': msg}), 400
         err, msg = YamlDB.update_aci(Const.KUBAM_CFG, req)

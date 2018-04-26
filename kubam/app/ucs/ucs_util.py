@@ -42,15 +42,15 @@ class UCSUtil(object):
         return jsonify({'error': msg}), 401
 
     @staticmethod
-    def check_login(req):
-        if 'credentials' not in req:
+    def check_aci_login(request):
+        if 'credentials' not in request:
             return 1, "no credentials found in request"
         for v in ['user', 'password', 'ip']:
-            if v not in req['credentials']:
+            if v not in request['credentials']:
                 return 1, "credentials should include {0}".format(v)
-        user = req['credentials']['user']
-        pw = req['credentials']['password']
-        ip = req['credentials']['ip']
+        user = request['credentials']['user']
+        pw = request['credentials']['password']
+        ip = request['credentials']['ip']
         if ip == "":
             return 1, "Please enter a valid ACI IP address."
         # TODO: implement ACI APIs to log in and configure
@@ -58,6 +58,27 @@ class UCSUtil(object):
         # if h == "":
         #    return {'error': err}, 400
         # UCSSession.logout(h)
+        return 0, None
+
+    @staticmethod
+    def check_ucs_login(request):
+        if not isinstance(request, dict):
+            return 1, "improper request sent"
+        if 'credentials' not in request:
+            return 1, "no credentials found in request"
+        for v in ['user', 'password', 'ip']:
+            if v not in request['credentials']:
+                return 1, "credentials should include {0}".format(v)
+        user = request['credentials']['user']
+        pw = request['credentials']['password']
+        ip = request['credentials']['ip']
+        if ip == "":
+            return 1, "Please enter a valid UCSM IP address."
+        ucs_session = UCSSession()
+        h, err = ucs_session.login(user, pw, ip)
+        if h == "":
+            return 1, err
+        UCSSession.logout(h)
         return 0, None
 
     # create org should not have org- prepended to it.

@@ -1,5 +1,6 @@
 import unittest
-from sg import sg
+from server import Servers
+
 
 class SGUnitTests(unittest.TestCase):
     """Tests for Server Group Tests."""
@@ -15,10 +16,10 @@ class SGUnitTests(unittest.TestCase):
     }
     
     def test_servergroup_crud(self):
-        err, msg = sg.create(self.newsg)
+        err, msg = Servers.create_servers(self.newsg)
         assert(msg != "")
         assert(err != 1)
-        s, err = sg.list()
+        s, err = Servers.list_servers()
         assert(err == 200)
         print s
 
