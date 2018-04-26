@@ -7,7 +7,7 @@ from network import networks
 from server import servers
 from session import session
 from config import Const
-from ucs import UCSServer, UCSUtil
+from ucs import UCSUtil
 from iso import IsoMaker
 from db import YamlDB
 from autoinstall import Builder
@@ -153,101 +153,6 @@ def update_public_keys():
     return jsonify({'keys': keys}), 201
 
 
-# see if there are any selected servers in the database
-def servers_to_api(ucs_servers, dbServers):
-    for i, real_server in enumerate(ucs_servers):
-        if real_server["type"] == "blade":
-            if "blades" in dbServers:
-                for b in dbServers["blades"]:
-                    b_parts = b.split("/")
-                    if (len(b_parts) == 2 and
-                            real_server["chassis_id"] == b_parts[0] and
-                            real_server["slot"] == b_parts[1]):
-                        real_server["selected"] = True
-                        ucs_servers[i] = real_server
-        elif real_server["type"] == "rack":
-            if "rack_servers" in dbServers:
-                for s in dbServers["rack_servers"]:
-                    if real_server["rack_id"] == s:
-                        real_server["selected"] = True
-                        ucs_servers[i] = real_server
-    return ucs_servers
-
-
-@app.route(Const.API_ROOT + "/servers", methods=['GET'])
-@cross_origin()
-def get_servers():
-    err, msg, handle = UCSUtil.ucs_login()
-    if err != 0:
-        return UCSUtil.not_logged_in(msg)
-    servers = UCSServer.list_servers(handle)
-    UCSUtil.ucs_logout(handle)
-
-    # gets a hash of severs of form:
-    # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
-    err, msg, dbServers = YamlDB.get_ucs_servers(Const.KUBAM_CFG)
-    if err != 0:
-        return jsonify({'error': msg}), 400
-    servers = servers_to_api(servers, dbServers)
-    # app.logger.info("returninng servers...")
-    # app.logger.info(servers)
-    err, msg, hosts = YamlDB.get_hosts(Const.KUBAM_CFG)
-    if err != 0:
-        return jsonify({'error': msg}), 400
-    return jsonify({'servers': servers, 'hosts': hosts}), 200
-
-
-# translates the json we get from the web interface to what we expect to put in
-# the database.
-def servers_to_db(servers):
-    # gets a server array list and gets the selected servers and
-    # puts them in the database form
-    server_pool = {}
-    # app.logger.info(servers)
-    for s in servers:
-        if "selected" in s and s["selected"] == True:
-            if s["type"] == "blade":
-                if not "blades" in server_pool:
-                    server_pool["blades"] = []
-                b = "%s/%s" % (s["chassis_id"], s["slot"])
-                server_pool["blades"].append(b)
-            elif s["type"] == "rack":
-                if not "rack_servers" in server_pool:
-                    server_pool["rack_servers"] = []
-                server_pool["rack_servers"].append(s["rack_id"])
-    return server_pool
-
-
-@app.route(Const.API_ROOT + "/servers", methods=['POST'])
-@cross_origin()
-def select_servers():
-    # make sure we got some data.
-    if not request.json:
-        return jsonify({'error': 'expected hash of servers'}), 400
-    # make sure we can login
-    err, msg, handle = UCSUtil.ucs_login()
-    if err != 0:
-        return UCSUtil.not_logged_in(msg)
-    servers = request.json['servers']
-    # we expect servers to be a hash of like:
-    # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
-    servers = servers_to_db(servers)
-    if servers:
-        err, msg = YamlDB.update_ucs_servers(Const.KUBAM_CFG, servers)
-        if err != 0:
-            return jsonify({'error': msg}), 400
-    if "hosts" not in request.json:
-        return get_servers()
-
-    hosts = request.json['hosts']
-    err, msg = YamlDB.update_hosts(Const.KUBAM_CFG, hosts)
-    if err != 0:
-        return jsonify({'error': msg}), 400
-
-    # return the existing networks now with the new one chosen.
-    return get_servers()
-
-
 # list ISO images.
 @app.route(Const.API_ROOT + "/isos", methods=['GET'])
 @cross_origin()
@@ -316,15 +221,6 @@ def update_iso_map():
         return jsonify({'error': msg}), 400
     return get_iso_map()
 
-
-# Make the server images
-@app.route(Const.API_ROOT + "/servers/images", methods=['POST'])
-@cross_origin()
-def deploy_server_autoinstall_images():
-    err, msg = Builder.deploy_server_images(Const.KUBAM_CFG)
-    if not err == 0:
-        return jsonify({"error": msg})
-    return jsonify({"status": "ok"}), 201
 
 
 @app.route(Const.API_ROOT + "/settings", methods=['POST'])

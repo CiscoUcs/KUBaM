@@ -3,7 +3,7 @@ from ucs import UCSServer, UCSSession
 
 
 class ServerUnitTests(unittest.TestCase):
-    """Tests for `UCSServer.py`."""
+    """Tests for `ucs_server.py`."""
     ucs_session = UCSSession()
     handle, err = ucs_session.login("admin",
                                    "nbv12345",
