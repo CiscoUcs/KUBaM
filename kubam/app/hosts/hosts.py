@@ -30,7 +30,7 @@ class Hosts(object):
         err, msg = YamlDB.new_hosts(Const.KUBAM_CFG, req)
         if err == 1:
             return {'error': msg}, 400
-        return {'status': "Hosts %s created!" % req["name"]}, 201
+        return {'status': "Hosts %s created!"}, 201
 
     @staticmethod
     def update_hosts(req):
