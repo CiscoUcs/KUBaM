@@ -41,6 +41,25 @@ class UCSUtil(object):
             msg = "not logged in to UCS"
         return jsonify({'error': msg}), 401
 
+    @staticmethod
+    def check_login(req):
+        if 'credentials' not in req:
+            return 1, "no credentials found in request"
+        for v in ['user', 'password', 'ip']:
+            if v not in req['credentials']:
+                return 1, "credentials should include {0}".format(v)
+        user = req['credentials']['user']
+        pw = req['credentials']['password']
+        ip = req['credentials']['ip']
+        if ip == "":
+            return 1, "Please enter a valid ACI IP address."
+        # TODO: implement ACI APIs to log in and configure
+        # h, err = UCSSession.login(user, pw, ip)
+        # if h == "":
+        #    return {'error': err}, 400
+        # UCSSession.logout(h)
+        return 0, None
+
     # create org should not have org- prepended to it.
     @staticmethod
     def create_org(handle, org):
