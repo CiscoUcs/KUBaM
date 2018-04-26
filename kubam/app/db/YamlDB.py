@@ -350,8 +350,9 @@ def delete_server_group(file_name, guid):
         if group["id"] == guid:
             if "hosts" in config:
                 for host in config["hosts"]:
-                    if host["server_group"] == group["name"]:
-                        return 1, "Can't delete server_group: there is a host tied to it."
+                    if "server_group" in host:
+                        if host["server_group"] == group["name"]:
+                            return 1, "Can't delete server_group: there is a host tied to it."
             found = True 
             config["server_groups"].remove(group)
             break
