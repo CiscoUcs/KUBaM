@@ -1,5 +1,5 @@
 from ucsmsdk.ucsexception import UcsException
-from ucs import UCSServer, UCSSession, UCSNet
+from ucs_session import UCSSession
 from flask import jsonify
 from db import YamlDB
 from config import Const
@@ -96,63 +96,41 @@ class UCSUtil(object):
             err, msg = self.create_org(handle, org)
         return err, msg, full_org
 
-    # Make the UCS configuration using the Kubam information
-    def make_ucs(self):
-        err, msg, handle = self.ucs_login()
-        if err != 0:
-            return self.not_logged_in(msg)
-        err, msg, full_org = self.get_full_org(handle)
-        if err != 0:
-            return err, msg
+    # Translates the JSON we get from the web interface to what we expect to put in the database
+    @staticmethod
+    def servers_to_db(ucs_servers):
+        # Gets a server array list and gets the selected servers and puts them in the database form
+        server_pool = dict()
+        for s in ucs_servers:
+            if "selected" in s and s["selected"]:
+                if s["type"] == "blade":
+                    if "blades" not in server_pool:
+                        server_pool["blades"] = []
+                    b = "{0}/{1}".format(s["chassis_id"], s["slot"])
+                    server_pool["blades"].append(b)
+                elif s["type"] == "rack":
+                    if "rack_servers" not in server_pool:
+                        server_pool["rack_servers"] = []
+                    server_pool["rack_servers"].append(s["rack_id"])
+        return server_pool
 
-        err, msg, net_settings = YamlDB.get_ucs_network(Const.KUBAM_CFG)
-        selected_vlan = ""
-        if "vlan" in net_settings:
-            selected_vlan = net_settings["vlan"]
-        if selected_vlan == "":
-            self.ucs_logout(handle)
-            return 1, "No vlan selected in UCS configuration."
-
-        ucs_net = UCSNet()
-        err, msg = ucs_net.create_kube_networking(handle, full_org, selected_vlan)
-        if err != 0:
-            self.ucs_logout(handle)
-            return err, msg
-
-        # get the selected servers, and hosts.
-        err, msg, hosts = YamlDB.get_hosts(Const.KUBAM_CFG)
-        err, msg, servers = YamlDB.get_ucs_servers(Const.KUBAM_CFG)
-        err, msg, kubam_ip = YamlDB.get_kubam_ip(Const.KUBAM_CFG)
-
-        ucs_server = UCSServer()
-        err, msg = ucs_server.create_server_resources(handle, full_org, hosts, servers, kubam_ip)
-        if err != 0:
-            self.ucs_logout(handle)
-            return err, msg
-
-        self.ucs_logout(handle)
-        return err, msg
-
-    # Destroy the UCS configuration
-    def destroy_ucs(self):
-        err, msg, handle = UCSUtil.ucs_login()
-        if err != 0:
-            return UCSUtil.not_logged_in(msg)
-        err, msg, hosts = YamlDB.get_hosts(Const.KUBAM_CFG)
-        if err != 0:
-            return 1, msg
-        if len(hosts) == 0:
-            return 0, "no servers deployed"
-        err, msg, full_org = self.get_full_org(handle)
-        if err != 0:
-            return err, msg
-
-        ucs_server = UCSServer()
-        err, msg = ucs_server.delete_server_resources(handle, full_org, hosts)
-        if err != 0:
-            return 1, msg
-        ucs_net = UCSNet()
-        err, msg = ucs_net.delete_kube_networking(handle, full_org)
-        if err != 0:
-            return 1, msg
-        return 0, "ok"
+    # See if there are any selected servers in the database
+    @staticmethod
+    def servers_to_api(ucs_servers, db_servers):
+        for i, real_server in enumerate(ucs_servers):
+            if real_server["type"] == "blade":
+                if "blades" in db_servers:
+                    for b in db_servers["blades"]:
+                        b_parts = b.split("/")
+                        if (len(b_parts) == 2 and
+                                real_server["chassis_id"] == b_parts[0] and
+                                real_server["slot"] == b_parts[1]):
+                            real_server["selected"] = True
+                            ucs_servers[i] = real_server
+            elif real_server["type"] == "rack":
+                if "rack_servers" in db_servers:
+                    for s in db_servers["rack_servers"]:
+                        if real_server["rack_id"] == s:
+                            real_server["selected"] = True
+                            ucs_servers[i] = real_server
+        return ucs_servers
