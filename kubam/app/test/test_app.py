@@ -31,11 +31,18 @@ class FlaskTestCase(unittest.TestCase):
         "bridge_domain" : "3"
     }
 
+    newhosts = [
+        {'name': 'kube01', 'ip': '172.20.30.1', 'os': 'centos7.4', 'role': 'generic', 'network_group' : 'HOLD' },
+        {'name': 'kube02', 'ip': '172.20.30.2', 'os': 'centos7.4', 'role': 'k8s master', 'network_group': 'HOLD'}
+    ]
+
+
     def test_api(self):
         tester=app.test_client(self)
         response = tester.get('/', content_type='application/json')
         self.assertEqual(response.status_code,200)
     
+
     def test_server(self):
         tester=app.test_client(self)
         response = tester.post(API_ROOT2 + '/servers', content_type='application/json', data=json.dumps(self.gdata))
@@ -55,16 +62,15 @@ class FlaskTestCase(unittest.TestCase):
         else: 
             print "test server group not found.  Should have been found and deleted."
 
+
     def test_network(self):
         tester=app.test_client(self)
         response = tester.post(API_ROOT2+'/networks', content_type='application/json', data=json.dumps(self.newnet))
         self.assertEqual(response.status_code,201)
         response = tester.get(API_ROOT2+'/networks', content_type='application/json')
-        #print response
         self.assertEqual(response.status_code,200)
         d = json.loads(response.get_data(as_text=True))
         delete_me = ""
-        print d['networks']
         for a in  d['networks']:
             if a['name'] == self.newnet['name']:
                 delete_me = a
@@ -73,6 +79,7 @@ class FlaskTestCase(unittest.TestCase):
             self.assertEqual(response.status_code,201)
         else:
             print "test network name not found. SHould have been found and deleted."
+
 
     def test_aci(self):
         tester = app.test_client(self)
@@ -91,6 +98,26 @@ class FlaskTestCase(unittest.TestCase):
             self.assertEqual(response.status_code,201)
         else: 
             print "aci name not found and not deleted.  Shoudl have been"
+    
+
+    def test_hosts(self):
+        tester = app.test_client(self)
+        # first get a network. 
+        response = tester.post(API_ROOT2+'/networks', content_type='application/json', data=json.dumps(self.newnet))
+        self.assertEqual(response.status_code,201)
+        response = tester.get(API_ROOT2+'/networks', content_type='application/json')
+        self.assertEqual(response.status_code,200)
+        d = json.loads(response.get_data(as_text=True))
+        first_net = d['networks'][0]
+        # add the id into the hosts.         
+        for h in self.newhosts:
+            h["network_group"] = first_net['id']
+        response = tester.post(API_ROOT2+'/hosts', content_type='application/json', data=json.dumps(self.newhosts))
+        self.assertEqual(response.status_code,201)
+        
+        # delete the network we were using. 
+        response = tester.delete(API_ROOT2 + '/networks', content_type='application/json', data=json.dumps({"id" : first_net['id']}))
+        self.assertEqual(response.status_code,201)
             
 
 if __name__ == '__main__':
