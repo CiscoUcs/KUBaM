@@ -13,4 +13,3 @@ class IsoUnitTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
