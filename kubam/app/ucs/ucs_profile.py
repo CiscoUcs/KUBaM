@@ -16,7 +16,8 @@ class UCSProfile(object):
         if err != 0:
             return err, msg
 
-        err, msg, net_settings = YamlDB.get_ucs_network(Const.KUBAM_CFG)
+        db = YamlDB()
+        err, msg, net_settings = db.get_ucs_network(Const.KUBAM_CFG)
         selected_vlan = ""
         if "vlan" in net_settings:
             selected_vlan = net_settings["vlan"]
@@ -31,7 +32,6 @@ class UCSProfile(object):
             return err, msg
 
         # Get the selected servers and hosts
-        db = YamlDB()
         err, msg, hosts = db.get_hosts(Const.KUBAM_CFG)
         err, msg, servers = db.get_ucs_servers(Const.KUBAM_CFG)
         err, msg, kubam_ip = db.get_kubam_ip(Const.KUBAM_CFG)

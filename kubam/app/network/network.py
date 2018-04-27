@@ -14,7 +14,8 @@ class Network(object):
         """
         Lists all the network groups
         """
-        err, msg, net_list = YamlDB.list_network_group(Const.KUBAM_CFG)
+        db = YamlDB()
+        err, msg, net_list = db.list_network_group(Const.KUBAM_CFG)
         if err == 1:
             return {'error': msg}, 500
         return {"networks": net_list}, 200
@@ -25,7 +26,8 @@ class Network(object):
         """
         Create a new network group
         """
-        err, msg = YamlDB.new_network_group(Const.KUBAM_CFG, req)
+        db = YamlDB()
+        err, msg = db.new_network_group(Const.KUBAM_CFG, req)
         if err == 1:
             return {'error': msg}, 400
         return {'status': "Network %s created!" % req["name"]}, 201
@@ -35,7 +37,8 @@ class Network(object):
         """
         Update Netowork settings of one of the network groups.
         """
-        err, msg = YamlDB.update_network_group(Const.KUBAM_CFG, req)
+        db = YamlDB()
+        err, msg = db.update_network_group(Const.KUBAM_CFG, req)
         if err == 1:
             return {'error': msg}, 400
         return {"status": "ok"}, 201
@@ -46,7 +49,8 @@ class Network(object):
         Delete the network group from the config.
         """
         uuid = req['id']
-        err, msg = YamlDB.delete_network_group(Const.KUBAM_CFG, uuid)
+        db = YamlDB()
+        err, msg = db.delete_network_group(Const.KUBAM_CFG, uuid)
         if err == 1:
             return {'error': msg}, 400
         else:
