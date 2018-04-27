@@ -9,10 +9,11 @@ class UCSProfile(object):
     # Make the UCS configuration using the Kubam information
     @staticmethod
     def make_ucs():
-        err, msg, handle = UCSUtil.ucs_login()
+        ucs_util = UCSUtil()
+        err, msg, handle = ucs_util.ucs_login()
         if err != 0:
             return err, UCSUtil.not_logged_in(msg)
-        err, msg, full_org = UCSUtil.get_full_org(handle)
+        err, msg, full_org = ucs_util.get_full_org(handle)
         if err != 0:
             return err, msg
 

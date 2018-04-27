@@ -6,21 +6,6 @@ from config import Const
 monitor = Blueprint("monitor", __name__)
 
 
-# Get the server name from the URL parameters
-def get_server_name():
-    server_type = request.args.get('type')
-    chassis_id = request.args.get('chassis_id')
-    slot = request.args.get('slot')
-    rack_id = request.args.get('rack_id')
-    server_name = None
-    if server_type == "blade":
-        server_name = "sys/chassis-{0}/blade-{1}".format(chassis_id, slot)
-    elif server_type == "rack":
-        server_name = "sys/rack-unit-{0}".format(rack_id)
-
-    return server_name
-
-
 # Get the overall status of the server from UCSM FSM
 @monitor.route(Const.API_ROOT2 + "/status", methods=['GET'])
 @cross_origin()
@@ -29,7 +14,7 @@ def get_server_status():
     if err != 0:
         msg = UCSUtil.not_logged_in(msg)
         return jsonify({'error': msg}), 401
-    status = UCSMonitor.get_status(handle, get_server_name())
+    status = UCSMonitor.get_status(handle, UCSMonitor.get_server_name(request.args))
     UCSUtil.ucs_logout(handle)
     if not status:
         return jsonify({"error": "Bad blade or rack server specified"}), 404
@@ -45,7 +30,7 @@ def get_server_fsm():
     if err != 0:
         msg = UCSUtil.not_logged_in(msg)
         return jsonify({'error': msg}), 401
-    fsm = UCSMonitor.get_fsm(handle, get_server_name())
+    fsm = UCSMonitor.get_fsm(handle, UCSMonitor.get_server_name(request.args))
     UCSUtil.ucs_logout(handle)
 
     if not fsm:

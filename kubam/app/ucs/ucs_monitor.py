@@ -1,5 +1,20 @@
 class UCSMonitor(object):
 
+    # Get the server name from the URL parameters
+    @staticmethod
+    def get_server_name(args):
+        server_type = args.get('type')
+        chassis_id = args.get('chassis_id')
+        slot = args.get('slot')
+        rack_id = args.get('rack_id')
+        server_name = None
+        if server_type == "blade":
+            server_name = "sys/chassis-{0}/blade-{1}".format(chassis_id, slot)
+        elif server_type == "rack":
+            server_name = "sys/rack-unit-{0}".format(rack_id)
+
+        return server_name
+
     @staticmethod
     def get_status(handle, server_name):
         fsm = handle.query_dn(server_name + "/fsm")

@@ -21,7 +21,7 @@ class YamlDB(object):
         for i in iso_images:
             if not i:
                 return 1, "empty value not accepted."
-            elif "file" not in i and not "os" in i:
+            elif "file" not in i and "os" not in i:
                 return 1, "iso must have an 'os' value and a 'file' value"
             elif not path.isfile(i["file"]):
                 return 1, "{0} file is not found.".format(i["file"])
@@ -104,7 +104,7 @@ class YamlDB(object):
 
     def validate_config(self, config, strict):
         err = 0
-        msg = ""
+        msg = str()
         if "kubam_ip" in config:
             er1, msg1 = self.validate_ip(config["kubam_ip"])
             err += er1
@@ -132,19 +132,18 @@ class YamlDB(object):
 
         if err > 0:
             msg = "Invalid config file. See documentation at http://kubam.io" + msg
-            config = {}
+            config = dict()
         return err, msg, config
 
     @staticmethod
     def write_config(config, out_file):
         err = 0
-        msg = ""
         try:
             with open(out_file, "w") as f:
                 try:
                     msg = yaml.safe_dump(config, f, encoding='utf-8', default_flow_style=False)
                 except yaml.YAMLError as err:
-                    msg = "Error writing %s config file: %s" % (out_file, err)
+                    msg = "Error writing {0} config file: {1}".format(out_file, err)
                     err = 1
         except IOError as err:
             msg = err.strerror + " " + out_file
@@ -152,27 +151,25 @@ class YamlDB(object):
 
         return err, msg
 
-    
-    # get the config file and parse it out so we know what we have.
-    # returns err, msg, config
+    # Get the config file and parse it out so we know what we have.
     @staticmethod
     def open_config(file_name):
-        config = {}
         err = 0
         msg = ""
         try:
             with open(file_name, "r") as stream:
                 try:
                     config = yaml.load(stream)
-                except yaml.YAMLError as exc:
-                    msg = "Error parsing %s config file: " % file_name
-                    return 1, msg, {}
+                except yaml.YAMLError as e:
+                    msg = "Error parsing {0} config file: ".format(file_name)
+                    msg += e
+                    return 1, msg, None
             stream.close()
         except IOError as err:
             msg = err.strerror + " " + file_name
             if err.errno == 2:
                 return 2, msg, {}
-            return 1, msg, {}
+            return 1, msg, None
         return err, msg, config
 
     def parse_config(self, file_name, strict):
@@ -183,7 +180,7 @@ class YamlDB(object):
 
     @staticmethod
     def new_uuid():
-        # create a random uuid string.
+        # Create a random uuid string.
         return str(uuid.uuid4())
 
     @staticmethod
@@ -195,7 +192,7 @@ class YamlDB(object):
                     val += 1
             if val > 1:
                 return 1, "Field " + elem + " has to be unique."
-        return 0, ""
+        return 0, None
 
     def delete_hosts(self, file_name, name):
         """
@@ -207,14 +204,12 @@ class YamlDB(object):
             return err, msg
         if "hosts" not in config:
             return 1, "no hosts created yet"
-        # get the group
-        found = False
-        for group in config["hosts"]:
-            if group["name"] == name:
-                found = True
-                config["hosts"].remove(group)
+        # Get the group
+        for group in config['hosts']:
+            if group['name'] == name:
+                config['hosts'].remove(group)
                 break
-        # now that it is removed, write the config file back out.
+        # Now that it is removed, write the config file back out.
         err, msg = self.write_config(config, file_name)
         return err, msg
 
@@ -222,13 +217,13 @@ class YamlDB(object):
         if "ip" not in gh:
             return 1, "Please specify the ip address of the host."
         else:
-            er1, msg1 = self.validate_ip(gh["ip"])
+            er1, msg1 = self.validate_ip(gh['ip'])
             if er1 == 1:
                 return 1, "Please provide valid IP address."
 
         catalog = Const.CATALOG
 
-        if not "os" in gh:
+        if "os" not in gh:
             return 1, "Please specify the OS of the host."
         else:
             flag = False
@@ -238,19 +233,19 @@ class YamlDB(object):
             if not flag:
                 return 1, "OS should be a supported type"
 
-        if not "name" in gh:
+        if "name" not in gh:
             return 1, "Please specify the name of the host / service profile name.  This should be unique."
         else:
             if ' ' in gh["name"]:
                 return 1, "The name should not contain spaces."
 
-        if not "role" in gh:
+        if "role" not in gh:
             return 1, "Please specify the role of the host."
         else:
             if gh["role"] not in catalog[gh["os"]]:
                 return 1, "Host role should match the os capabilities"
 
-        if not "network_group" in gh:
+        if "network_group" not in gh:
             return 1, "Please specify the network_group of the host."
         else:
             flag = False
@@ -268,7 +263,7 @@ class YamlDB(object):
             if not flag:
                 return 1, "Please specify an already existing server_group of the host."
 
-        return 0, ""
+        return 0, None
 
     def new_hosts(self, file_name, gh):
         if not isinstance(gh, list):
@@ -300,23 +295,23 @@ class YamlDB(object):
         if err == 1:
             return err, msg
 
-        config["hosts"] = gh
+        config['hosts'] = gh
         err, msg = self.write_config(config, file_name)
         return err, msg
 
     def list_hosts(self, file_name):
         """
-        get all the hosts details for each server group.
+        Get all the hosts details for each server group.
         """
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, ""
-        # err code 2 means no entries
+            return err, msg, None
+        # Error code 2 means no entries
         if err == 2:
-            return 0, "", {}
-        if not "hosts" in config:
-            return 0, "", {}
-        return 0, "", config["hosts"]
+            return 0, None, {}
+        if "hosts" not in config:
+            return 0, None, {}
+        return 0, None, config['hosts']
 
     def delete_server_group(self, file_name, guid):
         """
@@ -326,63 +321,63 @@ class YamlDB(object):
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg
-        if not "server_groups" in config:
+        if "server_groups" not in config:
             return 1, "no servers created yet"
 
-        # get the group
-        found = False
-        for group in config["server_groups"]:
-            if group["id"] == guid:
+        # Get the group
+        for group in config['server_groups']:
+            if group['id'] == guid:
                 if "hosts" in config:
-                    for host in config["hosts"]:
+                    for host in config['hosts']:
                         if "server_group" in host:
-                            if host["server_group"] == group["name"]:
+                            if host['server_group'] == group['name']:
                                 return 1, "Can't delete server_group: there is a host tied to it."
-                found = True
                 config["server_groups"].remove(group)
                 break
-        # now that it is removed, write the config file back out.
+        # Now that it is removed, write the config file back out.
         err, msg = self.write_config(config, file_name)
         return err, msg
 
     @staticmethod
     def check_valid_server_group(gh):
-        if not "type" in gh:
+        if "type" not in gh:
             return 1, "Please specify the type of server group: 'imc' or 'ucsm'"
         else:
             if gh["type"] not in ["imc", "ucsm"]:
                 return 1, "server group type should be 'imc' or 'ucsm'"
-
-        if not "name" in gh:
+        bad_credentials = (
+            "Please specify the login credentials of the server group: "
+            "'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+        )
+        if "name" not in gh:
             return 1, "Please specify the name of the server group.  This should be unique."
-        if not "credentials" in gh:
-            return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
-
+        if "credentials" not in gh:
+            return 1, bad_credentials
         creds = gh['credentials']
         if not isinstance(creds, dict):
             return 1, "Credentials should be a dictionary of ip, password, and user."
-        if not 'ip' in creds:
-            return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
-        if not 'password' in creds:
-            return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
-        if not 'user' in creds:
-            return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
-        return 0, ""
+        if "ip" not in creds:
+            return 1, bad_credentials
+        if "password" not in creds:
+            return 1, bad_credentials
+        if "user" not in creds:
+            return 1, bad_credentials
+        return 0, None
 
     def update_server_group(self, file_name, gh):
-        # check if valid config.
+        # Check if valid config
         err, msg = self.check_valid_server_group(gh)
         if err == 1:
             return err, msg
-        # make sure there is an id
+        # Make sure there is an ID
         if "id" not in gh:
             return 1, "server group id not given"
 
-        # get all server groups
+        # Get all server groups
         err, msg, groups = self.list_server_group(file_name)
         if err == 1:
             return err, msg
-        # check that it exists.
+        # Check that it exists
         found = False
         for g in groups:
             if g['id'] == gh['id']:
@@ -395,14 +390,16 @@ class YamlDB(object):
                 if err == 1:
                     return err, msg
         if not found:
-            return 1, "nothing to update, no server group %s is found" % gh['name']
+            return 1, "nothing to update, no server group {0} is found".format(gh['name'])
 
-        return 0, "%s has been updated" % gh['name']
+        return 0, "{0} has been updated".format(gh['name'])
 
     def new_server_group(self, file_name, gh):
         """
         Credentials passed would be:
-        {"name", "ucs01", "type" : "ucsm", "credentials" : {"user": "admin", "password" : "secret-password", "server" : "172.28.225.163" }}
+        {"name", "ucs01", "type": "ucsm",
+            "credentials": {"user": "admin", "password" : "secret-password", "server" : "172.28.225.163" }
+        }
         """
         if not isinstance(gh, dict):
             return 1, "No server group information was passed into the request."
@@ -412,24 +409,24 @@ class YamlDB(object):
         err, msg = self.check_valid_server_group(gh)
         if err == 1:
             return err, msg
-        # create a new uuid
-        gh["id"] = self.new_uuid()
-        # encrypt the password:
+        # Create a new uuid
+        gh['id'] = self.new_uuid()
+        # Encrypt the password
         err, msg, key = self.get_decoder_key(file_name)
         if err == 1:
             return err, msg
         f = Fernet(key)
         gh['credentials']['password'] = f.encrypt(bytes(gh['credentials']['password']))
-        # nothing in here yet, first entry.
+        # Nothing in here yet, first entry
         if not isinstance(config, dict):
             config = {}
-        if not "server_groups" in config:
+        if "server_groups" not in config:
             config["server_groups"] = []
         else:
-            # check if name already exists
-            for group in config["server_groups"]:
-                if group["name"] == gh["name"]:
-                    return 1, "server group '%s' already exists.  Can not add another." % gh["name"]
+            # Check if name already exists
+            for group in config['server_groups']:
+                if group['name'] == gh['name']:
+                    return 1, "server group '{0}' already exists. Can not add another.".format(gh['name'])
 
         config["server_groups"].append(gh)
         err, msg = self.write_config(config, file_name)
@@ -437,35 +434,34 @@ class YamlDB(object):
 
     def list_server_group(self, file_name):
         """
-        get all the server group details for each server group.
+        Get all the server group details for each server group.
         """
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, ""
-        # err code 2 means no entries
+            return err, msg, None
+        # Error code 2 means no entries
         if err == 2:
-            return 0, "", {}
-        # if there is an empty file
+            return 0, None, None
+        # If there is an empty file
         if not isinstance(config, dict):
-            return 0, "", {}
-        if not "server_groups" in config:
-            return 0, "", {}
-        return 0, "", config["server_groups"]
+            return 0, None, None
+        if "server_groups" not in config:
+            return 0, None, None
+        return 0, None, config['server_groups']
 
-
-    # our database operations will all be open and update the file.
-    # creds_hash should be: {"ip": "172.28.225.164", "user": "admin", "password": "nbv12345"}}
+    # Our database operations will all be open and update the file.
+    # Credentials_hash should be: {"ip": "172.28.225.164", "user": "admin", "password": "nbv12345"}}
     def update_ucs_creds(self, file_name, creds_hash):
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg
-        if not "ucsm" in config:
-            config["ucsm"] = {}
-        # if the creds is empty, then get rid of credentials.
+        if "ucsm" not in config:
+            config['ucsm'] = dict()
+        # If the creds is empty, then get rid of credentials.
         if not creds_hash:
-            config["ucsm"].pop("credentials", None)
+            config['ucsm'].pop("credentials", None)
         else:
-            config["ucsm"]["credentials"] = creds_hash
+            config['ucsm']['credentials'] = creds_hash
         err, msg = self.write_config(config, file_name)
         return err, msg
 
@@ -474,24 +470,24 @@ class YamlDB(object):
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg
-        if not "ucsm" in config:
-            config["ucsm"] = {}
-        config["ucsm"]["ucs_network"] = net_hash
+        if "ucsm" not in config:
+            config['ucsm'] = dict()
+        config['ucsm']['ucs_network'] = net_hash
         err, msg = self.write_config(config, file_name)
         return err, msg
 
     def get_ucs_network(self, file_name):
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, ""
+            return err, msg, None
         elif err == 2:
-            return 0, "", {}
+            return 0, None, None
         elif "ucsm" not in config:
-            return 0, "", {}
-        elif "ucs_network" not in config["ucsm"]:
-            return 0, "", {}
+            return 0, None, {}
+        elif "ucs_network" not in config['ucsm']:
+            return 0, None, None
         else:
-            return 0, "", config["ucsm"]["ucs_network"]
+            return 0, None, config['ucsm']['ucs_network']
 
     def update_network(self, file_name, net_hash):
         err, msg = self.validate_network(net_hash)
@@ -500,61 +496,59 @@ class YamlDB(object):
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg
-        if not "network" in config:
-            config["network"] = {}
-        config["network"] = net_hash
+        if "network" not in config:
+            config['network'] = dict()
+        config['network'] = net_hash
         err, msg = self.write_config(config, file_name)
         return err, msg
 
     def get_network(self, file_name):
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, ""
+            return err, msg, None
         elif err == 2:
-            return 0, "", {}
-        elif not "network" in config:
-            return 0, "", {}
+            return 0, None, None
+        elif "network" not in config:
+            return 0, None, None
         else:
-            return 0, "", config["network"]
-
+            return 0, None, config['network']
 
     def update_ucs_servers(self, file_name, server_hash):
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg
-        if not "ucsm" in config:
-            config["ucsm"] = {}
-        config["ucsm"]["ucs_server_pool"] = server_hash
+        if "ucsm" not in config:
+            config['ucsm'] = dict()
+        config['ucsm']['ucs_server_pool'] = server_hash
         err, msg = self.write_config(config, file_name)
         return err, msg
-
 
     def get_ucs_servers(self, file_name):
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, ""
+            return err, msg, None
         elif err == 2:
-            return 0, "", []
-        elif not "ucsm" in config:
-            return 0, "", []
-        elif not "ucs_server_pool" in config["ucsm"]:
-            return 0, "", []
+            return 0, None, None
+        elif "ucsm" not in config:
+            return 0, None, None
+        elif "ucs_server_pool" not in config['ucsm']:
+            return 0, None, None
         else:
-            return 0, "", config["ucsm"]["ucs_server_pool"]
+            return 0, None, config['ucsm']['ucs_server_pool']
 
-    # get hosts out of the database
+    # Get hosts out of the database
     def get_hosts(self, file_name):
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, ""
+            return err, msg, None
         elif err == 2:
-            return 0, "", []
-        elif not "hosts" in config:
-            return 0, "", []
+            return 0, None, None
+        elif "hosts" not in config:
+            return 0, None, None
         else:
-            return 0, "", config["hosts"]
+            return 0, None, config['hosts']
 
-    # update the hosts
+    # Update the hosts
     def update_hosts(self, file_name, ho_hash):
         err, msg = self.validate_hosts(ho_hash)
         if err > 0:
@@ -562,75 +556,74 @@ class YamlDB(object):
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg
-        if not "hosts" in config:
-            config["hosts"] = []
-        config["hosts"] = ho_hash
+        if "hosts" not in config:
+            config['hosts'] = list()
+        config['hosts'] = ho_hash
         err, msg = self.write_config(config, file_name)
         return err, msg
 
-    # get the proxy value
+    # Get the proxy value
     def get_proxy(self, file_name):
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, ""
+            return err, msg, None
         elif err == 2:
-            return 0, "", ""
-        elif not "proxy" in config:
-            return 0, "", ""
+            return 0, None, None
+        elif "proxy" not in config:
+            return 0, None, None
         else:
-            return 0, "", config["proxy"]
+            return 0, None, config['proxy']
 
-    # update the proxy, should be something like http://proxy.com:80  needs port, etc.
+    # Update the proxy, should be something like http://proxy.com:80  needs port, etc.
     # TODO verify that this is correct to do some error detection.
     def update_proxy(self, file_name, proxy):
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg
-        config["proxy"] = proxy
+        config['proxy'] = proxy
         err, msg = self.write_config(config, file_name)
         return err, msg
 
-    # get the UCS org
+    # Get the UCS organisation
     def get_org(self, file_name):
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, ""
+            return err, msg, None
         elif err == 2:
-            return 0, "", ""
-        if not "ucsm" in config:
-            return 0, "", ""
-        if not "org" in config["ucsm"]:
-            return 0, "", ""
+            return 0, None, None
+        if "ucsm" not in config:
+            return 0, None, None
+        if "org" not in config['ucsm']:
+            return 0, None, None
         else:
-            return 0, "", config["ucsm"]["org"]
+            return 0, None, config['ucsm']['org']
 
-    # Set UCS org
+    # Set UCS organisation
     def update_org(self, file_name, org):
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg
-        if not "ucsm" in config:
-            config["ucsm"] = {}
-        # if org is empty update org.
+        if "ucsm" not in config:
+            config['ucsm'] = dict()
+        # If organisation is empty update organisation
         if not org:
-            config["ucsm"].pop("org", None)
+            config['ucsm'].pop("org", None)
         else:
-            config["ucsm"]["org"] = org
+            config['ucsm']['org'] = org
         err, msg = self.write_config(config, file_name)
         return err, msg
 
-    # put in the IP address of master node.
+    # Put in the IP address of master node.
     def get_kubam_ip(self, file_name):
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, ""
+            return err, msg, None
         elif err == 2:
-            return 0, "", ""
-        elif not "kubam_ip" in config:
-            return 0, "", ""
+            return 0, None, None
+        elif "kubam_ip" not in config:
+            return 0, None, None
         else:
-            return 0, "", config["kubam_ip"]
-
+            return 0, None, config['kubam_ip']
 
     def update_kubam_ip(self, file_name, kubam_ip):
         err, msg = self.validate_ip(kubam_ip)
@@ -639,21 +632,20 @@ class YamlDB(object):
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg
-        config["kubam_ip"] = kubam_ip
+        config['kubam_ip'] = kubam_ip
         err, msg = self.write_config(config, file_name)
         return err, msg
 
     def get_public_keys(self, file_name):
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, ""
+            return err, msg, None
         elif err == 2:
-            return 0, "", []
-        elif not "public_keys" in config:
-            return 0, "", []
+            return 0, None, None
+        elif "public_keys" not in config:
+            return 0, None, None
         else:
-            return 0, "", config["public_keys"]
-
+            return 0, None, config['public_keys']
 
     def update_public_keys(self, file_name, public_keys):
         err, msg = self.validate_pks(public_keys)
@@ -662,32 +654,31 @@ class YamlDB(object):
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg
-        if not "public_keys" in config:
-            config["public_keys"] = []
-        config["public_keys"] = public_keys
+        if "public_keys" not in config:
+            config['public_keys'] = dict()
+        config['public_keys'] = public_keys
         err, msg = self.write_config(config, file_name)
         return err, msg
 
     def show_config(self, file_name):
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, ""
+            return err, msg, None
         elif err == 2:
-            return 0, "", []
+            return 0, None, None
         else:
-            return 0, "", config
-
+            return 0, None, config
 
     def get_iso_map(self, file_name):
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, ""
+            return err, msg, None
         elif err == 2:
-            return 0, "", []
-        elif not "iso_map" in config:
-            return 0, "", []
+            return 0, None, None
+        elif "iso_map" not in config:
+            return 0, None, None
         else:
-            return 0, "", config["iso_map"]
+            return 0, None, config['iso_map']
 
     def update_iso_map(self, file_name, iso_images):
         err, msg = self.validate_iso_images(iso_images)
@@ -696,32 +687,31 @@ class YamlDB(object):
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg
-        if not "iso_map" in config:
-            config["iso_map"] = []
-        config["iso_map"] = iso_images
+        if "iso_map" not in config:
+            config['iso_map'] = list()
+        config['iso_map'] = iso_images
         err, msg = self.write_config(config, file_name)
         return err, msg
 
     @staticmethod
     def create_key(file_name):
         """
-        create the key in a file name, write it out and return the key
+        Create the key in a file name, write it out and return the key.
         """
         key = Fernet.generate_key()
         try:
             with open(file_name, "w") as f:
                 f.write(key)
         except IOError as err:
-            return 1, err.strerror + " " + file_name, ""
+            return 1, err.strerror + " " + file_name, None
         f.close()
-        return 0, "", key
+        return 0, None, key
 
     @staticmethod
     def get_key(file_name):
         """
-        return the decoder key
+        Return the decoder key.
         """
-        key = ""
         with open(file_name, "r") as f:
             key = f.read()
         return key
@@ -729,58 +719,62 @@ class YamlDB(object):
     def get_decoder_key(self, file_name):
         """
         Create encryption key file in the same directory as the kubam.yaml if it doesn't exist.
-        but we store it in the .kubam file
-        The file passed in should be the kubam.yaml file so we can tell where it is.
+        But we store it in the .kubam file and the file passed in should be the kubam.yaml file,
+        so we can tell where it is.
         """
         dir_name = path.dirname(file_name)
         secret_file = path.join(dir_name, ".kubam")
         err = 0
-        msg = ""
+        msg = str()
         if path.isfile(secret_file):
             key = self.get_key(secret_file)
         else:
-            # create the key
+            # Create the key
             err, msg, key = self.create_key(secret_file)
         return err, msg, key
 
     def list_aci(self, file_name):
         """
-        get all the aci details for each aci group
+        Get all the aci details for each aci group
         """
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, ""
+            return err, msg, None
         # err code 2 means no entries
         if err == 2:
-            return 0, "", {}
-        if not "aci" in config:
-            return 0, "", {}
-        return 0, "", config["aci"]
+            return 0, None, None
+        if "aci" not in config:
+            return 0, None, None
+        return 0, None, config['aci']
 
     @staticmethod
     def check_valid_aci(gh):
-        if not "name" in gh:
-            return 1, "Please specify the name of the server group.  This should be unique."
-        if not "credentials" in gh:
-            return 1, "Please specify the login credentials of the server group: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
 
+        if "name" not in gh:
+            return 1, "Please specify the name of the server group.  This should be unique."
+        if "credentials" not in gh:
+            return 1, "Please specify the login credentials of server group."
+
+        bad_credentials = (
+            "Please specify the login credentials of ACI: "
+            "'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
+        )
         creds = gh['credentials']
         if not isinstance(creds, dict):
             return 1, "Credentials should be a dictionary of ip, password, and user."
-        if not 'ip' in creds:
-            return 1, "Please specify the login credentials of ACI : 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
-        if not 'password' in creds:
-            return 1, "Please specify the login credentials of ACI: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
-        if not 'user' in creds:
-            return 1, "Please specify the login credentials of ACI: 'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
-
-        if not 'tenant_name' in gh:
+        if 'ip' not in creds:
+            return 1, bad_credentials
+        if 'password' not in creds:
+            return 1, bad_credentials
+        if 'user' not in creds:
+            return 1, bad_credentials
+        if 'tenant_name' not in gh:
             return 1, "Please specify the tenant name for the ACI group"
-        if not 'vrf_name' in gh:
+        if 'vrf_name' not in gh:
             return 1, "Please specify the VRF name for the ACI group"
-        if not 'bridge_domain' in gh:
+        if 'bridge_domain' not in gh:
             return 1, "Please specify the bridge Domain name for the ACI group"
-        return 0, ""
+        return 0, None
 
     def new_aci(self, file_name, gh):
         """
@@ -806,25 +800,25 @@ class YamlDB(object):
         err, msg = self.check_valid_aci(gh)
         if err == 1:
             return err, msg
-        # create a new uuid
-        gh["id"] = self.new_uuid()
-        # encrypt the password:
+        # Create a new UUID
+        gh['id'] = self.new_uuid()
+        # Encrypt the password
         err, msg, key = self.get_decoder_key(file_name)
         if err == 1:
             return err, msg
         f = Fernet(key)
         gh['credentials']['password'] = f.encrypt(bytes(gh['credentials']['password']))
 
-        # nothing in here yet, first entry.
-        if not "aci" in config:
-            config["aci"] = []
+        # Nothing in here yet, first entry
+        if "aci" not in config:
+            config['aci'] = list()
         else:
-            # check if name already exists
-            for group in config["aci"]:
-                if group["name"] == gh["name"]:
-                    return 1, "ACI group '%s' already exists.  Can not add another." % gh["name"]
+            # Check if name already exists
+            for group in config['aci']:
+                if group['name'] == gh['name']:
+                    return 1, "ACI group '{0}' already exists.  Can not add another.".format(gh['name'])
 
-        config["aci"].append(gh)
+        config['aci'].append(gh)
         err, msg = self.write_config(config, file_name)
         return err, msg
 
@@ -832,19 +826,19 @@ class YamlDB(object):
         """
         Update an ACI group
         """
-        # check if valid config.
+        # Check if valid config
         err, msg = self.check_valid_aci(gh)
         if err == 1:
             return err, msg
-        # make sure there is an id
-        if not "id" in gh:
+        # Make sure there is an ID
+        if "id" not in gh:
             return 1, "ACI group id not given"
 
-        # get all server groups
+        # Get all server groups
         err, msg, groups = self.list_aci(file_name)
         if err == 1:
             return err, msg
-        # check that it exists.
+        # cCheck that it exists.
         found = False
         for g in groups:
             if g['id'] == gh['id']:
@@ -857,9 +851,9 @@ class YamlDB(object):
                 if err == 1:
                     return err, msg
         if not found:
-            return 1, "nothing to update, no server group %s is found" % gh['name']
+            return 1, "nothing to update, no server group {0} is found".format(gh['name'])
 
-        return 0, "%s has been updated" % gh['name']
+        return 0, "{0} has been updated".format(gh['name'])
 
     def delete_aci(self, file_name, guid):
         """
@@ -869,26 +863,23 @@ class YamlDB(object):
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg
-        if not "aci" in config:
+        if "aci" not in config:
             return 1, "no servers created yet"
-        # get the group
-        found = False
-        for group in config["aci"]:
-            if group["id"] == guid:
-                found = True
-                config["aci"].remove(group)
+        # Get the group
+        for group in config['aci']:
+            if group['id'] == guid:
+                config['aci'].remove(group)
                 break
-        # now that it is removed, write the config file back out.
+        # Now that it is removed, write the config file back out
         err, msg = self.write_config(config, file_name)
         return err, msg
-
 
     def check_valid_network(self, gh):
         """
         Checks that all the right parameters are in the network hash
         """
         if "name" not in gh:
-            return 1, "Please specify the name of the network group.  This should be unique."
+            return 1, "Please specify the name of the network group. This should be unique."
         err, msg = self.validate_network(gh)
         if err > 0:
             return err, msg
@@ -896,9 +887,9 @@ class YamlDB(object):
         if "aci_group" in gh:
             # TODO, make sure aci group exists.
             pass
-        return 0, ""
+        return 0, None
 
-    # net information
+    # Network information
     def new_network_group(self, file_name, gh):
         """
         Create a new net group
@@ -920,56 +911,54 @@ class YamlDB(object):
         err, msg = self.check_valid_network(gh)
         if err > 0:
             return 1, msg
-        # create a new uuid
-        gh["id"] = self.new_uuid()
-        # encrypt the password:
+        # Create a new UUID
+        gh['id'] = self.new_uuid()
+        # Encrypt the password
 
-        # nothing in here yet, first entry.
-        if not "network_groups" in config:
-            config["network_groups"] = []
+        # Nothing in here yet, first entry
+        if "network_groups" not in config:
+            config['network_groups'] = list()
         else:
             # check if name already exists
-            for group in config["network_groups"]:
-                if group["name"] == gh["name"]:
-                    return 1, "Network group '%s' already exists.  Can not add another." % gh["name"]
+            for group in config['network_groups']:
+                if group['name'] == gh['name']:
+                    return 1, "Network group '{0}' already exists.  Can not add another.".format(gh['name'])
 
-        config["network_groups"].append(gh)
+        config['network_groups'].append(gh)
         err, msg = self.write_config(config, file_name)
         return err, msg
 
-
     def list_network_group(self, file_name):
         """
-        get all the network group details for each group.
+        Get all the network group details for each group.
         """
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, ""
-        # err code 2 means no entries
+            return err, msg, None
+        # Err code 2 means no entries
         if err == 2:
-            return 0, "", {}
-        if not "network_groups" in config:
-            return 0, "", {}
-        return 0, "", config["network_groups"]
+            return 0, None, None
+        if "network_groups" not in config:
+            return 0, None, None
+        return 0, None, config['network_groups']
 
     def update_network_group(self, file_name, gh):
         """
         Update an existing network group to something else.
         """
-        # check if valid config.
-
+        # Check if valid config
         err, msg = self.check_valid_network(gh)
         if err > 0:
             return 1, msg
-        # make sure there is an id
-        if not "id" in gh:
+        # Make sure there is an ID
+        if "id" not in gh:
             return 1, "network group id not given"
 
-        # get all server groups
+        # Get all server groups
         err, msg, groups = self.list_network_group(file_name)
         if err == 1:
             return err, msg
-        # check that it exists.
+        # Check that it exists
         found = False
         for g in groups:
             if g['id'] == gh['id']:
@@ -982,33 +971,30 @@ class YamlDB(object):
                 if err == 1:
                     return err, msg
         if not found:
-            return 1, "nothing to update, no network group %s is found" % gh['name']
+            return 1, "nothing to update, no network group {0} is found".format(gh['name'])
 
-        return 0, "%s has been updated" % gh['name']
-
+        return 0, "{0} has been updated".format(gh['name'])
 
     def delete_network_group(self, file_name, guid):
         """
         Deletes a Network group from the Database.  Just pass in the ID.
         """
-        #TODO: make sure no host group uses a network group
+        # TODO: make sure no host group uses a network group
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg
-        if not "network_groups" in config:
+        if "network_groups" not in config:
             return 1, "no networks created yet"
-        # get the group
-        found = False
+        # Get the group
         for group in config["network_groups"]:
-            if group["id"] == guid:
+            if group['id'] == guid:
                 if "hosts" in config:
-                    for host in config["hosts"]:
+                    for host in config['hosts']:
                         if "network_group" in host:
-                            if host["network_group"] == group["name"]:
+                            if host['network_group'] == group['name']:
                                 return 1, "Can't delete network_group: there is a host tied to it."
-                found = True
-                config["network_groups"].remove(group)
+                config['network_groups'].remove(group)
                 break
-        # now that it is removed, write the config file back out.
+        # Now that it is removed, write the config file back out
         err, msg = self.write_config(config, file_name)
         return err, msg

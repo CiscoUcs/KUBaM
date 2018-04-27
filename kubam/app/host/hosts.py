@@ -26,7 +26,9 @@ class Hosts(object):
         """
         Create a new host entry
         Format of request should be JSON that looks like:
-        {"name", "aci01", "credentials" : {"user": "admin", "password" : "secret-password", "ip" : "172.28.225.163" }, ...}
+        {"name", "aci01",
+            "credentials": {"user": "admin", "password": "secret-password", "ip": "172.28.225.163" },
+        ...}
         """
         db = YamlDB()
         err, msg = db.new_hosts(Const.KUBAM_CFG, req)

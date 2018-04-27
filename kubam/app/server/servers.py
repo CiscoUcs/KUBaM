@@ -120,8 +120,8 @@ def select_servers():
     # Gets a hash of severs of form:
     # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
     ucs_servers = UCSUtil.servers_to_db(ucs_servers)
+    db = YamlDB()
     if ucs_servers:
-        db = YamlDB()
         err, msg = db.update_ucs_servers(Const.KUBAM_CFG, ucs_servers)
         if err != 0:
             return jsonify({'error': msg}), 400
