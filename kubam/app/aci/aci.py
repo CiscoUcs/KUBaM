@@ -15,7 +15,8 @@ class ACI(object):
         Basic test to see if site is up.
         should return { 'status' : 'ok'}
         """
-        err, msg, aci_list = YamlDB.list_aci(Const.KUBAM_CFG)
+        db = YamlDB()
+        err, msg, aci_list = db.list_aci(Const.KUBAM_CFG)
         if err == 1:
             return {'error': msg}, 500
         return {'aci': aci_list}, 200
@@ -33,7 +34,8 @@ class ACI(object):
         msg, code = UCSUtil.check_aci_login(req)
         if code == 400:
             return msg, code
-        err, msg = YamlDB.new_aci(Const.KUBAM_CFG, req)
+        db = YamlDB()
+        err, msg = db.new_aci(Const.KUBAM_CFG, req)
         if err == 1:
             return {'error': msg}, 400
         return {'status': "new ACI group {0} created!". format(req["name"])}, 201
@@ -46,7 +48,8 @@ class ACI(object):
         err, msg = UCSUtil.check_aci_login(req)
         if err == 1:
             return jsonify({'error': msg}), 400
-        err, msg = YamlDB.update_aci(Const.KUBAM_CFG, req)
+        db = YamlDB()
+        err, msg = db.update_aci(Const.KUBAM_CFG, req)
         if err == 1:
             return {'error': msg}, 400
         return {'status': "ACI group {0} updated!".format(req["name"])}, 201
@@ -57,7 +60,8 @@ class ACI(object):
         Delete the ACI group from the config.
         """
         uuid = req['id']
-        err, msg = YamlDB.delete_aci(Const.KUBAM_CFG, uuid)
+        db = YamlDB()
+        err, msg = db.delete_aci(Const.KUBAM_CFG, uuid)
         if err == 1:
             return {'error': msg}, 400
         else:

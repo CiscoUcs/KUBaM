@@ -82,7 +82,8 @@ class Builder(object):
         return 0, ""
 
     def deploy_server_images(self, config):
-        err, msg, config = YamlDB.parse_config(config, True)
+        db = YamlDB()
+        err, msg, config = db.parse_config(config, True)
         if err > 0:
             return err, msg
 

@@ -77,8 +77,9 @@ def get_networks():
         return jsonify({'error': msg}), 401
     vlans = UCSNet.list_vlans(handle)
     UCSUtil.ucs_logout(handle)
-    err, msg, net_hash = YamlDB.get_network(Const.KUBAM_CFG)
-    err, msg, net_settings = YamlDB.get_ucs_network(Const.KUBAM_CFG)
+    db = YamlDB()
+    err, msg, net_hash = db.get_network(Const.KUBAM_CFG)
+    err, msg, net_settings = db.get_ucs_network(Const.KUBAM_CFG)
     selected_vlan = ""
     if "vlan" in net_settings:
         selected_vlan = net_settings["vlan"]
@@ -100,7 +101,8 @@ def select_vlan():
     # app.logger.info("Request is: ")
     # app.logger.info(request)
     vlan = request.json['vlan']
-    err, msg = YamlDB.update_ucs_network(Const.KUBAM_CFG, {"vlan": vlan})
+    db = YamlDB()
+    err, msg = db.update_ucs_network(Const.KUBAM_CFG, {"vlan": vlan})
     if err != 0:
         return jsonify({'error': msg}), 500
     # return the existing networks now with the new one chosen.
@@ -119,11 +121,12 @@ def update_networks():
     # app.logger.info("request is")
     # app.logger.info(request.json)
     vlan = request.json['vlan']
-    err, msg = YamlDB.update_ucs_network(Const.KUBAM_CFG, {"vlan": vlan})
+    db = YamlDB()
+    err, msg = db.update_ucs_network(Const.KUBAM_CFG, {"vlan": vlan})
     if err != 0:
         return jsonify({'error': msg}), 400
     network = request.json['network']
-    err, msg = YamlDB.update_network(Const.KUBAM_CFG, network)
+    err, msg = db.update_network(Const.KUBAM_CFG, network)
     if err != 0:
         return jsonify({'error': msg}), 400
     return get_networks()

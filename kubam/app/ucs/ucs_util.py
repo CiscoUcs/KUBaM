@@ -8,7 +8,8 @@ class UCSUtil(object):
     # Login to the UCSM
     @staticmethod
     def ucs_login():
-        err, msg, config = YamlDB.open_config(Const.KUBAM_CFG)
+        db = YamlDB()
+        err, msg, config = db.open_config(Const.KUBAM_CFG)
         if err == 0:
             if "ucsm" in config and "credentials" in config["ucsm"]:
                 credentials = config["ucsm"]["credentials"]
@@ -122,7 +123,8 @@ class UCSUtil(object):
             print "\talready deleted"
 
     def get_full_org(self, handle):
-        err, msg, org = YamlDB.get_org(Const.KUBAM_CFG)
+        db = YamlDB()
+        err, msg, org = db.get_org(Const.KUBAM_CFG)
         if err != 0:
             return err, msg, org
         if org == "":

@@ -30,10 +30,11 @@ class UCSProfile(object):
             UCSUtil.ucs_logout(handle)
             return err, msg
 
-        # get the selected servers, and hosts.
-        err, msg, hosts = YamlDB.get_hosts(Const.KUBAM_CFG)
-        err, msg, servers = YamlDB.get_ucs_servers(Const.KUBAM_CFG)
-        err, msg, kubam_ip = YamlDB.get_kubam_ip(Const.KUBAM_CFG)
+        # Get the selected servers and hosts
+        db = YamlDB()
+        err, msg, hosts = db.get_hosts(Const.KUBAM_CFG)
+        err, msg, servers = db.get_ucs_servers(Const.KUBAM_CFG)
+        err, msg, kubam_ip = db.get_kubam_ip(Const.KUBAM_CFG)
 
         ucs_server = UCSServer()
         err, msg = ucs_server.create_server_resources(handle, full_org, hosts, servers, kubam_ip)
@@ -51,7 +52,8 @@ class UCSProfile(object):
         err, msg, handle = ucs_util.ucs_login()
         if err != 0:
             return err, ucs_util.not_logged_in(msg)
-        err, msg, hosts = YamlDB.get_hosts(Const.KUBAM_CFG)
+        db = YamlDB()
+        err, msg, hosts = db.get_hosts(Const.KUBAM_CFG)
         if err != 0:
             return 1, msg
         if len(hosts) == 0:

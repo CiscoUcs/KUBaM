@@ -16,7 +16,8 @@ class Servers(object):
         / basic test to see if site is up.
         should return { 'status' : 'ok'}
         """
-        err, msg, sg = YamlDB.list_server_group(Const.KUBAM_CFG)
+        db = YamlDB()
+        err, msg, sg = db.list_server_group(Const.KUBAM_CFG)
         if err == 1:
             return {'error': msg}, 500
         return {"servers": sg}, 200
@@ -35,7 +36,8 @@ class Servers(object):
         err, msg = UCSUtil.check_ucs_login(req)
         if err == 1:
             return {'error:': msg}, 400
-        err, msg = YamlDB.new_server_group(Const.KUBAM_CFG, req)
+        db = YamlDB()
+        err, msg = db.new_server_group(Const.KUBAM_CFG, req)
         if err == 1:
             return {'error': msg}, 400
         return {'status': "new server group {0} created!".format(req["name"])}, 201
@@ -48,7 +50,8 @@ class Servers(object):
         err, msg = UCSUtil.check_ucs_login(req)
         if err == 1:
             return {'error:': msg}, 400
-        err, msg = YamlDB.update_server_group(Const.KUBAM_CFG, req)
+        db = YamlDB()
+        err, msg = db.update_server_group(Const.KUBAM_CFG, req)
         if err == 1:
             return {'error': msg}, 400
         return {'status': "server group %s updated!" % req["name"]}, 201
@@ -59,7 +62,8 @@ class Servers(object):
         Delete the UCS server group or CIMC from the config.
         """
         uuid = req['id']
-        err, msg = YamlDB.delete_server_group(Const.KUBAM_CFG, uuid)
+        db = YamlDB()
+        err, msg = db.delete_server_group(Const.KUBAM_CFG, uuid)
         if err == 1:
             return {'error': msg}, 400
         else:
@@ -92,11 +96,12 @@ def get_servers():
 
     # Gets a hash of severs of form:
     # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
-    err, msg, db_servers = YamlDB.get_ucs_servers(Const.KUBAM_CFG)
+    db = YamlDB()
+    err, msg, db_servers = db.get_ucs_servers(Const.KUBAM_CFG)
     if err != 0:
         return jsonify({'error': msg}), 400
     ucs_servers = UCSUtil.servers_to_api(ucs_servers, db_servers)
-    err, msg, hosts = YamlDB.get_hosts(Const.KUBAM_CFG)
+    err, msg, hosts = db.get_hosts(Const.KUBAM_CFG)
     if err != 0:
         return jsonify({'error': msg}), 400
     return jsonify({'servers': ucs_servers, 'hosts': hosts}), 200
@@ -116,14 +121,15 @@ def select_servers():
     # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
     ucs_servers = UCSUtil.servers_to_db(ucs_servers)
     if ucs_servers:
-        err, msg = YamlDB.update_ucs_servers(Const.KUBAM_CFG, ucs_servers)
+        db = YamlDB()
+        err, msg = db.update_ucs_servers(Const.KUBAM_CFG, ucs_servers)
         if err != 0:
             return jsonify({'error': msg}), 400
     if "hosts" not in request.json:
         return get_servers()
 
     hosts = request.json['hosts']
-    err, msg = YamlDB.update_hosts(Const.KUBAM_CFG, hosts)
+    err, msg = db.update_hosts(Const.KUBAM_CFG, hosts)
     if err != 0:
         return jsonify({'error': msg}), 400
 

@@ -12,7 +12,8 @@ session = Blueprint("session", __name__)
 @cross_origin()
 def get_credentials():
     credentials = {}
-    err, msg, config = YamlDB.open_config(Const.KUBAM_CFG)
+    db = YamlDB()
+    err, msg, config = db.open_config(Const.KUBAM_CFG)
     if err == 0:
         if "ucsm" in config and "credentials" in config["ucsm"]:
             credentials = config["ucsm"]["credentials"]
@@ -41,7 +42,8 @@ def create_credentials():
     if not h:
         return jsonify({'error': err}), 401
     # Write datafile
-    YamlDB.update_ucs_creds(Const.KUBAM_CFG, credentials)
+    db = YamlDB()
+    db.update_ucs_creds(Const.KUBAM_CFG, credentials)
     UCSSession.logout(h)
     return jsonify({'login': "success"}), 201
 
@@ -49,5 +51,6 @@ def create_credentials():
 @session.route(Const.API_ROOT + "/session", methods=['DELETE'])
 @cross_origin()
 def delete_session():
-    YamlDB.update_ucs_creds(Const.KUBAM_CFG, "")
+    db = YamlDB()
+    db.update_ucs_creds(Const.KUBAM_CFG, "")
     return jsonify({'logout': "success"})
