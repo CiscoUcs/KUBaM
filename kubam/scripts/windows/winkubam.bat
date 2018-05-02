@@ -38,7 +38,7 @@ set Path=C:\Program Files (x86)\Windows Kits\8.1\Assessment and Deployment Kit\D
 
 ::clean the c:\winPE_amd64 and copy it from ADK
 if exist %defdrive%\WinPE_%SUFFIX% rd %defdrive%\WinPE_%SUFFIX% /s /q
-if exist %defdrive%\WinKUBAM del %defdrive%\WinKUBAM
+if exist %defdrive%\WinKUBAM.iso del %defdrive%\WinKUBAM.iso
 set retpath=%cd%
 cd /d "%adkpedir%"
 call copype.cmd %ARCH% %defdrive%\WinPE_%SUFFIX%
