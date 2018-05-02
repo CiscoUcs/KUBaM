@@ -1,25 +1,9 @@
-from UCSMonitor import UCSMonitor
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
-from ucs import UCSUtil
+from ucs import UCSUtil, UCSMonitor
 from config import Const
 
 monitor = Blueprint("monitor", __name__)
-
-
-# Get the server name from the URL parameters
-def get_server_name():
-    server_type = request.args.get('type')
-    chassis_id = request.args.get('chassis_id')
-    slot = request.args.get('slot')
-    rack_id = request.args.get('rack_id')
-    server_name = None
-    if server_type == "blade":
-        server_name = "sys/chassis-{0}/blade-{1}".format(chassis_id, slot)
-    elif server_type == "rack":
-        server_name = "sys/rack-unit-{0}".format(rack_id)
-
-    return server_name
 
 
 # Get the overall status of the server from UCSM FSM
@@ -28,8 +12,9 @@ def get_server_name():
 def get_server_status():
     err, msg, handle = UCSUtil.ucs_login()
     if err != 0:
-        return UCSUtil.not_logged_in(msg)
-    status = UCSMonitor.get_status(handle, get_server_name())
+        msg = UCSUtil.not_logged_in(msg)
+        return jsonify({'error': msg}), 401
+    status = UCSMonitor.get_status(handle, UCSMonitor.get_server_name(request.args))
     UCSUtil.ucs_logout(handle)
     if not status:
         return jsonify({"error": "Bad blade or rack server specified"}), 404
@@ -43,8 +28,9 @@ def get_server_status():
 def get_server_fsm():
     err, msg, handle = UCSUtil.ucs_login()
     if err != 0:
-        return UCSUtil.not_logged_in(msg)
-    fsm = UCSMonitor.get_fsm(handle, get_server_name())
+        msg = UCSUtil.not_logged_in(msg)
+        return jsonify({'error': msg}), 401
+    fsm = UCSMonitor.get_fsm(handle, UCSMonitor.get_server_name(request.args))
     UCSUtil.ucs_logout(handle)
 
     if not fsm:

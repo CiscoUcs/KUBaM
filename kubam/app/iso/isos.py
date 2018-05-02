@@ -2,8 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
 from db import YamlDB
 from config import Const
-from iso import IsoMaker
-from autoinstall import Builder
+from autoinstall import Builder, IsoMaker
 
 isos = Blueprint("isos", __name__)
 
@@ -23,12 +22,14 @@ def get_isos():
 @cross_origin()
 def mkboot_iso():
     # Get the ISO map
-    err, msg, iso_images = YamlDB.get_iso_map(Const.KUBAM_CFG)
+    db = YamlDB()
+    err, msg, iso_images = db.get_iso_map(Const.KUBAM_CFG)
     if err != 0:
         return jsonify({"error": msg}), 400
     if len(iso_images) == 0:
         return jsonify({"error": "No ISOS have been mapped.  Please map an ISO image with an OS"}), 400
-    err, msg = IsoMaker.mkboot_iso(isos)
+    iso_maker = IsoMaker()
+    err, msg = iso_maker.mkboot_iso(isos)
     if err != 0:
         return jsonify({"error": msg}), 400
 
@@ -43,7 +44,8 @@ def mkboot_iso():
 @isos.route(Const.API_ROOT + "/isos/map", methods=['GET'])
 @cross_origin()
 def get_iso_map():
-    err, msg, iso_images = YamlDB.get_iso_map(Const.KUBAM_CFG)
+    db = YamlDB()
+    err, msg, iso_images = db.get_iso_map(Const.KUBAM_CFG)
     if err != 0:
         return jsonify({'error': msg}), 400
     return jsonify({'iso_map': iso_images}), 200
@@ -59,7 +61,8 @@ def update_iso_map():
         return jsonify({'error': 'expected request with iso_map '}), 400
 
     iso_images = request.json['iso_map']
-    err, msg = YamlDB.update_iso_map(Const.KUBAM_CFG, iso_images)
+    db = YamlDB()
+    err, msg = db.update_iso_map(Const.KUBAM_CFG, iso_images)
     if err != 0:
         return jsonify({'error': msg}), 400
     return get_iso_map()

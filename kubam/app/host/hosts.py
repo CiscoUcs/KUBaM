@@ -11,10 +11,11 @@ class Hosts(object):
     @staticmethod
     def list_hosts():
         """
-        / basic test to see if site is up.
-        should return { 'status' : 'ok'}
+        Basic test to see if site is up.
+        Should return { 'status' : 'ok'}
         """
-        err, msg, host_list = YamlDB.list_hosts(Const.KUBAM_CFG)
+        db = YamlDB()
+        err, msg, host_list = db.list_hosts(Const.KUBAM_CFG)
         if err == 1:
             return {'error': msg}, 500
         return {"hosts": host_list}, 200
@@ -25,9 +26,12 @@ class Hosts(object):
         """
         Create a new host entry
         Format of request should be JSON that looks like:
-        {"name", "aci01", "credentials" : {"user": "admin", "password" : "secret-password", "ip" : "172.28.225.163" }, ...}
+        {"name", "aci01",
+            "credentials": {"user": "admin", "password": "secret-password", "ip": "172.28.225.163" },
+        ...}
         """
-        err, msg = YamlDB.new_hosts(Const.KUBAM_CFG, req)
+        db = YamlDB()
+        err, msg = db.new_hosts(Const.KUBAM_CFG, req)
         if err == 1:
             return {'error': msg}, 400
         return {'status': "Hosts %s created!"}, 201
@@ -43,7 +47,8 @@ class Hosts(object):
         Delete the ACI group from the config.
         """
         uuid = req['id']
-        err, msg = YamlDB.delete_hosts(Const.KUBAM_CFG, uuid)
+        db = YamlDB()
+        err, msg = db.delete_hosts(Const.KUBAM_CFG, uuid)
         if err == 1:
             return {'error': msg}, 400
         else:

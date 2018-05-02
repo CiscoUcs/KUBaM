@@ -15,7 +15,7 @@ class UCSSession(object):
     def ensure_version(self, handle):
         version = self.get_version(handle)
         if version.startswith('3'):
-            return ""
+            return None
         return "Unsupported UCS firmware version: {0}. Please update to at least 3.0".format(version)
 
     # Returns handle or error message
@@ -26,24 +26,24 @@ class UCSSession(object):
         try:
             result = s.connect_ex((server, 80))
             if result != 0:
-                return "", "{0} is not reachable".format(server)
+                return None, "{0} is not reachable".format(server)
             s.close()
         except socket.error as err:
-            return "", "UCS Login Error: {0} {1}".format(server, err.strerror)
+            return None, "UCS Login Error: {0} {1}".format(server, err.strerror)
 
         handle = UcsHandle(server, username, password)
         try:
             handle.login()
         except UcsException as err:
             print "Login Error: " + err.error_descr
-            return "", err.error_descr
+            return None, err.error_descr
         except HTTPError as err:
             print "Connection Error: Bad UCSM? " + err.reason
-            return "", err.reason
+            return None, err.reason
         except Exception as e:
-            print "Issue logging in.  Please check that all parameters are correct"
+            print "Issue logging in. Please check that all parameters are correct"
             print e
-            return "", "Issue logging in.  Please check that all parameters are correct."
+            return None, "Issue logging in. Please check that all parameters are correct."
 
         msg = self.ensure_version(handle)
         return handle, msg

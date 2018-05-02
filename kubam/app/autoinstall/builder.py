@@ -20,17 +20,17 @@ class Builder(object):
         template = node['os'] + ".tmpl"
         if "template" in node:
             if path.isfile(node['template']):
-                return 0, "", template, Const.KUBAM_DIR
+                return 0, None, template, Const.KUBAM_DIR
         if path.isfile(Const.KUBAM_DIR + template):
-            return 0, "", template, Const.KUBAM_DIR
+            return 0, None, template, Const.KUBAM_DIR
         if path.isfile(Const.TEMPLATE_DIR + template):
-            return 0, "", template, Const.TEMPLATE_DIR
-        return 1, "template not found", "", ""
+            return 0, None, template, Const.TEMPLATE_DIR
+        return 1, "template not found", None, None
 
     def build_template(self, node, config):
         err, msg, template_file, template_dir = self.find_template(node)
         if err > 0:
-            return err, msg, ""
+            return err, msg, None
         if "vlan" not in config['network']:
             config['network']['vlan'] = ""
         j2_env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True)
@@ -82,7 +82,8 @@ class Builder(object):
         return 0, ""
 
     def deploy_server_images(self, config):
-        err, msg, config = YamlDB.parse_config(config, True)
+        db = YamlDB()
+        err, msg, config = db.parse_config(config, True)
         if err > 0:
             return err, msg
 

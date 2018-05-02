@@ -4,6 +4,7 @@ from config import Const
 from db import YamlDB
 
 util = Blueprint("util", __name__)
+db = YamlDB()
 
 
 # Get the capabilities of Kubam
@@ -18,7 +19,7 @@ def get_catalog():
 @util.route(Const.API_ROOT + "/ip", methods=['GET'])
 @cross_origin()
 def get_kubam_ip():
-    err, msg, kubam_ip = YamlDB.get_kubam_ip(Const.KUBAM_CFG)
+    err, msg, kubam_ip = db.get_kubam_ip(Const.KUBAM_CFG)
     if err != 0:
         return jsonify({'error': msg}), 400
     return jsonify({'kubam_ip': kubam_ip}), 200
@@ -34,7 +35,7 @@ def update_kubam_ip():
         return jsonify({'error': 'expected request with kubam_ip '}), 400
 
     kubam_ip = request.json['kubam_ip']
-    err, msg = YamlDB.update_kubam_ip(Const.KUBAM_CFG, kubam_ip)
+    err, msg = db.update_kubam_ip(Const.KUBAM_CFG, kubam_ip)
     if err != 0:
         return jsonify({'error': msg}), 400
     return jsonify({'kubam_ip': kubam_ip}), 201
@@ -44,7 +45,7 @@ def update_kubam_ip():
 @util.route(Const.API_ROOT + "/keys", methods=['GET'])
 @cross_origin()
 def get_public_keys():
-    err, msg, keys = YamlDB.get_public_keys(Const.KUBAM_CFG)
+    err, msg, keys = db.get_public_keys(Const.KUBAM_CFG)
     if err != 0:
         return jsonify({'error': msg}), 400
     return jsonify({'keys': keys}), 200
@@ -60,7 +61,7 @@ def update_public_keys():
         return jsonify({'error': "expected request with keys "}), 400
 
     keys = request.json['keys']
-    err, msg = YamlDB.update_public_keys(Const.KUBAM_CFG, keys)
+    err, msg = db.update_public_keys(Const.KUBAM_CFG, keys)
     if err != 0:
         return jsonify({'error': msg}), 400
     return jsonify({'keys': keys}), 201
@@ -70,7 +71,7 @@ def update_public_keys():
 @util.route(Const.API_ROOT + "/proxy", methods=['GET'])
 @cross_origin()
 def get_proxy():
-    err, msg, keys = YamlDB.get_proxy(Const.KUBAM_CFG)
+    err, msg, keys = db.get_proxy(Const.KUBAM_CFG)
     if err != 0:
         return jsonify({'error': msg}), 400
     return jsonify({'proxy': keys}), 200
@@ -86,7 +87,7 @@ def update_proxy():
         return jsonify({'error': 'expected request with proxy'}), 400
 
     proxy = request.json['proxy']
-    err, msg = YamlDB.update_proxy(Const.KUBAM_CFG, proxy)
+    err, msg = db.update_proxy(Const.KUBAM_CFG, proxy)
     if err != 0:
         return jsonify({'error': msg}), 400
     return jsonify({'proxy': proxy}), 201
@@ -96,7 +97,7 @@ def update_proxy():
 @util.route(Const.API_ROOT + "/org", methods=['GET'])
 @cross_origin()
 def get_org():
-    err, msg, org = YamlDB.get_org(Const.KUBAM_CFG)
+    err, msg, org = db.get_org(Const.KUBAM_CFG)
     if err != 0:
         return jsonify({'error': msg}), 400
     return jsonify({'org': org}), 200
@@ -112,7 +113,7 @@ def update_ucs_org():
         return jsonify({'error': "expected request with org"}), 400
 
     org = request.json['org']
-    err, msg = YamlDB.update_org(Const.KUBAM_CFG, org)
+    err, msg = db.update_org(Const.KUBAM_CFG, org)
     if err != 0:
         return jsonify({'error': msg}), 400
     return jsonify({'org': org}), 201
@@ -134,25 +135,25 @@ def update_settings():
     # Proxy and org fields are not mandatory
     if "proxy" in request.json:
         proxy = request.json['proxy']
-        err, msg = YamlDB.update_proxy(Const.KUBAM_CFG, proxy)
+        err, msg = db.update_proxy(Const.KUBAM_CFG, proxy)
         if err != 0:
             return jsonify({'error': msg}), 400
 
     if "org" in request.json:
         org = request.json['org']
-        err, msg = YamlDB.update_org(Const.KUBAM_CFG, org)
+        err, msg = db.update_org(Const.KUBAM_CFG, org)
         if err != 0:
             return jsonify({'error': msg}), 400
 
     # Update the Kubam IP if it is changed
     ip = request.json['kubam_ip']
-    err, msg = YamlDB.update_kubam_ip(Const.KUBAM_CFG, ip)
+    err, msg = db.update_kubam_ip(Const.KUBAM_CFG, ip)
     if err != 0:
         return jsonify({'error': msg}), 400
 
     # Update the keys if changed
     keys = request.json['keys']
-    err, msg = YamlDB.update_public_keys(Const.KUBAM_CFG, keys)
+    err, msg = db.update_public_keys(Const.KUBAM_CFG, keys)
     if err != 0:
         return jsonify({'error': msg}), 400
 
