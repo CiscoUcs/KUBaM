@@ -25,11 +25,12 @@ for /f "delims=" %%a in ('Type "%File2Read%"') do (
 )
 netsh interface ip set address eth0 static !Line[1]! !Line[2]! !Line[3]!
 :noping
-ping -n 1 %KUBAM% 2> NUL | find "TTL=" > NUL || goto :noping
+ping -n 1 172.28.225.135 2> NUL | find "TTL=" > NUL || goto :noping
 md \kubam
 echo Waiting for successful mount of \\%KUBAM%\install (if this hangs, check that samba is running)
 :nomount
-net use i: \\%KUBAM%\kubam || goto :nomount
+::net use i: \\%KBAM%\kubam || goto :nomount
+net use i: \\172.28.225.135\kubam || goto :nomount
 echo Successfully mounted \\%KUBAM%\install, moving on to execute remote script
 if exist  c:\autounattend.xml copy c:\autounattend.xml x:\kubam\autounattend.xml
 if not exist x:\kubam\autounattend.xml echo I could not find my autoinst file
