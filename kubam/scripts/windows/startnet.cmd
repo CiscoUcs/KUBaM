@@ -24,8 +24,6 @@ for /f "delims=" %%a in ('Type "%File2Read%"') do (
   set "Line[!count!]=%%a
 )
 netsh interface ip set address eth0 static !Line[1]! !Line[2]! !Line[3]!
-for /f %%A IN ('getnextserver.exe') DO SET KUBAM=%%A
-echo Waiting for xCAT server %KUBAM% to become reachable (check WinPE network drivers if this does not proceeed)
 :noping
 ping -n 1 %KUBAM% 2> NUL | find "TTL=" > NUL || goto :noping
 md \kubam
