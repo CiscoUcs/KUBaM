@@ -32,6 +32,9 @@ set oscdimg=%defdrive%\Program Files (x86)\Windows Kits\8.1\Assessment and Deplo
 set WinPERoot=%adkpedir%
 set OSCDImgRoot=%oscdimg%
 set Path=C:\Program Files (x86)\Windows Kits\8.1\Assessment and Deployment Kit\Deployment Tools\amd64\DISM;%Path%
+set Path=C:\Program Files (x86)\Windows Kits\8.1\Assessment and Deployment Kit\Windows Preinstallation Environment;%Path%
+set Path=C:\Program Files (x86)\Windows Kits\8.1\Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg;%Path%
+
 
 ::clean the c:\winPE_amd64 and copy it from ADK
 if exist %defdrive%\WinPE_%SUFFIX% rd %defdrive%\WinPE_%SUFFIX% /s /q
@@ -95,7 +98,7 @@ if [%WINPENAME%] NEQ [] rename %defdrive%\WinPE_%SUFFIX%\media\winboot\origmedia
 
 echo Finished generating of winpe and BCD.
 echo Generating ISO image.
-MakeWinPEMedia.cmd /ISO %defdrive%:\WinPE_64\ %defdrive%:\WinKUBAM.iso
+MakeWinPEMedia.cmd /ISO %defdrive%\WinPE_64\ %defdrive%\WinKUBAM.iso
 echo "Upload %defdrive%\WinKUBAM.iso into ~/kubam directory of KUBAM (usually /tftpboot/)"
 goto :eof
 :errorbadargs
