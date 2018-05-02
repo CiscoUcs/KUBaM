@@ -61,6 +61,8 @@ class Servers(object):
         """
         Delete the UCS server group or CIMC from the config.
         """
+        if not isinstance(req, dict):
+            return {'error' : "invalid parameters: %s" % req}, 400
         uuid = req['id']
         db = YamlDB()
         err, msg = db.delete_server_group(Const.KUBAM_CFG, uuid)
