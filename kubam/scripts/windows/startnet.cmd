@@ -1,4 +1,4 @@
-:: OSVER and KUBAM are veriables added by winkubam.bat 
+:: OS and KUBAM are veriables added by winkubam.bat 
 start /min cmd
 echo Initializing KUBAM WinPE please wait.
 wpeinit
@@ -21,6 +21,6 @@ echo Successfully mounted \\172.28.225.135\install, moving on to execute remote 
 if exist  c:\autounattend.xml copy c:\autounattend.xml x:\kubam\autounattend.xml
 if not exist x:\kubam\autounattend.xml echo I could not find my autoinst file
 if not exist x:\kubam\autounattend.xml pause
-i:\%OSVER%\setup /unattend:x:\kubam\autounattend.xml /noreboot
+i:\%OS%\setup /unattend:x:\kubam\autounattend.xml /noreboot
 wpeutil reboot
 :end

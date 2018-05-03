@@ -13,8 +13,8 @@ set OS=%1%
 set ARCH=amd64
 set SUFFIX=64
 :: only support 2 windows versions at the moment. 
-if [%OS%] EQU [win2012r2] set OSVER=win2012r2
-if [%OS%] EQU [win2016] set OSVER=win2016
+if [%OS%] EQU [win2012r2] set OSVER=2012r2
+if [%OS%] EQU [win2016] set OSVER=2016
 if [%OSVER%] EQU [] goto :errorbadargs
 
 ::get the KUBAM server
@@ -67,7 +67,7 @@ dism /mount-image /imagefile:%defdrive%\WinPE_%SUFFIX%\media\Sources\boot.wim /i
 cd /d %retpath%
 echo @echo off > startnet.cmd.new
 echo set KUBAM=%KUBAM% >>startnet.cmd.new
-echo set OSVER=%OSVER% >>startnet.cmd.new
+echo set OS=%OS% >>startnet.cmd.new
 type startnet.cmd >>startnet.cmd.new
 copy startnet.cmd.new %defdrive%\WinPE_%SUFFIX%\mount\Windows\system32
 ::mv /y startnet.cmd.new %defdrive%\WinPE_%SUFFIX%\mount\Windows\system32\startnet.cmd
