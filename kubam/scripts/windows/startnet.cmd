@@ -1,6 +1,6 @@
 @echo off
 start /min cmd
-echo Initializing WPE init please wait.
+echo Initializing KUBAM WinPE please wait.
 wpeinit
 :: Get information somehow from file in the C:\ drive of the IP address for this node. 
 set "File2Read=c:\network.txt"
