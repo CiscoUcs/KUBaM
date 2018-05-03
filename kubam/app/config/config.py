@@ -15,6 +15,8 @@ class Const(object):
         'redhat7.4': ["generic", "k8s master", "k8s node"],
         'esxi6.0': ["generic"],
         'esxi6.5': ["generic"],
+        'win2012r2': ["generic"],
+        'win2016': ["generic"]
     }
     OS_DICT = {  # Dictionary of supported operating systems
         "centos7.3": {
@@ -51,5 +53,15 @@ class Const(object):
             "key_file": ".DISCINFO",
             "key_string": "Version: 6.0.0",
             "dir": "esxi6.0"
+        },
+        "win2012r2": {
+            "key_file": "sources/idwbinfo.txt",
+            "key_string": "winblue_rtm",
+            "dir": "win2012r2"
+        },
+        "win2016": {
+            "key_file": "sources/idwbinfo.txt",
+            "key_string": "rs1_release",
+            "dir": "win2016"
         }
     }
