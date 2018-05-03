@@ -23,5 +23,5 @@ if exist  c:\autounattend.xml copy c:\autounattend.xml x:\kubam\autounattend.xml
 if not exist x:\kubam\autounattend.xml echo I could not find my autoinst file
 if not exist x:\kubam\autounattend.xml pause
 i:\win2012r2\setup /unattend:x:\kubam\autounattend.xml /noreboot
-::wpeutil reboot
+wpeutil reboot
 :end

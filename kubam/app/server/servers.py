@@ -61,6 +61,7 @@ class Servers(object):
         """
         Delete the UCS server group or CIMC from the config.
         """
+        print req
         if not isinstance(req, dict):
             return {'error' : "invalid parameters: %s" % req}, 400
         uuid = req['id']
@@ -80,6 +81,8 @@ def server_handler():
     elif request.method == 'PUT':
         j, rc = Servers.update_servers(request.json)
     elif request.method == 'DELETE':
+        print request.json
+
         j, rc = Servers.delete_servers(request.json)
     else:
         j, rc = Servers.list_servers()

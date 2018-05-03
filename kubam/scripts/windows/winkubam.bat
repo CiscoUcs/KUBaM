@@ -4,7 +4,7 @@
 ::https://raw.githubusercontent.com/xcat2/xcat-core/master/KUBAM-server/share/xcat/netboot/windows/genimage.cmd
 ::This script requires that the ADK must be installed onto the Windows 
 ::This script can accept three parameters: 
-::genimage.cmd arch [winpe name] [bcdonly]
+::winkubam.bat arch [winpe name] [bcdonly]
 
 ::get the arch from first param
 set ARCH=%1%
@@ -104,8 +104,8 @@ echo "Upload %defdrive%\WinKUBAM.iso into ~/kubam directory of KUBAM (usually /t
 goto :eof
 :errorbadargs
 echo Specify the architecture on the command line
-echo Usage: genimage.cmd arch [bcdonly]
-echo        e.g. genimage.cmd amd64 
-echo        e.g. genimage.cmd amd64 bcdonly
+echo Usage: winkubam.bat arch [bcdonly]
+echo        e.g. winkubam.bat amd64 
+echo        e.g. winkubam.bat amd64 bcdonly
 goto :eof
 :eof
