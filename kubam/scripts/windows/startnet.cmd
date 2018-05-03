@@ -9,6 +9,7 @@ for /f "delims=" %%a in ('Type "%File2Read%"') do (
   set /a count+=1
   set "Line[!count!]=%%a
 )
+echo Setting IP address of node...
 netsh interface ip set address eth0 static !Line[1]! !Line[2]! !Line[3]!
 :noping
 ping -n 1 172.28.225.135 2> NUL | find "TTL=" > NUL || goto :noping
