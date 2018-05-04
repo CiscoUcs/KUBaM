@@ -9,17 +9,10 @@
 
 
 ::get the arch from first param
-set OS=%1%
+
 set ARCH=amd64
 set SUFFIX=64
-:: only support 2 windows versions at the moment. 
-if [%OS%] EQU [win2012r2] set OSVER=2012r2
-if [%OS%] EQU [win2016] set OSVER=2016
-if [%OSVER%] EQU [] goto :errorbadargs
 
-::get the KUBAM server
-set KUBAM=%2%
-if [%KUBAM%] EQU [] goto :errorbadargs
 ::Configuration section
 ::the drive to use for holding the image
 set defdrive=%SystemDrive%
@@ -39,7 +32,7 @@ set Path=C:\Program Files (x86)\Windows Kits\8.1\Assessment and Deployment Kit\D
 
 ::clean the c:\winPE_amd64 and copy it from ADK
 if exist %defdrive%\WinPE_%SUFFIX% rd %defdrive%\WinPE_%SUFFIX% /s /q
-if exist %defdrive%\WinPE_%OSVER%.iso del %defdrive%\WinPE_%OSVER%.iso
+if exist %defdrive%\WinPE_KUBAM.iso del %defdrive%\WinPE_KUBAM.iso
 set retpath=%cd%
 cd /d "%adkpedir%"
 call copype.cmd %ARCH% %defdrive%\WinPE_%SUFFIX%
@@ -65,11 +58,8 @@ if [%ARCH%] EQU [amd64]  copy %defdrive%\WinPE_%SUFFIX%\media\Boot\BCD.%SUFFIX% 
 
 dism /mount-image /imagefile:%defdrive%\WinPE_%SUFFIX%\media\Sources\boot.wim /index:1 /mountdir:%defdrive%\WinPE_%SUFFIX%\mount
 cd /d %retpath%
-echo "@echo off" > startnet.cmd.new
-echo "set KUBAM=%KUBAM%" >>startnet.cmd.new
-echo "set OS=%OS%" >>startnet.cmd.new
-type startnet.cmd >>startnet.cmd.new
-move /y startnet.cmd.new %defdrive%\WinPE_%SUFFIX%\mount\Windows\system32\startnet.cmd
+copy startnet.cmd %defdrive%\WinPE_%SUFFIX%\mount\Windows\system32
+
 dism /Image:%defdrive%\WinPE_%SUFFIX%\mount /add-package /packagepath:"%adkpedir%\amd64\WinPE_OCs\WinPE-WMI.cab"
 dism /Image:%defdrive%\WinPE_%SUFFIX%\mount /add-package /packagepath:"%adkpedir%\amd64\WinPE_OCs\WinPE-Scripting.cab"
 dism /Image:%defdrive%\WinPE_%SUFFIX%\mount /add-package /packagepath:"%adkpedir%\amd64\WinPE_OCs\WinPE-RNDIS.cab"
@@ -94,13 +84,6 @@ move %defdrive%\WinPE_%SUFFIX%\media\Sources\boot.wim %defdrive%\WinPE_%SUFFIX%\
 
 echo Finished generating of winpe and BCD.
 echo Generating ISO image.
-MakeWinPEMedia.cmd /ISO %defdrive%\WinPE_64\ %defdrive%\WinPE_%OSVER%.iso
-echo "Upload %defdrive%\WinPE_%OSVER%.iso into ~/kubam directory of KUBAM"
-goto :eof
-:errorbadargs
-echo Specify the architecture on the command line
-echo Usage: winkubam.bat [win2012r2^|win2016] ^<kubam IP^>
-echo        e.g. winkubam.bat win2012r2 172.28.225.135
-echo        e.g. winkubam.bat win2016 172.28.225.135
-goto :eof
-:eof
+MakeWinPEMedia.cmd /ISO %defdrive%\WinPE_64\ %defdrive%\WinPE_KUBAM.iso
+echo "Upload %defdrive%\WinPE_KUBAM.iso into ~/kubam directory of KUBAM"
+
