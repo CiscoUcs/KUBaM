@@ -32,6 +32,7 @@ class YamlDB(object):
     def validate_pks(key_list):
         err = 0
         msg = ""
+        bad_keys = []
 
         for k in key_list:
             if not k:
@@ -41,7 +42,9 @@ class YamlDB(object):
                 ssh.parse()
             except InvalidKeyException as e:
                 err += 1
-                msg = msg + "\nInvalid SSH Public Key:".format(k)
+                bad_keys.append(k)
+        if err > 0:
+            msg = "Invalid SSH keys: {}".format(bad_keys) 
         return err, msg
 
     # Takes in an OS and verifies it's something we support
