@@ -44,7 +44,7 @@ class YamlDB(object):
                 err += 1
                 bad_keys.append(k)
         if err > 0:
-            msg = "Invalid SSH keys: {}".format(bad_keys) 
+            msg = "Invalid SSH keys: {}".format(",".join(bad_keys)) 
         return err, msg
 
     # Takes in an OS and verifies it's something we support
