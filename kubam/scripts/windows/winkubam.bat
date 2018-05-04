@@ -65,12 +65,11 @@ if [%ARCH%] EQU [amd64]  copy %defdrive%\WinPE_%SUFFIX%\media\Boot\BCD.%SUFFIX% 
 
 dism /mount-image /imagefile:%defdrive%\WinPE_%SUFFIX%\media\Sources\boot.wim /index:1 /mountdir:%defdrive%\WinPE_%SUFFIX%\mount
 cd /d %retpath%
-echo @echo off > startnet.cmd.new
-echo set KUBAM=%KUBAM% >>startnet.cmd.new
-echo set OS=%OS% >>startnet.cmd.new
+echo "@echo off" > startnet.cmd.new
+echo "set KUBAM=%KUBAM%" >>startnet.cmd.new
+echo "set OS=%OS%" >>startnet.cmd.new
 type startnet.cmd >>startnet.cmd.new
-copy startnet.cmd.new %defdrive%\WinPE_%SUFFIX%\mount\Windows\system32
-::mv /y startnet.cmd.new %defdrive%\WinPE_%SUFFIX%\mount\Windows\system32\startnet.cmd
+move /y startnet.cmd.new %defdrive%\WinPE_%SUFFIX%\mount\Windows\system32\startnet.cmd
 dism /Image:%defdrive%\WinPE_%SUFFIX%\mount /add-package /packagepath:"%adkpedir%\amd64\WinPE_OCs\WinPE-WMI.cab"
 dism /Image:%defdrive%\WinPE_%SUFFIX%\mount /add-package /packagepath:"%adkpedir%\amd64\WinPE_OCs\WinPE-Scripting.cab"
 dism /Image:%defdrive%\WinPE_%SUFFIX%\mount /add-package /packagepath:"%adkpedir%\amd64\WinPE_OCs\WinPE-RNDIS.cab"
@@ -99,9 +98,9 @@ MakeWinPEMedia.cmd /ISO %defdrive%\WinPE_64\ %defdrive%\WinPE_%OSVER%.iso
 echo "Upload %defdrive%\WinPE_%OSVER%.iso into ~/kubam directory of KUBAM"
 goto :eof
 :errorbadargs
-echo Specify the OS and the KUBAM IP on the command line
-echo Usage: winkubam.bat [win2016|win2012r2] [ip address]
-echo        e.g. winkubam.bat win2016 10.93.234.94
+echo Specify the architecture on the command line
+echo Usage: winkubam.bat [win2012r2^|win2016] ^<kubam IP^>
 echo        e.g. winkubam.bat win2012r2 172.28.225.135
+echo        e.g. winkubam.bat win2016 172.28.225.135
 goto :eof
 :eof
