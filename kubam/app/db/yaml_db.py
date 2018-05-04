@@ -39,9 +39,9 @@ class YamlDB(object):
             ssh = SSHKey(k, strict_mode=True)
             try:
                 ssh.parse()
-            except InvalidKeyException as err:
+            except InvalidKeyException as e:
                 err += 1
-                msg = msg + "\nInvalid SSH Public Key:".format(k)
+                msg = msg + e + "\nInvalid SSH Public Key:".format(k)
         return err, msg
 
     # Takes in an OS and verifies it's something we support

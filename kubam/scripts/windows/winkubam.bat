@@ -99,9 +99,9 @@ MakeWinPEMedia.cmd /ISO %defdrive%\WinPE_64\ %defdrive%\WinPE_%OSVER%.iso
 echo "Upload %defdrive%\WinPE_%OSVER%.iso into ~/kubam directory of KUBAM"
 goto :eof
 :errorbadargs
-echo Specify the architecture on the command line
-echo Usage: winkubam.bat arch [bcdonly]
-echo        e.g. winkubam.bat amd64 
-echo        e.g. winkubam.bat amd64 bcdonly
+echo Specify the OS and the KUBAM IP on the command line
+echo Usage: winkubam.bat [win2016|win2012r2] [ip address]
+echo        e.g. winkubam.bat win2016 10.93.234.94
+echo        e.g. winkubam.bat win2012r2 172.28.225.135
 goto :eof
 :eof
