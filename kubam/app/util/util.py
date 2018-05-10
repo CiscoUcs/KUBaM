@@ -30,9 +30,9 @@ def get_kubam_ip():
 @cross_origin()
 def update_kubam_ip():
     if not request.json:
-        return jsonify({'error': 'expected request with kubam_ip '}), 400
+        return jsonify({'error': "expected request with kubam_ip "}), 400
     if "kubam_ip" not in request.json:
-        return jsonify({'error': 'expected request with kubam_ip '}), 400
+        return jsonify({'error': "expected request with kubam_ip "}), 400
 
     kubam_ip = request.json['kubam_ip']
     err, msg = db.update_kubam_ip(Const.KUBAM_CFG, kubam_ip)
@@ -56,9 +56,9 @@ def get_public_keys():
 @cross_origin()
 def update_public_keys():
     if not request.json:
-        return jsonify({'error': "expected request with keys "}), 400
+        return jsonify({'error': "expected request with keys"}), 400
     if "keys" not in request.json:
-        return jsonify({'error': "expected request with keys "}), 400
+        return jsonify({'error': "expected request with keys"}), 400
 
     keys = request.json['keys']
     err, msg = db.update_public_keys(Const.KUBAM_CFG, keys)
@@ -82,9 +82,9 @@ def get_proxy():
 @cross_origin()
 def update_proxy():
     if not request.json:
-        return jsonify({'error': 'expected request with proxy '}), 400
+        return jsonify({'error': "expected request with proxy"}), 400
     if "proxy" not in request.json:
-        return jsonify({'error': 'expected request with proxy'}), 400
+        return jsonify({'error': "expected request with proxy"}), 400
 
     proxy = request.json['proxy']
     err, msg = db.update_proxy(Const.KUBAM_CFG, proxy)

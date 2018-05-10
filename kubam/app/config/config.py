@@ -7,6 +7,9 @@ class Const(object):
     KUBAM_SHARE_DIR = "/usr/share/kubam/"
     BASE_IMG = KUBAM_SHARE_DIR + "/stage1/ks.img"
     TEMPLATE_DIR = KUBAM_SHARE_DIR + "/templates/"
+    HTTP_OK = 200
+    HTTP_UNAUTHORIZED = 401
+    HTTP_SERVER_ERROR = 500
     CATALOG = {  # Catalog of supported operating systems
         'centos7.3': ["generic", "k8s master", "k8s node"],
         'centos7.4': ["generic", "k8s master", "k8s node"],

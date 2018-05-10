@@ -5,6 +5,7 @@ from config import Const
 
 deploy = Blueprint("deploy", __name__)
 
+
 class Deployments(object):
     # List the server group information
     @staticmethod

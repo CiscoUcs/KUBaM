@@ -29,7 +29,7 @@ class UCSServer(object):
         for i, s in enumerate(m):
             if type(s) is ComputeBlade:
                 all_servers.append({
-                    'type': 'blade',
+                    'type': "blade",
                     'label': s.usr_lbl,
                     'chassis_id': s.chassis_id,
                     'slot': s.rn.replace("blade", ""),
@@ -39,7 +39,7 @@ class UCSServer(object):
                 })
             if type(s) is ComputeRackUnit:
                 all_servers.append({
-                    'type': 'rack',
+                    'type': "rack",
                     'label': s.usr_lbl,
                     'rack_id': s.rn.replace("rack-unit-", ""),
                     'model': s.model, 'association': s.association,

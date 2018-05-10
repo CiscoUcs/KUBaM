@@ -11,11 +11,11 @@ class UCSUtil(object):
         db = YamlDB()
         err, msg, config = db.open_config(Const.KUBAM_CFG)
         if err == 0:
-            if "ucsm" in config and "credentials" in config["ucsm"]:
-                credentials = config["ucsm"]["credentials"]
+            if "ucsm" in config and "credentials" in config['ucsm']:
+                credentials = config['ucsm']['credentials']
                 if "user" in credentials and "password" in credentials and "ip" in credentials:
                     ucs_session = UCSSession()
-                    h, msg = ucs_session.login(credentials["user"], credentials["password"], credentials["ip"])
+                    h, msg = ucs_session.login(credentials['user'], credentials['password'], credentials['ip'])
                     if msg:
                         return 1, msg, None
                     if h:
@@ -86,7 +86,7 @@ class UCSUtil(object):
     # create org should not have org- prepended to it.
     @staticmethod
     def create_org(handle, org):
-        print "Creating Organization: %s" % org
+        print "Creating Organization: {0}".format(org)
         from ucsmsdk.mometa.org.OrgOrg import OrgOrg
         mo = OrgOrg(parent_mo_or_dn="org-root", name=org, descr="KUBAM org")
         handle.add_mo(mo, modify_present=True)
@@ -102,19 +102,19 @@ class UCSUtil(object):
     # org should not have org-<name> prepended."
     @staticmethod
     def query_org(handle, org):
-        print "Checking if org %s exists" % org
+        print "Checking if org {0} exists".format(org)
         obj = handle.query_dn("org-root/org-" + org)
         if not obj:
-            print "Org %s does not exist" % org
+            print "Org {0} does not exist".format(org)
             return False
         else:
-            print "Org %s exists." % org
+            print "Org {0} exists.".format(org)
             return True
 
     # org should be passed with the org-<name> prepended to it.
     @staticmethod
     def delete_org(handle, org):
-        print "Deleting Org %s" % org
+        print "Deleting Org {0}".format(org)
         mo = handle.query_dn(org)
         try:
             handle.remove_mo(mo)
@@ -145,35 +145,35 @@ class UCSUtil(object):
         # Gets a server array list and gets the selected servers and puts them in the database form
         server_pool = dict()
         for s in ucs_servers:
-            if "selected" in s and s["selected"]:
-                if s["type"] == "blade":
+            if "selected" in s and s['selected']:
+                if s['type'] == "blade":
                     if "blades" not in server_pool:
-                        server_pool["blades"] = []
-                    b = "{0}/{1}".format(s["chassis_id"], s["slot"])
+                        server_pool['blades'] = []
+                    b = "{0}/{1}".format(s['chassis_id'], s['slot'])
                     server_pool["blades"].append(b)
-                elif s["type"] == "rack":
+                elif s['type'] == "rack":
                     if "rack_servers" not in server_pool:
-                        server_pool["rack_servers"] = []
-                    server_pool["rack_servers"].append(s["rack_id"])
+                        server_pool['rack_servers'] = []
+                    server_pool['rack_servers'].append(s['rack_id'])
         return server_pool
 
     # See if there are any selected servers in the database
     @staticmethod
     def servers_to_api(ucs_servers, db_servers):
         for i, real_server in enumerate(ucs_servers):
-            if real_server["type"] == "blade":
+            if real_server['type'] == "blade":
                 if "blades" in db_servers:
-                    for b in db_servers["blades"]:
+                    for b in db_servers['blades']:
                         b_parts = b.split("/")
                         if (len(b_parts) == 2 and
-                                real_server["chassis_id"] == b_parts[0] and
-                                real_server["slot"] == b_parts[1]):
-                            real_server["selected"] = True
+                                real_server['chassis_id'] == b_parts[0] and
+                                real_server['slot'] == b_parts[1]):
+                            real_server['selected'] = True
                             ucs_servers[i] = real_server
-            elif real_server["type"] == "rack":
+            elif real_server['type'] == "rack":
                 if "rack_servers" in db_servers:
-                    for s in db_servers["rack_servers"]:
-                        if real_server["rack_id"] == s:
-                            real_server["selected"] = True
+                    for s in db_servers['rack_servers']:
+                        if real_server['rack_id'] == s:
+                            real_server['selected'] = True
                             ucs_servers[i] = real_server
         return ucs_servers
