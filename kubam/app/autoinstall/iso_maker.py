@@ -26,6 +26,16 @@ class IsoMaker(object):
         return 0, list_of_isos
 
     @staticmethod
+    def extract_isos(isomap):
+        for o in isomap:  
+            os_dir = "/kubam/" + Const.OS_DICT[o['os']]['dir']
+            if not os.path.isdir(os_dir):
+                err, msg = IsoMaker.extract_iso(o['file'], os_dir)
+                if err != 0:
+                    return err, msg
+        return 0, None
+
+    @staticmethod
     def extract_iso(iso, mnt_dir):
         """
         Extract the ISO file into a directory call with iso file and directory to mount in:
@@ -36,6 +46,8 @@ class IsoMaker(object):
         err = 0
         if os.path.isdir(mnt_dir):
             return 1, mnt_dir + " directory already exists."
+        if not os.path.isfile(iso):
+            return 1, "iso file {0} not found".format(iso)
         # osirrox -prog kubam -indev ./*.iso -extract . centos7.3
         o = call(["osirrox", "-acl", "off", "-prog", "kubam", "-indev", iso, "-extract", ".", mnt_dir])
         if not o == 0:
@@ -128,21 +140,46 @@ class IsoMaker(object):
             return 1, "Unable to create ISO image"
 
         return 0, "success"
-
-    def mkboot(self, oper_sys):
-        if oper_sys == "centos7.3":
-            return self.mkboot_centos("centos", "7.3")
-        elif oper_sys == "centos7.4":
-            return self.mkboot_centos("centos", "7.4")
-        elif oper_sys == "redhat7.2":
-            return self.mkboot_centos("redhat", "7.2")
-        elif oper_sys == "redhat7.3":
-            return self.mkboot_centos("redhat", "7.3")
-        elif oper_sys == "redhat7.4":
-            return self.mkboot_centos("redhat", "7.4")
+    
+    @staticmethod
+    def mkboot_winpe():
+        """ 
+        check that winpe is there as this is a seperate step
+        """
+        if not os.path.isfile("/kubam/WinPE_KUBAM.iso"):
+            return 1, "KUBAM WinPE_KUBAM.iso file not found.  This is a separate step. See: https://ciscoucs.github.io/site/kubam/configure/windows2.html"
         return 0, "success"
 
-    def mkboot_iso(self, isos):
+    @staticmethod
+    def mkboot(oper_sys):
+        if oper_sys == "centos7.3":
+            return IsoMaker.mkboot_centos("centos", "7.3")
+        elif oper_sys == "centos7.4":
+            return IsoMaker.mkboot_centos("centos", "7.4")
+        elif oper_sys == "redhat7.2":
+            return IsoMaker.mkboot_centos("redhat", "7.2")
+        elif oper_sys == "redhat7.3":
+            return IsoMaker.mkboot_centos("redhat", "7.3")
+        elif oper_sys == "redhat7.4":
+            return IsoMaker.mkboot_centos("redhat", "7.4")
+        elif oper_sys in ["win2016", "win2012r2"]:
+            return IsoMaker.mkboot_winpe()
+        return 0, "success"
+    
+    @staticmethod
+    def mkboot_isos(isos):
+        """
+        Make boot isos for all images. 
+        """
+        for iso in isos:
+            err, msg = IsoMaker.mkboot(iso["os"])
+            if err != 0:
+                return err, msg
+        return 0, None
+    
+        
+    @staticmethod
+    def mkboot_iso(isos):
         """
         Determine version of OS and make boot dir.
         :param isos: ISO images list
