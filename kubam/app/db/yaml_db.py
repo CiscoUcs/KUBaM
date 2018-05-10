@@ -234,7 +234,7 @@ class YamlDB(object):
                 if c == gh["os"]:
                     flag = True
             if not flag:
-                return 1, "OS should be a supported type"
+                return 1, "%s is not a supported OS" % gh["os"]
 
         if "name" not in gh:
             return 1, "Please specify the name of the host / service profile name.  This should be unique."

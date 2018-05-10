@@ -17,6 +17,8 @@ def get_isos():
     return jsonify({'isos': iso_images}), 200
 
 
+
+#TODO: Remove this method as this is the old one. 
 # Make the boot ISO image of an ISO
 @isos.route(Const.API_ROOT + "/isos/boot", methods=['POST'])
 @cross_origin()

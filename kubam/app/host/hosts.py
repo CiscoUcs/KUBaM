@@ -26,15 +26,13 @@ class Hosts(object):
         """
         Create a new host entry
         Format of request should be JSON that looks like:
-        {"name", "aci01",
-            "credentials": {"user": "admin", "password": "secret-password", "ip": "172.28.225.163" },
-        ...}
+        
         """
         db = YamlDB()
         err, msg = db.new_hosts(Const.KUBAM_CFG, req)
         if err == 1:
             return {'error': msg}, 400
-        return {'status': "Hosts %s created!"}, 201
+        return {'status': "Hosts created!"}, 201
 
     @staticmethod
     def update_hosts(req):
@@ -44,7 +42,7 @@ class Hosts(object):
     @staticmethod
     def delete_hosts(req):
         """
-        Delete the ACI group from the config.
+        Delete the hosts group from the config.
         """
         uuid = req['id']
         db = YamlDB()
