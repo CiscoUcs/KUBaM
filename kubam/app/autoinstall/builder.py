@@ -33,13 +33,13 @@ class Builder(object):
         return sum([bin(int(x)).count('1') for x in netmask.split('.')])
 
     @staticmethod
-    def build_template(self, node, config):
+    def build_template(node, config):
         """
         Given a node and the kubam configuration populate a template file with the appropriate values.
         If the machine is Windows we add the network.txt file and fill in these values as well. 
         Returns: error code (0 good, 1 bad), msg (only if an error), template, network.txt if windows.
         """
-        err, msg, template_file, template_dir = self.find_template(node)
+        err, msg, template_file, template_dir = Builder.find_template(node)
         if err > 0:
             return err, msg, None
         ## get network configuration from network group
