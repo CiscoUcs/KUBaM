@@ -125,12 +125,15 @@ class YamlDB(object):
             msg = msg + "\n" + "No hosts found in config file."
             err += 1
 
-        if "network" in config:
-            er1, msg1 = self.validate_network(config["network"])
-            err += er1
+        if "network_groups" in config:
+            er1 = 0 
+            msg1 = ""
+            for net in config["network_groups"]:
+                er1, msg1 = self.validate_network(net)
+                err += er1
             msg = msg + "\n" + msg1
         elif strict:
-            msg = msg + "\n" + "network not found in config file."
+            msg = msg + "\n" + "network_groups not found in config file."
             err += 1
 
         if err > 0:
