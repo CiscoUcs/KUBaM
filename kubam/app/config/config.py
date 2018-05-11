@@ -5,7 +5,8 @@ class Const(object):
     API_ROOT2 = "/api/v2"
     KUBAM_DIR = "/kubam/"
     KUBAM_SHARE_DIR = "/usr/share/kubam/"
-    BASE_IMG = KUBAM_SHARE_DIR + "/stage1/ks.img"
+    BASE_IMG = KUBAM_SHARE_DIR + "/stage1/ks.img"  # ext2 formatted base image. 
+    WIN_IMG = KUBAM_SHARE_DIR + "/stage1/win.img"  # windows requires fat32 formatted
     TEMPLATE_DIR = KUBAM_SHARE_DIR + "/templates/"
     HTTP_OK = 200
     HTTP_UNAUTHORIZED = 401

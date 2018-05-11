@@ -55,7 +55,7 @@ class Deployments(object):
     def create_images(req):
         """
         Create a new deployment
-        ["host01", "host02", ... ]
+        ["host01", "host02", ... ] or no arguments.  
         """
         err, msg, hosts = Deployments.get_valid_hosts(req)
         if err != 0:
@@ -76,24 +76,9 @@ class Deployments(object):
         if err != 0:
             return {'error': msg}, 400
         # always go through and create the auto installation media for each server. 
-        
-
-
-    #err, msg, iso_images = db.get_iso_map(Const.KUBAM_CFG)
-    #if err != 0:
-    #    return jsonify({"error": msg}), 400
-    #if len(iso_images) == 0:
-    #    return jsonify({"error": "No ISOS have been mapped.  Please map an ISO image with an OS"}), 400
-    #iso_maker = IsoMaker()
-    #err, msg = iso_maker.mkboot_iso(isos)
-    #if err != 0:
-    #    return jsonify({"error": msg}), 400
-#
-#    builder = Builder()
-#    err, msg = builder.deploy_server_images(Const.KUBAM_CFG)
-#    if err != 0:
-#        return jsonify({"error": msg}), 400
-#    return jsonify({"status": "ok"}), 201
+        err, msg = Builder.make_images(hosts)
+        if err != 0:
+            return {'error': msg}, 400
         return {'status': "server images created!"}, 201
 
 

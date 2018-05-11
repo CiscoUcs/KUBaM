@@ -9,6 +9,7 @@ RUN yum -y install  xorriso \
                     python-jinja2 \
                     PyYAML \
                     fuseext2 \
+                    fuse-exfat \
                     nginx \
                     mkisofs \
                     python-flask \

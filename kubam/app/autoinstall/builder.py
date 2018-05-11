@@ -3,6 +3,7 @@ from subprocess import call
 from os import path, chdir
 from kickstart import Kickstart
 from vmware import VMware
+from windows import Windows
 from db import YamlDB
 from config import Const
 
@@ -27,40 +28,69 @@ class Builder(object):
             return 0, None, template, Const.TEMPLATE_DIR
         return 1, "template not found", None, None
 
+    @staticmethod
+    def get_cidr(netmask):
+        return sum([bin(int(x)).count('1') for x in netmask.split('.')])
+
+    @staticmethod
     def build_template(self, node, config):
+        """
+        Given a node and the kubam configuration populate a template file with the appropriate values.
+        If the machine is Windows we add the network.txt file and fill in these values as well. 
+        Returns: error code (0 good, 1 bad), msg (only if an error), template, network.txt if windows.
+        """
         err, msg, template_file, template_dir = self.find_template(node)
         if err > 0:
             return err, msg, None
-        if "vlan" not in config['network']:
-            config['network']['vlan'] = ""
+        ## get network configuration from network group
+        netinfo = [x for x in config["network_groups"] if node["network_group"] == x["id"]]
+        if len(netinfo) < 1:
+            return 1, "network group {0} not found".format(node["network_group"])
+        netinfo = netinfo[0] # get the first element of the list. 
+        vlan = ""
+        proxyAddr = ""
+        if "vlan" in netinfo:
+            vlan = netinfo["vlan"]
+        if "proxy" in netinfo:
+            proxyAddr = netinfo["proxy"]
+        
         j2_env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True)
-        if "proxy" not in config:
-            config['proxy'] = ""
-
         f = j2_env.get_template(template_file).render(
             masterIP=config['kubam_ip'],
             ip=node['ip'],
             # grab the first k8s master or return blank if there is none.
             k8s_master=next((x for x in config['hosts'] if x['role'] == "k8s master"), ""),
             name=node['name'],
-            proxy=config['proxy'],
+            proxy=proxyAddr,
             role=node['role'],
             hosts=config['hosts'],
-            netmask=config['network']['netmask'],
-            nameserver=config['network']['nameserver'],
-            ntp=config['network']['ntpserver'],
-            gateway=config['network']['gateway'],
-            vlan=config['network']['vlan'],
+            netmask=netinfo['netmask'],
+            mask_bits=Builder.get_cidr(netinfo['netmask']),
+            nameserver=netinfo['nameserver'],
+            ntp=netinfo['ntpserver'],
+            gateway=netinfo['gateway'],
+            vlan=vlan,
             keys=config['public_keys']
         )
-        return err, msg, f
+        j = ""
+        if node["os"] in ["win2016", "win2012r2"]:
+            j = j2_env.get_template(Const.TEMPLATE_DIR + "network.txt").render(
+                masterIP=config['kubam_ip'],
+                ip=node['ip'],
+                netmask=netinfo['netmask'],
+                gateway=netinfo['gateway'],
+                os=node['os'] 
+            )
+        return err, msg, f, j
 
     @staticmethod
-    def build_boot_image(node, template):
+    def build_boot_image(node, template, net_template):
         if node['os'] in ["centos7.3", "centos7.4", "redhat7.2"]:
             return Kickstart.build_boot_image(node, template)
         if node['os'] in ["esxi6.0", "esxi6.5"]:
             return VMware.build_boot_image(node, template)
+        if node['os'] in ["win2012r2", "win2016"]:
+            return Windows.build_boot_image(node, template, net_template)
         return 1,  "no os is built! for os %s and node {0}".format(node['os'], node['name'])
 
     # Make the Ansible post install directory so its accessible for post installation tasks.
@@ -81,22 +111,27 @@ class Builder(object):
             return 1, "error creating tar archive of ansible scripts."
         return 0, ""
 
-    def deploy_server_images(self, config):
+    @staticmethod
+    def make_images(hosts):
+        """
+        given an array of host dictionaries, build an image for each one.
+        """
+        # make the post directory
+        err, msg = Builder.make_post()
+        if err > 0:
+            return err, msg
+
         db = YamlDB()
-        err, msg, config = db.parse_config(config, True)
+        err, msg, config = db.open_config(file_name) 
         if err > 0:
             return err, msg
 
-        err, msg = self.make_post()
-        if err > 0:
-            return err, msg
-
-        for host in config["hosts"]:
-            err, msg, template = self.build_template(host, config)
+        for host in hosts:
+            err, msg, template, net_template  = Builder.build_template(host, config)
             if err > 0:
                 print err, msg
                 break
-            err, msg = self.build_boot_image(host, template)
+            err, msg = Builder.build_boot_image(host, template, net_template)
             if err == 1:
                 print err, msg
                 break
