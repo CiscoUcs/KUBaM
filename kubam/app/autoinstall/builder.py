@@ -122,7 +122,7 @@ class Builder(object):
             return err, msg
 
         db = YamlDB()
-        err, msg, config = db.open_config(file_name) 
+        err, msg, config = db.open_config(Const.KUBAM_CFG) 
         if err > 0:
             return err, msg
 
