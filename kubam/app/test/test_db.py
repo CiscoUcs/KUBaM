@@ -17,12 +17,12 @@ class DBUnitTests(unittest.TestCase):
             "role": "",
             "os": "esxi6.0"
         }],
-        "network": {
+        "network_groups": [{
             "netmask": "255.255.254.0",
             "gateway": "192.28.3.4",
             "nameserver": "172.34.38.1",
             "ntpserver": "ntp.esl.cisco.com"
-        },
+        }],
         "kubam_ip": "24.2.2.1"
     }
     bad1 = {"foo": "bar"}
@@ -49,7 +49,7 @@ class DBUnitTests(unittest.TestCase):
         assert(err == 0)
 
     def test_validate_network(self):
-        err, msg = self.db.validate_network(self.cfg['network'])
+        err, msg = self.db.validate_network(self.cfg['network_groups'][0])
         assert(err == 0)
 
     def test_validate_config(self):
