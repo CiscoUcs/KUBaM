@@ -13,6 +13,7 @@ pipeline:
       - python -m unittest test.test_db.DBUnitTests
       - python -m unittest test.test_app.FlaskTestCase
       - python -m unittest test.test_sg.SGUnitTests
+      - python -m unittest test.test_autoinstall.AutoInstallUnitTests
   
   # publish docker image to docker hub
   docker:

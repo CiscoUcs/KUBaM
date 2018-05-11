@@ -10,25 +10,31 @@ class AutoInstallUnitTests(unittest.TestCase):
             "name": "node1",
             # "role" : "k8s master",
             "role": "none",
-            "os": "centos7.3"
+            "os": "centos7.3",
+            "network_group": "123"
             }, {
             "ip": "1.2.3.5",
             "name": "node2",
             "role": "k8s node",
-            "os": "centos7.3"
+            "os": "centos7.3",
+            "network_group": "123"
             }, {
             "ip": "1.2.3.6",
             "name": "node3",
             "role": "k8s node",
-            "os": "centos7.3"
+            "os": "win2016",
+            "network_group": "123",
+            "template": "test/t134.tmpl"
             }
         ],
-        "network": {
+        "network_groups": [{
+            "id" : "123",
+            "name" : "ucs net",
             "netmask": "255.255.254.0",
             "gateway": "192.28.3.4",
             "nameserver": "172.34.38.1",
             "ntpserver": "1.us.pool.ntp.org"
-        },
+        }],
         "kubam_ip": "24.2.2.1",
         "public_keys": [
             "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCc/7HrOIZB2wk8FvmZXzLMS1ZJ8TvS9OWBf5xosp59NRvcAb"
@@ -49,13 +55,11 @@ class AutoInstallUnitTests(unittest.TestCase):
     
     # Need to have a template file in ~/kubam/centos7.3.tmpl for this to work.
     def test_build_template(self):
-        builder = Builder()
-        err, msg, f = builder.build_template(self.cfg["hosts"][0], self.cfg)
+        err, msg, f, net = Builder.build_template(self.cfg["hosts"][2], self.cfg)
+        print net
         if err != 0:
             print msg
-        # print f
         assert(err == 0)
-
 
 if __name__ == '__main__':
     unittest.main()

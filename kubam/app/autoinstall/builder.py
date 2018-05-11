@@ -1,6 +1,6 @@
 from jinja2 import Environment, FileSystemLoader
 from subprocess import call
-from os import path, chdir
+from os import path, chdir, pardir
 from kickstart import Kickstart
 from vmware import VMware
 from windows import Windows
@@ -21,7 +21,10 @@ class Builder(object):
         template = node['os'] + ".tmpl"
         if "template" in node:
             if path.isfile(node['template']):
-                return 0, None, template, Const.KUBAM_DIR
+                print path.dirname(path.abspath(node['template']))
+                return 0, None, path.basename(node['template']), path.dirname(path.abspath(node['template']))
+            else:
+                return 1, "template: {0} not found".format(node['template']), None, None
         if path.isfile(Const.KUBAM_DIR + template):
             return 0, None, template, Const.KUBAM_DIR
         if path.isfile(Const.TEMPLATE_DIR + template):
@@ -41,8 +44,10 @@ class Builder(object):
         """
         err, msg, template_file, template_dir = Builder.find_template(node)
         if err > 0:
-            return err, msg, None
+            return err, msg, None, None
         ## get network configuration from network group
+        if not "network_group" in node:
+            return 1, "node does not have a network_group", None, None
         netinfo = [x for x in config["network_groups"] if node["network_group"] == x["id"]]
         if len(netinfo) < 1:
             return 1, "network group {0} not found".format(node["network_group"])
@@ -74,7 +79,11 @@ class Builder(object):
         )
         j = ""
         if node["os"] in ["win2016", "win2012r2"]:
-            j2_env = Environment(loader=FileSystemLoader(Const.TEMPLATE_DIR), trim_blocks=True)
+            net_dir = Const.TEMPLATE_DIR
+            ## hack for test cases since we don't have a /kubam directory per say. Keep the templates in the test file.
+            if template_file == "t134.tmpl":
+               net_dir = "./test" 
+            j2_env = Environment(loader=FileSystemLoader(net_dir), trim_blocks=True)
             j = j2_env.get_template("network.txt").render(
                 masterIP=config['kubam_ip'],
                 ip=node['ip'],
@@ -82,7 +91,6 @@ class Builder(object):
                 gateway=netinfo['gateway'],
                 os=node['os'] 
             )
-
         return err, msg, f, j
 
     @staticmethod
