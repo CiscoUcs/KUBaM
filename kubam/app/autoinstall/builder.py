@@ -74,13 +74,15 @@ class Builder(object):
         )
         j = ""
         if node["os"] in ["win2016", "win2012r2"]:
-            j = j2_env.get_template(Const.TEMPLATE_DIR + "network.txt").render(
+            j2_env = Environment(loader=FileSystemLoader(Const.TEMPLATE_DIR), trim_blocks=True)
+            j = j2_env.get_template("network.txt").render(
                 masterIP=config['kubam_ip'],
                 ip=node['ip'],
                 netmask=netinfo['netmask'],
                 gateway=netinfo['gateway'],
                 os=node['os'] 
             )
+
         return err, msg, f, j
 
     @staticmethod
