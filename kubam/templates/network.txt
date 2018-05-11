@@ -1,5 +1,5 @@
-{ip}
-{netmask}
-{gateway}
-{masterIP}
-{os}
+{{ ip }}
+{{ netmask }}
+{{ gateway }}
+{{ masterIP }}
+{{ os }}
