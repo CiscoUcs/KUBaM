@@ -5,7 +5,7 @@ from config import Const
 
 
 class UCSUtil(object):
-    # Login to the UCSM
+
     @staticmethod
     def ucs_login(server_group):
         """
@@ -19,7 +19,12 @@ class UCSUtil(object):
             credentials = server_group["credentials"]
             if "user" in credentials and "password" in credentials and "ip" in credentials:
                 ucs_session = UCSSession()
-                h, msg = ucs_session.login(credentials['user'], credentials['password'], credentials['ip'])
+                db = YamlDB()
+                err, msg, password = db.decrypt_password(credentials['password'])
+                if err == 1:
+                    return err, msg, None
+
+                h, msg = ucs_session.login(credentials['user'], password, credentials['ip'])
                 if msg:
                     return 1, msg, None
                 if h:

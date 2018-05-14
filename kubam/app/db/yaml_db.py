@@ -448,6 +448,17 @@ class YamlDB(object):
         err, msg = self.write_config(config, file_name)
         return err, msg
 
+    def decrypt_password(self, encrypted_password):
+        """
+        Decrypt the password.  We take in the password and then look for the password file
+        """
+        err, msg, key = self.get_decoder_key(Const.KUBAM_CFG)
+        if err == 1:
+            return err, msg, None
+        f = Fernet(key)
+        return 0, None, f.decrypt(encrypted_password)
+
+
     def list_server_group(self, file_name):
         """
         Get all the server group details for each server group.
