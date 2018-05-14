@@ -92,29 +92,6 @@ def server_handler():
     return jsonify(j), rc
 
 
-@servers.route(Const.API_ROOT + "/servers", methods=['GET'])
-@cross_origin()
-def get_servers():
-    err, msg, handle = UCSUtil.ucs_login()
-    if err != 0:
-        msg = UCSUtil.not_logged_in(msg)
-        return jsonify({'error': msg}), 401
-    ucs_servers = UCSServer.list_servers(handle)
-    UCSUtil.ucs_logout(handle)
-
-    # Gets a hash of severs of form:
-    # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
-    db = YamlDB()
-    err, msg, db_servers = db.get_ucs_servers(Const.KUBAM_CFG)
-    if err != 0:
-        return jsonify({'error': msg}), 400
-    ucs_servers = UCSUtil.servers_to_api(ucs_servers, db_servers)
-    err, msg, hosts = db.get_hosts(Const.KUBAM_CFG)
-    if err != 0:
-        return jsonify({'error': msg}), 400
-    return jsonify({'servers': ucs_servers, 'hosts': hosts}), 200
-
-
 @servers.route(Const.API_ROOT + "/servers", methods=['POST'])
 @cross_origin()
 def select_servers():
@@ -145,21 +122,12 @@ def select_servers():
     return get_servers()
 
 
-# Make the server images
-@servers.route(Const.API_ROOT + "/servers/images", methods=['POST'])
-@cross_origin()
-def deploy_server_autoinstall_images():
-    builder = Builder()
-    err, msg = builder.deploy_server_images(Const.KUBAM_CFG)
-    if not err == 0:
-        return jsonify({"error": msg})
-    return jsonify({"status": "ok"}), 201
-
 @servers.route(Const.API_ROOT2 + "/servers/<server_group>/templates", methods=['GET'])
 @cross_origin()
 def get_templates(server_group):
-    # get UCS server group login
-    #
+    """
+    Get the service profile templates in the server group. 
+    """
     db = YamlDB()
     err, msg, sg = db.get_server_group(Const.KUBAM_CFG, server_group)
     err, msg, handle = UCSUtil.ucs_login(sg)
@@ -173,3 +141,33 @@ def get_templates(server_group):
         return jsonify({'templates': ucs_templates}), Const.HTTP_OK
     except KubamError as e:
         return jsonify({'error': e}), Const.HTTP_SERVER_ERROR
+
+
+@servers.route(Const.API_ROOT2 + "/servers/<server_group>/servers", methods=['GET'])
+@cross_origin()
+def get_servers(server_group):
+    """
+    List all the servers in the server group
+    or in this case the domain. 
+    """
+    db = YamlDB()
+    err, msg, sg = db.get_server_group(Const.KUBAM_CFG, server_group)
+    err, msg, handle = UCSUtil.ucs_login(sg)
+     
+    if err != 0:
+        msg = UCSUtil.not_logged_in(msg)
+        return jsonify({'error': msg}), 401
+    ucs_servers = UCSServer.list_servers(handle)
+    UCSUtil.ucs_logout(handle)
+
+    # Gets a hash of severs of form:
+    # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
+    db = YamlDB()
+    err, msg, db_servers = db.get_ucs_servers(Const.KUBAM_CFG)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+    ucs_servers = UCSUtil.servers_to_api(ucs_servers, db_servers)
+    if err != 0:
+        return jsonify({'error': msg}), 400
+    return jsonify({'servers': ucs_servers}), 200
+
