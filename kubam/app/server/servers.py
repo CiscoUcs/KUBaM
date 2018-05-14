@@ -92,36 +92,6 @@ def server_handler():
     return jsonify(j), rc
 
 
-@servers.route(Const.API_ROOT + "/servers", methods=['POST'])
-@cross_origin()
-def select_servers():
-    if not request.json:
-        return jsonify({'error': 'expected hash of servers'}), 400
-    err, msg, handle = UCSUtil.ucs_login()
-    if err != 0:
-        msg = UCSUtil.not_logged_in(msg)
-        return jsonify({'error': msg}), 401
-    ucs_servers = request.json['servers']
-    # Gets a hash of severs of form:
-    # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
-    ucs_servers = UCSUtil.servers_to_db(ucs_servers)
-    db = YamlDB()
-    if ucs_servers:
-        err, msg = db.update_ucs_servers(Const.KUBAM_CFG, ucs_servers)
-        if err != 0:
-            return jsonify({'error': msg}), 400
-    if "hosts" not in request.json:
-        return get_servers()
-
-    hosts = request.json['hosts']
-    err, msg = db.update_hosts(Const.KUBAM_CFG, hosts)
-    if err != 0:
-        return jsonify({'error': msg}), 400
-
-    # Return the existing networks now with the new one chosen.
-    return get_servers()
-
-
 @servers.route(Const.API_ROOT2 + "/servers/<server_group>/templates", methods=['GET'])
 @cross_origin()
 def get_templates(server_group):
