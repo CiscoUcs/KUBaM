@@ -1,7 +1,7 @@
 version: '2'
 services:
   web:
-    image: kubam/web
+    image: kubam/web:v2
     ports:
       - "5000:5000"
     depends_on:
@@ -9,7 +9,7 @@ services:
     links:
       - kubam
   kubam:
-    image: kubam/kubam
+    image: kubam/kubam:v2
     cap_add:
       - SYS_ADMIN
     devices:

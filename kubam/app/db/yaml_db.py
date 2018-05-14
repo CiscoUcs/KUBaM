@@ -369,6 +369,16 @@ class YamlDB(object):
         if "user" not in creds:
             return 1, bad_credentials
         return 0, None
+    
+    def get_server_group(self, file_name, group_id):
+        err, msg, groups = self.list_server_group(file_name)
+        if err == 1:
+            return err, msg
+        found = False
+        for g in groups: 
+            if g['id'] == group_id:
+                return 0, None, g
+        return "1", "server group id: {0} not found".format(group_id), None
 
     def update_server_group(self, file_name, gh):
         # Check if valid config

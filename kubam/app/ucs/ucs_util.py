@@ -7,26 +7,30 @@ from config import Const
 class UCSUtil(object):
     # Login to the UCSM
     @staticmethod
-    def ucs_login():
-        db = YamlDB()
-        err, msg, config = db.open_config(Const.KUBAM_CFG)
-        if err == 0:
-            if "ucsm" in config and "credentials" in config['ucsm']:
-                credentials = config['ucsm']['credentials']
-                if "user" in credentials and "password" in credentials and "ip" in credentials:
-                    ucs_session = UCSSession()
-                    h, msg = ucs_session.login(credentials['user'], credentials['password'], credentials['ip'])
-                    if msg:
-                        return 1, msg, None
-                    if h:
-                        return 0, msg, h
+    def ucs_login(server_group):
+        """
+        login to a UCS and return a login handle
+        """
+        err = 0
+        msg = ""
+        if not isinstance(server_group, dict):
+            return 1, "login format is not correct", None
+        if "credentials" in server_group:
+            credentials = server_group["credentials"]
+            if "user" in credentials and "password" in credentials and "ip" in credentials:
+                ucs_session = UCSSession()
+                h, msg = ucs_session.login(credentials['user'], credentials['password'], credentials['ip'])
+                if msg:
                     return 1, msg, None
-                else:
-                    msg = "kubam.yaml file does not include the user, password, and ip properties to login."
-                    err = 1
+                if h:
+                    return 0, msg, h
+                return 1, msg, None
             else:
-                msg = "UCS Credentials have not been entered.  Please login to UCS to continue."
+                msg = "kubam.yaml file does not include the user, password, and ip properties to login."
                 err = 1
+        else:
+            msg = "UCS Credentials have not been entered.  Please login to UCS to continue."
+            err = 1
         return err, msg, None
 
     # Logout from the the UCSM

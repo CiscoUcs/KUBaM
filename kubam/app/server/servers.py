@@ -1,9 +1,12 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from flask_cors import cross_origin
-from ucs import UCSUtil, UCSServer
+from ucs import UCSUtil, UCSServer, UCSTemplate, UCSUtil
 from autoinstall import Builder
 from config import Const
 from db import YamlDB
+from config import Const
+from util import KubamError
+
 
 servers = Blueprint("servers", __name__)
 
@@ -151,3 +154,22 @@ def deploy_server_autoinstall_images():
     if not err == 0:
         return jsonify({"error": msg})
     return jsonify({"status": "ok"}), 201
+
+@servers.route(Const.API_ROOT2 + "/servers/<server_group>/templates", methods=['GET'])
+@cross_origin()
+def get_templates(server_group):
+    # get UCS server group login
+    #
+    db = YamlDB()
+    err, msg, sg = db.get_server_group(Const.KUBAM_CFG, server_group)
+    err, msg, handle = UCSUtil.ucs_login(sg)
+    if err != 0:
+        msg = UCSUtil.not_logged_in(msg)
+        current_app.logger.warning(msg)
+        return jsonify({'error': msg}), Const.HTTP_UNAUTHORIZED
+    try:
+        ucs_templates = UCSTemplate.list_templates(handle)
+        UCSUtil.ucs_logout(handle)
+        return jsonify({'templates': ucs_templates}), Const.HTTP_OK
+    except KubamError as e:
+        return jsonify({'error': e}), Const.HTTP_SERVER_ERROR
