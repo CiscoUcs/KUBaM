@@ -1,11 +1,9 @@
 from flask import Blueprint, jsonify, request, current_app
 from flask_cors import cross_origin
-from ucs import UCSUtil, UCSServer, UCSTemplate, UCSUtil
-from autoinstall import Builder
-from config import Const
+from ucs import UCSServer, UCSTemplate, UCSUtil
 from db import YamlDB
 from config import Const
-from util import KubamError
+from helper import KubamError
 
 
 servers = Blueprint("servers", __name__)
@@ -22,8 +20,8 @@ class Servers(object):
         db = YamlDB()
         err, msg, sg = db.list_server_group(Const.KUBAM_CFG)
         if err == 1:
-            return {'error': msg}, 500
-        return {"servers": sg}, 200
+            return {"error": msg}, Const.HTTP_SERVER_ERROR
+        return {"servers": sg}, Const.HTTP_OK
 
     # Create a new server group
     @staticmethod
@@ -34,16 +32,16 @@ class Servers(object):
         {"name", "ucs01", "type" : "ucsm", "credentials":
             {"user": "admin", "password": "secret-password", "ip" : "172.28.225.163" }}
         """
-        # Make sure we can log in first.
 
+        # Make sure we can log in first.
         err, msg = UCSUtil.check_ucs_login(req)
         if err == 1:
-            return {'error:': msg}, 400
+            return {"error": msg}, Const.HTTP_UNAUTHORIZED
         db = YamlDB()
         err, msg = db.new_server_group(Const.KUBAM_CFG, req)
         if err == 1:
-            return {'error': msg}, 400
-        return {'status': "new server group {0} created!".format(req["name"])}, 201
+            return {"error": msg}, Const.HTTP_BAD_REQUEST
+        return {"status": "new server group {0} created!".format(req['name'])}, Const.HTTP_CREATED
 
     @staticmethod
     def update_servers(req):
@@ -52,12 +50,12 @@ class Servers(object):
         """
         err, msg = UCSUtil.check_ucs_login(req)
         if err == 1:
-            return {'error:': msg}, 400
+            return {"error:": msg}, Const.HTTP_BAD_REQUEST
         db = YamlDB()
         err, msg = db.update_server_group(Const.KUBAM_CFG, req)
         if err == 1:
-            return {'error': msg}, 400
-        return {'status': "server group %s updated!" % req["name"]}, 201
+            return {"error": msg}, Const.HTTP_BAD_REQUEST
+        return {"status": "server group {0} updated!".format(req['name'])}, Const.HTTP_CREATED
 
     @staticmethod
     def delete_servers(req):
@@ -66,54 +64,87 @@ class Servers(object):
         """
         print req
         if not isinstance(req, dict):
-            return {'error' : "invalid parameters: %s" % req}, 400
+            return {"error": "invalid parameters: {0}".format(req)}, Const.HTTP_BAD_REQUEST
         uuid = req['id']
         db = YamlDB()
         err, msg = db.delete_server_group(Const.KUBAM_CFG, uuid)
         if err == 1:
-            return {'error': msg}, 400
+            return {"error": msg}, Const.HTTP_BAD_REQUEST
         else:
-            return {'status': "server group deleted"}, 201
+            return {"status": "Server group deleted"}, Const.HTTP_NO_CONTENT
 
 
-@servers.route(Const.API_ROOT2 + "/servers", methods=['GET', 'POST', 'PUT', 'DELETE'])
+class Templates(object):
+    @staticmethod
+    def list_templates(server_group):
+        """
+        Get the service profile templates in the server group.
+        """
+        db = YamlDB()
+        err, msg, sg = db.get_server_group(Const.KUBAM_CFG, server_group)
+        err, msg, handle = UCSUtil.ucs_login(sg)
+        if err != 0:
+            msg = UCSUtil.not_logged_in(msg)
+            current_app.logger.warning(msg)
+            return jsonify({"error": msg}), Const.HTTP_UNAUTHORIZED
+
+        ucs_templates = UCSTemplate.list_templates(handle)
+        UCSUtil.ucs_logout(handle)
+        return jsonify({"templates": ucs_templates}), Const.HTTP_OK
+
+    @staticmethod
+    def update_template(server_group, req):
+        db = YamlDB()
+        msg = db.assign_template(Const.KUBAM_CFG, req, server_group)
+        return jsonify({"status": msg}), Const.HTTP_CREATED
+
+    @staticmethod
+    def delete_template(server_group, req):
+        db = YamlDB()
+        msg = db.delete_template(Const.KUBAM_CFG, req, server_group)
+        return jsonify({"status": msg}), Const.HTTP_NO_CONTENT
+
+
+@servers.route(Const.API_ROOT2 + "/servers", methods=["GET", "POST", "PUT", "DELETE"])
 @cross_origin()
 def server_handler():
-    if request.method == 'POST':
+    if request.method == "GET":
+        j, rc = Servers.list_servers()
+    elif request.method == "POST":
         j, rc = Servers.create_servers(request.json)
-    elif request.method == 'PUT':
+    elif request.method == "PUT":
         j, rc = Servers.update_servers(request.json)
-    elif request.method == 'DELETE':
-        print request.json
-
+    elif request.method == "DELETE":
         j, rc = Servers.delete_servers(request.json)
     else:
-        j, rc = Servers.list_servers()
+        j = {"error": "Unknown HTTP method, aborting."}
+        rc = Const.HTTP_NOT_ALLOWED
+        current_app.log.error(j)
     return jsonify(j), rc
 
 
-@servers.route(Const.API_ROOT2 + "/servers/<server_group>/templates", methods=['GET'])
+@servers.route(Const.API_ROOT2 + "/servers/<server_group>/templates", methods=["GET", "POST", "PUT", "DELETE"])
 @cross_origin()
-def get_templates(server_group):
-    """
-    Get the service profile templates in the server group. 
-    """
-    db = YamlDB()
-    err, msg, sg = db.get_server_group(Const.KUBAM_CFG, server_group)
-    err, msg, handle = UCSUtil.ucs_login(sg)
-    if err != 0:
-        msg = UCSUtil.not_logged_in(msg)
-        current_app.logger.warning(msg)
-        return jsonify({'error': msg}), Const.HTTP_UNAUTHORIZED
+def template_handler(server_group):
     try:
-        ucs_templates = UCSTemplate.list_templates(handle)
-        UCSUtil.ucs_logout(handle)
-        return jsonify({'templates': ucs_templates}), Const.HTTP_OK
+        if request.method == "GET":
+            j, rc = Templates.list_templates(server_group)
+        elif request.method == "POST" or request.method == "PUT":
+            j, rc = Templates.update_template(server_group, request.json)
+        elif request.method == "DELETE":
+            j, rc = Templates.delete_template(server_group, request.json)
+        else:
+            j = "Unknown HTTP method, aborting."
+            rc = Const.HTTP_NOT_ALLOWED
+            current_app.log.error(j)
     except KubamError as e:
-        return jsonify({'error': e}), Const.HTTP_SERVER_ERROR
+        current_app.log.error(e)
+        j = str(e)
+        rc = Const.HTTP_SERVER_ERROR
+    return j, rc
 
 
-@servers.route(Const.API_ROOT2 + "/servers/<server_group>/servers", methods=['GET'])
+@servers.route(Const.API_ROOT2 + "/servers/<server_group>/servers", methods=["GET"])
 @cross_origin()
 def get_servers(server_group):
     """
@@ -126,7 +157,7 @@ def get_servers(server_group):
      
     if err != 0:
         msg = UCSUtil.not_logged_in(msg)
-        return jsonify({'error': msg}), 401
+        return jsonify({"error": msg}), Const.HTTP_UNAUTHORIZED
     ucs_servers = UCSServer.list_servers(handle)
     UCSUtil.ucs_logout(handle)
 
@@ -135,9 +166,9 @@ def get_servers(server_group):
     db = YamlDB()
     err, msg, db_servers = db.get_ucs_servers(Const.KUBAM_CFG)
     if err != 0:
-        return jsonify({'error': msg}), 400
+        return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
     ucs_servers = UCSUtil.servers_to_api(ucs_servers, db_servers)
     if err != 0:
-        return jsonify({'error': msg}), 400
-    return jsonify({'servers': ucs_servers}), 200
+        return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
+    return jsonify({"servers": ucs_servers}), Const.HTTP_OK
 

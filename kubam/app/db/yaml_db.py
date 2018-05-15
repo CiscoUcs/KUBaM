@@ -5,6 +5,7 @@ from os import path
 from sshpubkeys import SSHKey, InvalidKeyException
 from cryptography.fernet import Fernet
 from config import Const
+from helper import KubamError
 
 
 class YamlDB(object):
@@ -378,7 +379,7 @@ class YamlDB(object):
         for g in groups: 
             if g['id'] == group_id:
                 return 0, None, g
-        return "1", "server group id: {0} not found".format(group_id), None
+        return 1, "server group id: {0} not found".format(group_id), None
 
     def update_server_group(self, file_name, gh):
         # Check if valid config
@@ -444,9 +445,40 @@ class YamlDB(object):
                 if group['name'] == gh['name']:
                     return 1, "server group '{0}' already exists. Can not add another.".format(gh['name'])
 
-        config["server_groups"].append(gh)
+        config['server_groups'].append(gh)
         err, msg = self.write_config(config, file_name)
         return err, msg
+
+    def check_template(self, file_name, req):
+        if not isinstance(req, dict) or "sp_template" not in req:
+            raise KubamError("No service profile name was passed into the request.")
+        sp_temp = req['sp_template']
+        err, msg, config = self.open_config(file_name)
+        if err:
+            raise KubamError(msg)
+        return config, sp_temp
+
+    def assign_template(self, file_name, req, sg):
+        config, sp_temp = self.check_template(file_name, req)
+        for g in config['server_groups']:
+            if g['id'] == sg:
+                g['sp_template'] = sp_temp
+                err, msg = self.write_config(config, file_name)
+                if err:
+                    raise KubamError(msg)
+                return "Template {0} selected within the {1} server group".format(sp_temp, sg)
+        raise KubamError("Server group ID {0} not found.".format(sg))
+
+    def delete_template(self, file_name, req, sg):
+        config, sp_temp = self.check_template(file_name, req)
+        for g in config['server_groups']:
+            if g['id'] == sg:
+                del g['sp_template']
+                err, msg = self.write_config(config, file_name)
+                if err:
+                    raise KubamError(msg)
+                return "Template {0} deleted within the {1} server group".format(sp_temp, sg)
+        raise KubamError("Server group ID {0} not found.".format(sg))
 
     def decrypt_password(self, encrypted_password):
         """
@@ -457,7 +489,6 @@ class YamlDB(object):
             return err, msg, None
         f = Fernet(key)
         return 0, None, f.decrypt(encrypted_password)
-
 
     def list_server_group(self, file_name):
         """

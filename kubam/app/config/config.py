@@ -9,7 +9,12 @@ class Const(object):
     WIN_IMG = KUBAM_SHARE_DIR + "/stage1/win.img"  # windows requires fat32 formatted
     TEMPLATE_DIR = KUBAM_SHARE_DIR + "/templates/"
     HTTP_OK = 200
+    HTTP_CREATED = 201
+    HTTP_NO_CONTENT = 204
+    HTTP_BAD_REQUEST = 400
     HTTP_UNAUTHORIZED = 401
+    HTTP_NOT_FOUND = 404
+    HTTP_NOT_ALLOWED = 405
     HTTP_SERVER_ERROR = 500
     CATALOG = {  # Catalog of supported operating systems
         'centos7.3': ["generic", "k8s master", "k8s node"],
