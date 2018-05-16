@@ -371,6 +371,33 @@ class UCSServer(object):
             return 1, err.error_descr
         return 0, None
 
+    
+    @staticmethod
+    def create_server(handle, template, host_name, org):
+        """
+        Create a new service profile from a template that already exist.
+        """
+        from ucsmsdk.ucsmethodfactory import ls_instantiate_n_named_template
+        from ucsmsdk.ucsbasetype import DnSet, Dn
+        dn_set = DnSet()
+        dn = Dn()
+        dn.attr_set("value", host_name)
+        dn_set.child_add(dn)
+        elem = ls_instantiate_n_named_template(
+            cookie=handle.cookie, dn=template, in_error_on_existing="true", 
+            in_name_set=dn_set, in_target_org=org, in_hierarchical="false"
+        )
+
+        try: 
+            handle.process_xml_elem(elem)
+        except UcsException as err:
+            #if err.error_code == "105":
+            #    print "\t" + sp_name + " already exists."
+            #else:
+            #    return 1, err.error_descr
+            return 1, err.error_descr
+        return 0, None
+        
     @staticmethod
     def create_servers(handle, hosts, org):
         from ucsmsdk.ucsmethodfactory import ls_instantiate_n_named_template
@@ -378,22 +405,9 @@ class UCSServer(object):
 
         print "Creating Service Profiles"
         for i, s in enumerate(hosts):
-            dn_set = DnSet()
-            dn = Dn()
-            sp_name = s["name"]
-            dn.attr_set("value", sp_name)
-            dn_set.child_add(dn)
-            elem = ls_instantiate_n_named_template(
-                cookie=handle.cookie, dn=org + "/ls-KUBAM", in_error_on_existing="true",
-                in_name_set=dn_set, in_target_org=org, in_hierarchical="false"
-            )
-            try:
-                handle.process_xml_elem(elem)
-            except UcsException as err:
-                if err.error_code == "105":
-                    print "\t" + sp_name + " already exists."
-                else:
-                    return 1, err.error_descr
+            err, msg = UCSServer.create_server(handle, "org-root/ls-KUBAM", s["name"], org)
+            if err != 0:
+                return err, msg
         return 0, None
 
     @staticmethod
@@ -703,4 +717,11 @@ class UCSServer(object):
         err, msg = self.delete_uuid_pools(handle, org)
         if err != 0:
             return err, msg
+        return err, msg
+
+    @staticmethod
+    def make_profile_from_template(handle, org, host):
+        template = host['service_profile_template']
+        name = host['name']
+        err, msg = UCSServer.create_server(handle, template, name, org)
         return err, msg

@@ -624,6 +624,13 @@ class YamlDB(object):
         else:
             return 0, None, config['hosts']
 
+    def get_hosts_in_server_group(self, file_name, server_group):
+        err, msg, all_hosts = self.get_hosts(file_name)
+        if err != 0:
+            return err, msg, None
+        hosts = [h for h in all_hosts if "server_group" in h and h["server_group"] == server_group]
+        return err, msg, hosts
+
     # Update the hosts
     def update_hosts(self, file_name, ho_hash):
         err, msg = self.validate_hosts(ho_hash)

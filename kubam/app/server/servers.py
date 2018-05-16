@@ -200,7 +200,7 @@ def select_servers(server_group):
         if err != 0:
             return jsonify({'error': msg}), 400
 
-    return jsonify({"status": "ok"}), Const.HTTP_OK
+    return jsonify({"status": "ok"}), Const.HTTP_CREATED
 
 
 @servers.route(Const.API_ROOT2 + "/servers/<server_group>/deploy", methods=['POST'])
@@ -216,12 +216,30 @@ def deploy_servers(server_group):
     err, msg, sg = db.get_server_group(Const.KUBAM_CFG, server_group)
     if err != 0:
         return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
-    err, msg, handle = UCSUtil.ucs_login(sg)
+    org = "org-root"
+    if "org" in sg:
+        org = sg["org"]
 
-    # what are the servers in the group? 
+    err, msg, hosts = db.get_hosts_in_server_group(Const.KUBAM_CFG, server_group)
+    
+    if err != 0:
+        return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
+    if len(hosts) < 1:
+        return jsonify({"error": "No hosts defined in the server group"}), Const.HTTP_BAD_REQUEST
+
+    err, msg, handle = UCSUtil.ucs_login(sg)
+    if err != 0:
+        return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
+
+    for h in hosts:
+        if "service_profile_template" in h:
+            err, msg = UCSServer.make_profile_from_template(handle, org, h)
+            if err != 0:
+                UCSUtil.ucs_logout(handle)
+                return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
+        else:
+            print "This part is not implemented yet"
+            
 
     UCSUtil.ucs_logout(handle)
-
-    # It may also be that they pass parameters of which hosts in the server group, so we need to 
-    # check that these are in the server group as well.  
-
+    return jsonify({"status": hosts}), Const.HTTP_CREATED
