@@ -141,3 +141,21 @@ def get_servers(server_group):
         return jsonify({'error': msg}), 400
     return jsonify({'servers': ucs_servers}), 200
 
+@servers.route(Const.API_ROOT2 + "/servers/<server_group>/servers", methods=['GET'])
+@cross_origin()
+def deploy_servers(server_group):
+    """
+    Given a server group, deploy the resources in this form: 
+    1. If a service profile template is defined, create a sp from the template and associate
+    2. If no service profile is defined, create all resources (like we did before)
+    """
+
+    db = YamlDB()
+    err, msg, sg = db.get_server_group(Const.KUBAM_CFG, server_group)
+    err, msg, handle = UCSUtil.ucs_login(sg)
+
+    UCSUtil.ucs_logout(handle)
+
+    # It may also be that they pass parameters of which hosts in the server group, so we need to 
+    # check that these are in the server group as well.  
+

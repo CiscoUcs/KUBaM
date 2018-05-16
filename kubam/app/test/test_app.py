@@ -62,7 +62,7 @@ class FlaskTestCase(unittest.TestCase):
             response = tester.delete(
                 Const.API_ROOT2 + '/servers', content_type='application/json', data=json.dumps({"id": delete_me['id']})
             )
-            self.assertEqual(response.status_code, 201)
+            self.assertEqual(response.status_code, 204)
         else: 
             print "test server group not found.  Should have been found and deleted."
 
