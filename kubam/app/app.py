@@ -7,7 +7,7 @@ from iso import isos
 from monitor import monitor
 from network import networks
 from server import servers
-from util import util
+from setting import setting
 
 app = Flask(__name__)
 app.register_blueprint(aci)
@@ -17,7 +17,7 @@ app.register_blueprint(isos)
 app.register_blueprint(monitor)
 app.register_blueprint(networks)
 app.register_blueprint(servers)
-app.register_blueprint(util)
+app.register_blueprint(setting)
 CORS(app)
 
 
