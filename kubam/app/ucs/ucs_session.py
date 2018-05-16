@@ -1,5 +1,6 @@
 from ucsmsdk.ucshandle import UcsHandle
 from ucsmsdk.ucsexception import UcsException
+from helper import KubamError
 import socket
 from urllib2 import HTTPError
 
@@ -50,4 +51,7 @@ class UCSSession(object):
 
     @staticmethod
     def logout(handle):
-        handle.logout()
+        try:
+            handle.logout()
+        except UcsException as e:
+            raise KubamError(str(e))

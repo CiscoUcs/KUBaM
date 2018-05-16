@@ -3,6 +3,7 @@ from ucs_server import UCSServer
 from ucs_util import UCSUtil
 from db import YamlDB
 from config import Const
+from helper import KubamError
 
 
 class UCSProfile(object):
@@ -10,9 +11,10 @@ class UCSProfile(object):
     @staticmethod
     def make_ucs():
         ucs_util = UCSUtil()
-        err, msg, handle = ucs_util.ucs_login()
-        if err != 0:
-            return err, UCSUtil.not_logged_in(msg)
+        try:
+            handle = ucs_util.ucs_login()
+        except KubamError as e:
+            return 1, str(e)
         err, msg, full_org = ucs_util.get_full_org(handle)
         if err != 0:
             return err, msg
@@ -50,9 +52,10 @@ class UCSProfile(object):
     @staticmethod
     def destroy_ucs():
         ucs_util = UCSUtil()
-        err, msg, handle = ucs_util.ucs_login()
-        if err != 0:
-            return err, ucs_util.not_logged_in(msg)
+        try:
+            handle = ucs_util.ucs_login()
+        except KubamError as e:
+            return 1, str(e)
         db = YamlDB()
         err, msg, hosts = db.get_hosts(Const.KUBAM_CFG)
         if err != 0:

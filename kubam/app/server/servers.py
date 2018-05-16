@@ -34,9 +34,10 @@ class Servers(object):
         """
 
         # Make sure we can log in first.
-        err, msg = UCSUtil.check_ucs_login(req)
-        if err == 1:
-            return {"error": msg}, Const.HTTP_UNAUTHORIZED
+        try:
+            UCSUtil.check_ucs_login(req)
+        except KubamError as e:
+            return {"error": str(e)}, Const.HTTP_UNAUTHORIZED
         db = YamlDB()
         err, msg = db.new_server_group(Const.KUBAM_CFG, req)
         if err == 1:
@@ -48,9 +49,10 @@ class Servers(object):
         """
         Update a server group
         """
-        err, msg = UCSUtil.check_ucs_login(req)
-        if err == 1:
-            return {"error:": msg}, Const.HTTP_BAD_REQUEST
+        try:
+            UCSUtil.check_ucs_login(req)
+        except KubamError as e:
+            return {"error": str(e)}, Const.HTTP_UNAUTHORIZED
         db = YamlDB()
         err, msg = db.update_server_group(Const.KUBAM_CFG, req)
         if err == 1:
@@ -76,50 +78,54 @@ class Servers(object):
 
 class Templates(object):
     @staticmethod
-    def list_templates(server_group):
+    def get_templates(server_group):
+        db = YamlDB()
+        sg = db.get_server_group(Const.KUBAM_CFG, server_group)
+        handle = UCSUtil.ucs_login(sg)
+        ucs_templates = UCSTemplate.list_templates(handle)
+        UCSUtil.ucs_logout(handle)
+        return ucs_templates
+
+    def list_templates(self, server_group):
         """
         Get the service profile templates in the server group.
         """
-        db = YamlDB()
-        err, msg, sg = db.get_server_group(Const.KUBAM_CFG, server_group)
-        err, msg, handle = UCSUtil.ucs_login(sg)
-        if err != 0:
-            msg = UCSUtil.not_logged_in(msg)
-            current_app.logger.warning(msg)
-            return jsonify({"error": msg}), Const.HTTP_UNAUTHORIZED
+        ucs_templates = self.get_templates(server_group)
+        return {"templates": ucs_templates}, Const.HTTP_OK
 
-        ucs_templates = UCSTemplate.list_templates(handle)
-        UCSUtil.ucs_logout(handle)
-        return jsonify({"templates": ucs_templates}), Const.HTTP_OK
-
-    @staticmethod
-    def update_template(server_group, req):
+    def update_templates(self, server_group, req):
+        ucs_templates = self.get_templates(server_group)
         db = YamlDB()
-        msg = db.assign_template(Const.KUBAM_CFG, req, server_group)
-        return jsonify({"status": msg}), Const.HTTP_CREATED
+        msg = db.assign_template(Const.KUBAM_CFG, req, server_group, ucs_templates)
+        return {"status": msg}, Const.HTTP_CREATED
 
-    @staticmethod
-    def delete_template(server_group, req):
+    def delete_templates(self, server_group, req):
+        ucs_templates = self.get_templates(server_group)
         db = YamlDB()
-        msg = db.delete_template(Const.KUBAM_CFG, req, server_group)
-        return jsonify({"status": msg}), Const.HTTP_NO_CONTENT
+        msg = db.delete_template(Const.KUBAM_CFG, req, server_group, ucs_templates)
+        return {"status": msg}, Const.HTTP_NO_CONTENT
 
 
 @servers.route(Const.API_ROOT2 + "/servers", methods=["GET", "POST", "PUT", "DELETE"])
 @cross_origin()
 def server_handler():
-    if request.method == "GET":
-        j, rc = Servers.list_servers()
-    elif request.method == "POST":
-        j, rc = Servers.create_servers(request.json)
-    elif request.method == "PUT":
-        j, rc = Servers.update_servers(request.json)
-    elif request.method == "DELETE":
-        j, rc = Servers.delete_servers(request.json)
-    else:
-        j = {"error": "Unknown HTTP method, aborting."}
-        rc = Const.HTTP_NOT_ALLOWED
-        current_app.log.error(j)
+    try:
+        if request.method == "GET":
+            j, rc = Servers.list_servers()
+        elif request.method == "POST":
+            j, rc = Servers.create_servers(request.json)
+        elif request.method == "PUT":
+            j, rc = Servers.update_servers(request.json)
+        elif request.method == "DELETE":
+            j, rc = Servers.delete_servers(request.json)
+        else:
+            j = {"error": "Unknown HTTP method, aborting."}
+            rc = Const.HTTP_NOT_ALLOWED
+            current_app.logger.error(j)
+    except KubamError as e:
+        current_app.logger.error(e)
+        j = {"error": str(e)}
+        rc = Const.HTTP_BAD_REQUEST
     return jsonify(j), rc
 
 
@@ -127,21 +133,22 @@ def server_handler():
 @cross_origin()
 def template_handler(server_group):
     try:
+        t = Templates()
         if request.method == "GET":
-            j, rc = Templates.list_templates(server_group)
+            j, rc = t.list_templates(server_group)
         elif request.method == "POST" or request.method == "PUT":
-            j, rc = Templates.update_template(server_group, request.json)
+            j, rc = t.update_templates(server_group, request.json)
         elif request.method == "DELETE":
-            j, rc = Templates.delete_template(server_group, request.json)
+            j, rc = t.delete_templates(server_group, request.json)
         else:
             j = "Unknown HTTP method, aborting."
             rc = Const.HTTP_NOT_ALLOWED
-            current_app.log.error(j)
+            current_app.logger.error(j)
     except KubamError as e:
-        current_app.log.error(e)
-        j = str(e)
-        rc = Const.HTTP_SERVER_ERROR
-    return j, rc
+        current_app.logger.error(e)
+        j = {"error": str(e)}
+        rc = Const.HTTP_BAD_REQUEST
+    return jsonify(j), rc
 
 
 @servers.route(Const.API_ROOT2 + "/servers/<server_group>/servers", methods=["GET"])
@@ -151,25 +158,24 @@ def get_servers(server_group):
     List all the servers in the server group
     or in this case the domain. 
     1. Make call to UCS to grab the servers. 
-    2. Make call to dtabase to see which ones are selected.
+    2. Make call to database to see which ones are selected.
     3. Call servers_to_api which merges the two adding 'selected: true' to the servers that are selected.
     """
     db = YamlDB()
-    err, msg, sg = db.get_server_group(Const.KUBAM_CFG, server_group)
-    if err != 0:
-        return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
+    try:
+        sg = db.get_server_group(Const.KUBAM_CFG, server_group)
+    except KubamError as e:
+        return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
 
-    err, msg, handle = UCSUtil.ucs_login(sg)
-     
-    if err != 0:
-        msg = UCSUtil.not_logged_in(msg)
-        return jsonify({"error": msg}), Const.HTTP_UNAUTHORIZED
+    try:
+        handle = UCSUtil.ucs_login(sg)
+    except KubamError as e:
+        return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
     ucs_servers = UCSServer.list_servers(handle)
     UCSUtil.ucs_logout(handle)
 
     # Gets a hash of severs of form:
     # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
-    db = YamlDB()
     err, msg, db_servers = db.get_ucs_servers(Const.KUBAM_CFG, server_group)
     if err != 0:
         return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
@@ -177,6 +183,7 @@ def get_servers(server_group):
     if err != 0:
         return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
     return jsonify({"servers": ucs_servers}), Const.HTTP_OK
+
 
 @servers.route(Const.API_ROOT2 + "/servers/<server_group>/servers", methods=['POST'])
 @cross_origin()
@@ -187,18 +194,19 @@ def select_servers(server_group):
     """
     # make sure we got some data.
     if not request.json:
-        return jsonify({'error': 'expected hash of servers'}), Const.HTTP_BAD_REQUEST
-    if not "servers" in request.json:
+        return jsonify({"error": "expected hash of servers"}), Const.HTTP_BAD_REQUEST
+    if "servers" not in request.json:
         return jsonify({"error": "expected 'servers' with hash of servers in request"}), Const.HTTP_BAD_REQUEST
     # we expect servers to be a hash of like:
     # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
-    servers = request.json['servers'] 
+    ucs_servers = request.json['servers']
     # translate to db
-    servers = servers_to_db(servers)
-    if servers:
-        err, msg = YamlDB.update_ucs_servers(KUBAM_CFG, servers, server_group)
+    usc_servers = UCSUtil.servers_to_db(ucs_servers)
+    if usc_servers:
+        db = YamlDB()
+        err, msg = db.update_ucs_servers(Const.KUBAM_CFG, usc_servers, server_group)
         if err != 0:
-            return jsonify({'error': msg}), 400
+            return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
 
     return jsonify({"status": "ok"}), Const.HTTP_CREATED
 
@@ -213,9 +221,10 @@ def deploy_servers(server_group):
     """
 
     db = YamlDB()
-    err, msg, sg = db.get_server_group(Const.KUBAM_CFG, server_group)
-    if err != 0:
-        return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
+    try:
+        sg = db.get_server_group(Const.KUBAM_CFG, server_group)
+    except KubamError as e:
+        return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
     org = "org-root"
     if "org" in sg:
         org = sg["org"]
@@ -227,9 +236,10 @@ def deploy_servers(server_group):
     if len(hosts) < 1:
         return jsonify({"error": "No hosts defined in the server group"}), Const.HTTP_BAD_REQUEST
 
-    err, msg, handle = UCSUtil.ucs_login(sg)
-    if err != 0:
-        return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
+    try:
+        handle = UCSUtil.ucs_login(sg)
+    except KubamError as e:
+        return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
 
     for h in hosts:
         if "service_profile_template" in h:
@@ -239,7 +249,18 @@ def deploy_servers(server_group):
                 return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
         else:
             print "This part is not implemented yet"
-            
 
     UCSUtil.ucs_logout(handle)
     return jsonify({"status": hosts}), Const.HTTP_CREATED
+
+
+@servers.route(Const.API_ROOT2 + "/servers/<server_group>/clone", methods=['POST'])
+@cross_origin()
+def clone_template(server_group):
+    """
+    Given a server group and selected service profile template, deploy the resources in this form:
+    1. Clone an existing service profile template
+    2. Create and assign vMedia policy and change the boot order to boot the vMedia policy
+    """
+    # TODO Create me
+    pass

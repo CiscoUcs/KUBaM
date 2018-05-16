@@ -1,8 +1,8 @@
-from flask import jsonify, request, Blueprint
+from flask import jsonify, request, current_app, Blueprint
 from flask_cors import cross_origin
 from db import YamlDB
 from config import Const
-from ucs import UCSUtil, UCSNet
+from helper import KubamError
 
 networks = Blueprint("networks", __name__)
 
@@ -17,8 +17,8 @@ class Network(object):
         db = YamlDB()
         err, msg, net_list = db.list_network_group(Const.KUBAM_CFG)
         if err == 1:
-            return {'error': msg}, 500
-        return {"networks": net_list}, 200
+            return {"error": msg}, Const.HTTP_SERVER_ERROR
+        return {"networks": net_list}, Const.HTTP_OK
 
     # create a new server group
     @staticmethod
@@ -29,19 +29,19 @@ class Network(object):
         db = YamlDB()
         err, msg = db.new_network_group(Const.KUBAM_CFG, req)
         if err == 1:
-            return {'error': msg}, 400
-        return {'status': "Network %s created!" % req["name"]}, 201
+            return {"error": msg}, Const.HTTP_BAD_REQUEST
+        return {"status": "Network {0} created!".format(req['name'])}, Const.HTTP_CREATED
 
     @staticmethod
     def update_network(req):
         """
-        Update Netowork settings of one of the network groups.
+        Update network settings of one of the network groups.
         """
         db = YamlDB()
         err, msg = db.update_network_group(Const.KUBAM_CFG, req)
         if err == 1:
-            return {'error': msg}, 400
-        return {"status": "ok"}, 201
+            return {"error": msg}, Const.HTTP_BAD_REQUEST
+        return {"status": "ok"}, Const.HTTP_CREATED
 
     @staticmethod
     def delete_network(req):
@@ -52,85 +52,29 @@ class Network(object):
         db = YamlDB()
         err, msg = db.delete_network_group(Const.KUBAM_CFG, uuid)
         if err == 1:
-            return {'error': msg}, 400
+            return {"error": msg}, Const.HTTP_BAD_REQUEST
         else:
-            return {'status': "Network deleted"}, 201
+            return {"status": "Network deleted"}, Const.HTTP_CREATED
 
 
-@networks.route(Const.API_ROOT2 + "/networks", methods=['GET', 'POST', 'PUT', 'DELETE'])
+@networks.route(Const.API_ROOT2 + "/networks", methods=["GET", "POST", "PUT", "DELETE"])
 @cross_origin()
 def network_handler():
-    if request.method == 'POST':
-        j, rc = Network.create_network(request.json)
-    elif request.method == 'PUT':
-        j, rc = Network.update_network(request.json)
-    elif request.method == 'DELETE':
-        j, rc = Network.delete_network(request.json)
-    else:
-        j, rc = Network.list_network()
+    try:
+        if request.method == "GET":
+            j, rc = Network.list_network()
+        elif request.method == "POST":
+            j, rc = Network.create_network(request.json)
+        elif request.method == "PUT":
+            j, rc = Network.update_network(request.json)
+        elif request.method == "DELETE":
+            j, rc = Network.delete_network(request.json)
+        else:
+            j = "Unknown HTTP method, aborting."
+            rc = Const.HTTP_NOT_ALLOWED
+            current_app.logger.error(j)
+    except KubamError as e:
+        current_app.log.error(e)
+        j = {"error": str(e)}
+        rc = Const.HTTP_SERVER_ERROR
     return jsonify(j), rc
-
-
-# et the networks in the UCS.
-@networks.route(Const.API_ROOT + "/networks", methods=['GET'])
-@cross_origin()
-def get_networks():
-    err, msg, handle = UCSUtil.ucs_login()
-    if err != 0:
-        msg = UCSUtil.not_logged_in(msg)
-        return jsonify({'error': msg}), 401
-    vlans = UCSNet.list_vlans(handle)
-    UCSUtil.ucs_logout(handle)
-    db = YamlDB()
-    err, msg, net_hash = db.get_network(Const.KUBAM_CFG)
-    err, msg, net_settings = db.get_ucs_network(Const.KUBAM_CFG)
-    selected_vlan = ""
-    if "vlan" in net_settings:
-        selected_vlan = net_settings["vlan"]
-
-    return jsonify(
-        {'vlans': [{"name": vlan.name, "id": vlan.id, "selected": (vlan.name == selected_vlan)} for vlan in vlans],
-         'network': net_hash}), 200
-
-
-@networks.route(Const.API_ROOT + "/networks/vlan", methods=['POST'])
-@cross_origin()
-def select_vlan():
-    if not request.json:
-        return jsonify({'error': 'expected hash of VLANs'}), 400
-    err, msg, handle = UCSUtil.ucs_login()
-    if err != 0:
-        msg = UCSUtil.not_logged_in(msg)
-        return jsonify({'error': msg}), 401
-    # app.logger.info("Request is: ")
-    # app.logger.info(request)
-    vlan = request.json['vlan']
-    db = YamlDB()
-    err, msg = db.update_ucs_network(Const.KUBAM_CFG, {"vlan": vlan})
-    if err != 0:
-        return jsonify({'error': msg}), 500
-    # return the existing networks now with the new one chosen.
-    return get_networks()
-
-
-@networks.route(Const.API_ROOT + "/networks", methods=['POST'])
-@cross_origin()
-def update_networks():
-    if not request.json:
-        return jsonify({'error': 'expected hash of network settings'}), 400
-    err, msg, handle = UCSUtil.ucs_login()
-    if err != 0:
-        msg = UCSUtil.not_logged_in(msg)
-        return jsonify({'error': msg}), 401
-    # app.logger.info("request is")
-    # app.logger.info(request.json)
-    vlan = request.json['vlan']
-    db = YamlDB()
-    err, msg = db.update_ucs_network(Const.KUBAM_CFG, {"vlan": vlan})
-    if err != 0:
-        return jsonify({'error': msg}), 400
-    network = request.json['network']
-    err, msg = db.update_network(Const.KUBAM_CFG, network)
-    if err != 0:
-        return jsonify({'error': msg}), 400
-    return get_networks()

@@ -374,12 +374,11 @@ class YamlDB(object):
     def get_server_group(self, file_name, group_id):
         err, msg, groups = self.list_server_group(file_name)
         if err == 1:
-            return err, msg
-        found = False
+            raise KubamError(msg)
         for g in groups: 
             if g['id'] == group_id:
-                return 0, None, g
-        return 1, "server group id: {0} not found".format(group_id), None
+                return g
+        raise KubamError("Server group id: {0} not found.".format(group_id))
 
     def update_server_group(self, file_name, gh):
         # Check if valid config
@@ -449,17 +448,19 @@ class YamlDB(object):
         err, msg = self.write_config(config, file_name)
         return err, msg
 
-    def check_template(self, file_name, req):
+    def check_template(self, file_name, req, templates):
         if not isinstance(req, dict) or "sp_template" not in req:
             raise KubamError("No service profile name was passed into the request.")
         sp_temp = req['sp_template']
+        if not any(t['name'] == sp_temp for t in templates):
+            raise KubamError("Selected UCS template does not exist.")
         err, msg, config = self.open_config(file_name)
         if err:
             raise KubamError(msg)
         return config, sp_temp
 
-    def assign_template(self, file_name, req, sg):
-        config, sp_temp = self.check_template(file_name, req)
+    def assign_template(self, file_name, req, sg, templates):
+        config, sp_temp = self.check_template(file_name, req, templates)
         for g in config['server_groups']:
             if g['id'] == sg:
                 g['sp_template'] = sp_temp
@@ -469,8 +470,8 @@ class YamlDB(object):
                 return "Template {0} selected within the {1} server group".format(sp_temp, sg)
         raise KubamError("Server group ID {0} not found.".format(sg))
 
-    def delete_template(self, file_name, req, sg):
-        config, sp_temp = self.check_template(file_name, req)
+    def delete_template(self, file_name, req, sg, templates):
+        config, sp_temp = self.check_template(file_name, req, template)
         for g in config['server_groups']:
             if g['id'] == sg:
                 del g['sp_template']

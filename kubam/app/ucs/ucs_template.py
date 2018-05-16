@@ -14,7 +14,7 @@ class UCSTemplate(object):
             templates = list()
 
             for q in query:
-                templates.append({'name': q.name})
+                templates.append({"name": q.name})
             return templates
 
         except UcsException as e:

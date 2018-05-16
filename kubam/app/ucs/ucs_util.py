@@ -2,6 +2,7 @@ from ucsmsdk.ucsexception import UcsException
 from ucs_session import UCSSession
 from db import YamlDB
 from config import Const
+from helper import KubamError
 
 
 class UCSUtil(object):
@@ -11,10 +12,8 @@ class UCSUtil(object):
         """
         login to a UCS and return a login handle
         """
-        err = 0
-        msg = ""
         if not isinstance(server_group, dict):
-            return 1, "login format is not correct", None
+            raise KubamError("Login format is not correct")
         if "credentials" in server_group:
             credentials = server_group["credentials"]
             if "user" in credentials and "password" in credentials and "ip" in credentials:
@@ -22,21 +21,19 @@ class UCSUtil(object):
                 db = YamlDB()
                 err, msg, password = db.decrypt_password(credentials['password'])
                 if err == 1:
-                    return err, msg, None
+                    raise KubamError(msg)
 
                 h, msg = ucs_session.login(credentials['user'], password, credentials['ip'])
                 if msg:
-                    return 1, msg, None
+                    raise KubamError(msg)
                 if h:
-                    return 0, msg, h
-                return 1, msg, None
+                    return h
+                else:
+                    raise KubamError("Not logged in into UCS")
             else:
-                msg = "kubam.yaml file does not include the user, password, and ip properties to login."
-                err = 1
+                raise KubamError("The file kubam.yaml does not include the user, password, and IP properties to login.")
         else:
-            msg = "UCS Credentials have not been entered.  Please login to UCS to continue."
-            err = 1
-        return err, msg, None
+            raise KubamError("UCS Credentials have not been entered.  Please login to UCS to continue.")
 
     # Logout from the the UCSM
     @staticmethod
@@ -74,23 +71,22 @@ class UCSUtil(object):
     @staticmethod
     def check_ucs_login(request):
         if not isinstance(request, dict):
-            return 1, "improper request sent"
+            raise KubamError("improper request sent")
         if 'credentials' not in request:
-            return 1, "no credentials found in request"
+            raise KubamError ("no credentials found in request")
         for v in ['user', 'password', 'ip']:
             if v not in request['credentials']:
-                return 1, "credentials should include {0}".format(v)
+                raise KubamError("credentials should include {0}".format(v))
         user = request['credentials']['user']
         pw = request['credentials']['password']
         ip = request['credentials']['ip']
         if ip == "":
-            return 1, "Please enter a valid UCSM IP address."
+            raise KubamError("Please enter a valid UCSM IP address.")
         ucs_session = UCSSession()
         h, err = ucs_session.login(user, pw, ip)
         if not h:
-            return 1, err
+            raise KubamError(err)
         UCSSession.logout(h)
-        return 0, None
 
     # create org should not have org- prepended to it.
     @staticmethod
