@@ -1,4 +1,4 @@
-from util import KubamError
+from helper import KubamError
 from ucsmsdk.ucsexception import UcsException
 
 
