@@ -32,7 +32,7 @@ class UCSServer(object):
                     'type': "blade",
                     'label': s.usr_lbl,
                     'chassis_id': s.chassis_id,
-                    'slot': s.rn.replace("blade", ""),
+                    'slot': s.rn.replace("blade-", ""),
                     'model': s.model,
                     'association': s.association,
                     'service_profile': s.assigned_to_dn

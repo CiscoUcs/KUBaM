@@ -150,9 +150,15 @@ def get_servers(server_group):
     """
     List all the servers in the server group
     or in this case the domain. 
+    1. Make call to UCS to grab the servers. 
+    2. Make call to dtabase to see which ones are selected.
+    3. Call servers_to_api which merges the two adding 'selected: true' to the servers that are selected.
     """
     db = YamlDB()
     err, msg, sg = db.get_server_group(Const.KUBAM_CFG, server_group)
+    if err != 0:
+        return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
+
     err, msg, handle = UCSUtil.ucs_login(sg)
      
     if err != 0:
@@ -164,7 +170,7 @@ def get_servers(server_group):
     # Gets a hash of severs of form:
     # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
     db = YamlDB()
-    err, msg, db_servers = db.get_ucs_servers(Const.KUBAM_CFG)
+    err, msg, db_servers = db.get_ucs_servers(Const.KUBAM_CFG, server_group)
     if err != 0:
         return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
     ucs_servers = UCSUtil.servers_to_api(ucs_servers, db_servers)
@@ -172,7 +178,32 @@ def get_servers(server_group):
         return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
     return jsonify({"servers": ucs_servers}), Const.HTTP_OK
 
-@servers.route(Const.API_ROOT2 + "/servers/<server_group>/servers", methods=['GET'])
+@servers.route(Const.API_ROOT2 + "/servers/<server_group>/servers", methods=['POST'])
+@cross_origin()
+def select_servers(server_group):
+    """
+    Given a server group, select the servers from the server group (if this is UCS) that should be 
+    selected to be deployed and placed in a kubam group
+    """
+    # make sure we got some data.
+    if not request.json:
+        return jsonify({'error': 'expected hash of servers'}), Const.HTTP_BAD_REQUEST
+    if not "servers" in request.json:
+        return jsonify({"error": "expected 'servers' with hash of servers in request"}), Const.HTTP_BAD_REQUEST
+    # we expect servers to be a hash of like:
+    # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
+    servers = request.json['servers'] 
+    # translate to db
+    servers = servers_to_db(servers)
+    if servers:
+        err, msg = YamlDB.update_ucs_servers(KUBAM_CFG, servers, server_group)
+        if err != 0:
+            return jsonify({'error': msg}), 400
+
+    return jsonify({"status": "ok"}), Const.HTTP_OK
+
+
+@servers.route(Const.API_ROOT2 + "/servers/<server_group>/deploy", methods=['POST'])
 @cross_origin()
 def deploy_servers(server_group):
     """
@@ -183,7 +214,11 @@ def deploy_servers(server_group):
 
     db = YamlDB()
     err, msg, sg = db.get_server_group(Const.KUBAM_CFG, server_group)
+    if err != 0:
+        return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
     err, msg, handle = UCSUtil.ucs_login(sg)
+
+    # what are the servers in the group? 
 
     UCSUtil.ucs_logout(handle)
 

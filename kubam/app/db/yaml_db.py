@@ -571,28 +571,46 @@ class YamlDB(object):
         else:
             return 0, None, config['network']
 
-    def update_ucs_servers(self, file_name, server_hash):
+    def update_ucs_servers(self, file_name, server_hash, server_group):
+        """
+        v2
+        given a hash of servers and a server group we update the database
+        with the contents of this server
+        """
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg
-        if "ucsm" not in config:
-            config['ucsm'] = dict()
-        config['ucsm']['ucs_server_pool'] = server_hash
+        if "server_groups" not in config:
+            return 1, "no server groups defined.".format(server_group)
+        # get the existing server groups and add them 
+        indexes = [i for i, x in enumerate(config['server_groups']) if x.id == server_group]
+        if len(indexes) < 1:
+            return 1, "server group {0} does not exist.".format(server_group)
+        config['server_group'][indexes[0]]['server_pool'] = server_hash
         err, msg = self.write_config(config, file_name)
         return err, msg
 
-    def get_ucs_servers(self, file_name):
+    def get_ucs_servers(self, file_name, server_group):
+        """
+        Get the UCS servers from the server group
+        """
         err, msg, config = self.open_config(file_name)
         if err == 1:
             return err, msg, None
         elif err == 2:
             return 0, None, None
-        elif "ucsm" not in config:
+        elif "server_groups" not in config:
             return 0, None, None
-        elif "ucs_server_pool" not in config['ucsm']:
+
+        # get the server group from the server groups
+        sg = [x for x in config['server_groups'] if x['id'] == server_group]
+        if len(sg) < 1:
+            return 0, None, None
+
+        if "server_pool" not in sg[0]: 
             return 0, None, None
         else:
-            return 0, None, config['ucsm']['ucs_server_pool']
+            return 0, None, sg[0]['server_pool']
 
     # Get hosts out of the database
     def get_hosts(self, file_name):

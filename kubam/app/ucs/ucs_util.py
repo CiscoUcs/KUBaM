@@ -148,7 +148,7 @@ class UCSUtil(object):
             err, msg = self.create_org(handle, org)
         return err, msg, full_org
 
-    # Translates the JSON we get from the web interface to what we expect to put in the database
+    # Translates the JSON we get from the API to selected servers in the database.
     @staticmethod
     def servers_to_db(ucs_servers):
         # Gets a server array list and gets the selected servers and puts them in the database form
