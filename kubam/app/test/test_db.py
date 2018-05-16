@@ -66,12 +66,6 @@ class DBUnitTests(unittest.TestCase):
         err, msg, config = self.db.open_config("/tmp/foo.yaml")
         assert(err == 0)
 
-    def test_get_ucs_vlan(self):
-        err, msg, net = self.db.get_ucs_network("/tmp/bfoo.yaml")
-        assert(err == 0)
-        assert("vlan" in net)
-
-
     def test_get_network(self):
         err, msg, network = self.db.get_network("/tmp/bfoo.yaml")
         assert(err == 0)
