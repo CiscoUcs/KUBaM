@@ -14,7 +14,7 @@ class DBUnitTests(unittest.TestCase):
         }, {
             "ip":  "1.2.3.5",
             "name": "foonode2",
-            "role": "",
+            "roe": "",
             "os": "esxi6.0"
         }],
         "network_groups": [{
@@ -66,34 +66,11 @@ class DBUnitTests(unittest.TestCase):
         err, msg, config = self.db.open_config("/tmp/foo.yaml")
         assert(err == 0)
 
-    def test_add_credentials(self):
-        err, msg = self.db.update_ucs_creds(
-            "/tmp/bfoo.yaml", {"ip": "172.28.225.163", "user": "admin", "password": "nbv12345"}
-        )
-        assert(err == 0)
-        err, msg = self.db.update_ucs_creds(
-            "/tmp/bfoo.yaml", {"ip": "172.28.225.164", "user": "admin", "password": "nbv12345"}
-        )
-        
-    def test_add_ucs_vlan(self):
-        err, msg = self.db.update_ucs_network("/tmp/bfoo.yaml", {"vlan": "default"})
-        assert(err == 0)
-
-    def test_add_ucs_servers(self):
-        err, msg = self.db.update_ucs_servers(
-            "/tmp/bfoo.yaml", {"blades": ["1/1", "1/2"], "rack_servers": ["7", "8", "9"]}
-        )
-        assert(err == 0)
-
     def test_get_ucs_vlan(self):
         err, msg, net = self.db.get_ucs_network("/tmp/bfoo.yaml")
         assert(err == 0)
         assert("vlan" in net)
 
-    def test_get_ucs_servers(self):
-        err, msg, servers = self.db.get_ucs_servers("/tmp/bfoo.yaml")
-        assert(err == 0)
-        assert("blades" in servers)
 
     def test_get_network(self):
         err, msg, network = self.db.get_network("/tmp/bfoo.yaml")
@@ -243,6 +220,20 @@ class DBUnitTests(unittest.TestCase):
         assert(err == 1)
         err, msg = self.db.update_server_group(test_file, fg)
         assert(err == 0)
+
+        # see that we can get them if there are none. 
+        err, msg, servers = self.db.get_ucs_servers(test_file, fg['id'])
+        assert(err == 0)
+        # see that we can add new blades to the group
+        err, msg = self.db.update_ucs_servers(
+            test_file, {"blades": ["1/1", "1/2"], "rack_servers": ["7", "8", "9"]}, fg['id']
+        )
+        assert(err == 0)
+        # make sure we actually got new servers
+        err, msg, servers = self.db.get_ucs_servers(test_file, fg['id'])
+        assert(err == 0)
+        assert("blades" in servers)
+
         err, msg = self.db.delete_server_group(test_file, fg['id'])
         assert(err == 0)
     

@@ -583,10 +583,10 @@ class YamlDB(object):
         if "server_groups" not in config:
             return 1, "no server groups defined.".format(server_group)
         # get the existing server groups and add them 
-        indexes = [i for i, x in enumerate(config['server_groups']) if x.id == server_group]
+        indexes = [i for i, x in enumerate(config['server_groups']) if x['id'] == server_group]
         if len(indexes) < 1:
             return 1, "server group {0} does not exist.".format(server_group)
-        config['server_group'][indexes[0]]['server_pool'] = server_hash
+        config['server_groups'][indexes[0]]['server_pool'] = server_hash
         err, msg = self.write_config(config, file_name)
         return err, msg
 
