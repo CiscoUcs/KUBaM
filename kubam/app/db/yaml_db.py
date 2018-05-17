@@ -347,11 +347,13 @@ class YamlDB(object):
 
     @staticmethod
     def check_valid_server_group(gh):
+        if not isinstance(gh, dict):
+            return 1, "No server group information was passed into the request."
         if "type" not in gh:
-            return 1, "Please specify the type of server group: 'imc' or 'ucsm'"
+            return 1, "Please specify the type of server group: 'ucsm', 'imc', or 'ucsc'"
         else:
-            if gh["type"] not in ["imc", "ucsm"]:
-                return 1, "server group type should be 'imc' or 'ucsm'"
+            if gh["type"] not in ["imc", "ucsm", "ucsc"]:
+                return 1, "server group type should be 'imc', 'ucsc', or 'ucsm'"
         bad_credentials = (
             "Please specify the login credentials of the server group: "
             "'credentials': { 'ip': '123.345.234.1', 'password': 'password', 'user': 'admin' }"
