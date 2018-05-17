@@ -10,6 +10,7 @@ docker build -t kubam/python-test .
 docker push kubam/python-test
 ```
 
+
 This builds the test image for the CI/CD process.
 
 The correct image should then be pulled on the build server for testing. 
