@@ -12,9 +12,10 @@ services:
     image: kubam/kubam:v2
     cap_add:
       - SYS_ADMIN
+    privileged: true
     devices:
       - "/dev/fuse"
     volumes:
-      - ~/kubam:/kubam
+      - ~/kubam:/kubam:Z
     ports: 
       - "80:80"
