@@ -1,0 +1,79 @@
+%pre
+cd /tmp
+rpm2cpio /run/install/repo/Packages/redhat-virtualization-host-image-update*|cpio -ivd
+squashfs=$(find|grep squashfs|grep -v meta)
+ln -s $squashfs /tmp/squashfs
+%end
+
+lang en_US.UTF-8
+keyboard --vckeymap=es --xlayouts='es'
+timezone --utc Europe/Madrid
+rootpw Cisco.123
+reboot
+text
+
+services --disabled=NetworkManager --enabled=network
+
+liveimg --url=file:///tmp/squashfs
+zerombr
+bootloader --append=" crashkernel=auto" --location=mbr --timeout=1
+ignoredisk --only-use=sda
+clearpart --all --initlabel
+autopart --type=thinp
+
+%post
+nodectl init
+
+hostname="{{ name }}"
+ip="{{ ip }}"
+netmask="{{ netmask }}"
+gw="{{ gateway }}"
+opts=""
+device="enp7s0"
+dns1="{{ nameserver }}"
+
+scrFile="/etc/sysconfig/network-scripts/ifcfg-$device"
+hwaddr=`ifconfig $device | grep -i hwaddr | sed -e 's#^.*hwaddr[[:space:]]*##I'`
+
+hostnamectl --static set-hostname $hostname
+echo $hostname > /etc/hostname
+
+systemctl mask NetworkManager.service
+
+echo GATEWAY=$gw >> /etc/sysconfig/network
+
+echo nameserver $dns1 > /etc/resolv.conf
+echo search $dns2 >> /etc/resolv.conf
+
+if [ x"$vlan" = "xn" ] ; then
+	echo DEVICE=$device > $scrFile
+	echo BOOTPROTO=static >> $scrFile
+	echo ONBOOT=yes >> $scrFile
+	echo NM_CONTROLLED=no >> $scrFile
+	echo HWADDR=$hwaddr >> $scrFile
+	echo IPADDR=$ip >> $scrFile
+	echo NETMASK=$netmask >> $scrFile
+	echo USERCTL=no >> $scrFile
+else
+	scrFileVlan="/etc/sysconfig/network-scripts/ifcfg-$device.$vlan"
+
+	echo DEVICE=$device > $scrFile
+	echo BONDING_OPTS="mode=1 miimon=100" >> $scrFile
+	echo BONDING_MASTER=yes >> $scrFile
+	echo BOOTPROTO=static >> $scrFile
+
+	echo DEVICE=$device.$vlan >> $scrFileVlan
+	echo BOOTPROTO=static >> $scrFileVlan
+	echo ONBOOT=yes >> $scrFileVlan
+	echo TYPE=Ethernet >> $scrFileVlan
+	echo IPADDR=$ip >> $scrFileVlan
+	echo NETMASK=$netmask >> $scrFileVlan
+	echo VLAN=yes >> $scrFileVlan
+fi
+
+
+if [ "x$opts" != "x" ] ; then
+        echo 'ETHTOOL_OPTS="'"$opts"'"' >> $scrFile
+fi
+
+%end

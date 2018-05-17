@@ -115,6 +115,14 @@ class IsoMaker(object):
                 "-J", "-v", "-T", stage_dir + "/isolinux"
             ])
 
+        elif os_name == "rhvh":
+            o = call([
+                "mkisofs", "-o", boot_iso, "-b", "isolinux.bin", "-c", "boot.cat", "-no-emul-boot", "-V",
+                "RHVH-" + version + " RHVH.x86_64", "-boot-load-size", "4", "-boot-info-table", "-r",
+                "-J", "-v", "-T", stage_dir + "/isolinux"
+            ])
+        
+
         if not o == 0:
             return 1, "mkisofs failed for {0}".format(boot_iso)
         return 0, "success"
@@ -162,6 +170,8 @@ class IsoMaker(object):
             return IsoMaker.mkboot_centos("redhat", "7.3")
         elif oper_sys == "redhat7.4":
             return IsoMaker.mkboot_centos("redhat", "7.4")
+        elif oper_sys == "rhvh4.1":
+            return IsoMaker.mkboot_centos("rhvh", "4.1")
         elif oper_sys in ["win2016", "win2012r2"]:
             return IsoMaker.mkboot_winpe()
         return 0, "success"

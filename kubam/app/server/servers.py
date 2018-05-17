@@ -248,6 +248,7 @@ def deploy_servers(server_group):
                 UCSUtil.ucs_logout(handle)
                 return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
         else:
+            # TODO: Create this part. 
             print "This part is not implemented yet"
 
     UCSUtil.ucs_logout(handle)
