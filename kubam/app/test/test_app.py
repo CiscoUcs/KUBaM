@@ -60,7 +60,7 @@ class FlaskTestCase(unittest.TestCase):
                 delete_me = a
         if delete_me:
             response = tester.delete(
-                Const.API_ROOT2 + '/servers', content_type='application/json', data=json.dumps({"id": delete_me['id']})
+                Const.API_ROOT2 + '/servers', content_type='application/json', data=json.dumps({"name": delete_me['name']})
             )
             self.assertEqual(response.status_code, 204)
         else: 
@@ -121,7 +121,7 @@ class FlaskTestCase(unittest.TestCase):
         first_net = d['networks'][0]
         # Add the id into the hosts
         for h in self.newhosts:
-            h["network_group"] = first_net['id']
+            h["network_group"] = first_net['name']
         response = tester.post(
             Const.API_ROOT2+'/hosts', content_type='application/json', data=json.dumps(self.newhosts)
         )
@@ -129,7 +129,7 @@ class FlaskTestCase(unittest.TestCase):
         
         # Delete the network we were using
         response = tester.delete(
-            Const.API_ROOT2 + '/networks', content_type='application/json', data=json.dumps({"id": first_net['id']})
+            Const.API_ROOT2 + '/networks', content_type='application/json', data=json.dumps({"id": first_net['name']})
         )
         self.assertEqual(response.status_code, 201)
 
