@@ -44,9 +44,9 @@ class Hosts(object):
         """
         Delete the hosts group from the config.
         """
-        uuid = req['id']
+        name = req['name']
         db = YamlDB()
-        err, msg = db.delete_hosts(Const.KUBAM_CFG, uuid)
+        err, msg = db.delete_hosts(Const.KUBAM_CFG, name)
         if err == 1:
             return {'error': msg}, 400
         else:

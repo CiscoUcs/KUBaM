@@ -48,9 +48,9 @@ class Network(object):
         """
         Delete the network group from the config.
         """
-        uuid = req['id']
+        name = req['name']
         db = YamlDB()
-        err, msg = db.delete_network_group(Const.KUBAM_CFG, uuid)
+        err, msg = db.delete_network_group(Const.KUBAM_CFG, name)
         if err == 1:
             return {"error": msg}, Const.HTTP_BAD_REQUEST
         else:

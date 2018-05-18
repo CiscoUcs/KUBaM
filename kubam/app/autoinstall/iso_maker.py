@@ -33,7 +33,29 @@ class IsoMaker(object):
                 err, msg = IsoMaker.extract_iso(o['file'], os_dir)
                 if err != 0:
                     return err, msg
+                err, msg = IsoMaker.refine_extracted(o['os'], os_dir)
+                if err != 0:
+                    return err, msg
         return 0, None
+
+    @staticmethod
+    def refine_extracted(os, mnt_dir):
+        """
+        Given an os and an extracted OS directory do any updates that need to be
+        done in this directory.  For now this is mostly for RHVH4.1 that needs to be refined.
+        specifically: get the correct squashfs file as shown in 5.2.2 step 3 here:
+        https://access.redhat.com/documentation/en-us/red_hat_virtualization/4.1/html-single/installation_guide/#part-Installing_Hypervisor_Hosts
+        """
+        if not os in ['rhvh4.1']:
+            return 0, None 
+        os.chdir(mnt_dir)
+        o = call(["rpm2cpio", "Packages/redhat-virtualization-host-image-update*", "|", "cpio", "-idmv"])
+        if not o == 0:
+            return 1, "Unable to extract virtualization host image from rhvh4.1 iso directory" 
+        o = call(["mv", "usr/share/redhat-virtualization-host/image/*squashfs.img", "."])
+        if not o == 0:
+            return 1, "Unable to move extracted virtualization host squashfs.img" 
+        
 
     @staticmethod
     def extract_iso(iso, mnt_dir):

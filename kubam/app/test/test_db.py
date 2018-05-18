@@ -364,6 +364,7 @@ class DBUnitTests(unittest.TestCase):
         assert(len(nets) == 1)
         net = nets[0]
         net_id = net['id']
+        net_name = net['name']
         err, msg = self.db.new_hosts("", "")
         assert(err == 1)
         # Pass something without a name
@@ -410,8 +411,8 @@ class DBUnitTests(unittest.TestCase):
         print ("OS should be a supported type")
         assert(err == 1)
         good_array = [
-            {"name": "kube01", "ip": "172.20.30.1", "os": "centos7.4", "role": "generic", "network_group": net_id},
-            {"name": "kube02", "ip": "172.20.30.2", "os": "centos7.4", "role": "k8s master", "network_group": net_id}
+            {"name": "kube01", "ip": "172.20.30.1", "os": "centos7.4", "role": "generic", "network_group": net_name},
+            {"name": "kube02", "ip": "172.20.30.2", "os": "centos7.4", "role": "k8s master", "network_group": net_name}
         ]
         err, msg = self.db.new_hosts(test_file, good_array)
         print ("network should always have a network_group associated")

@@ -203,7 +203,7 @@ class YamlDB(object):
 
     def delete_hosts(self, file_name, name):
         """
-        Deletes a host from the list of hosts.  Just pass in the ID.
+        Deletes a host from the list of hosts.  Just pass in the name
         """
         # TODO: Make sure no host depends upon a physical group.
         err, msg, config = self.open_config(file_name)
@@ -257,7 +257,7 @@ class YamlDB(object):
         else:
             flag = False
             for group in config["network_groups"]:
-                if gh["network_group"] == group["id"]:
+                if gh["network_group"] == group["name"]:
                     flag = True
             if not flag:
                 return 1, "Please specify an already existing network_group of the host."
@@ -265,7 +265,7 @@ class YamlDB(object):
         if "server_group" in gh:
             flag = False
             for group in config["server_groups"]:
-                if gh["server_group"] == group["id"]:
+                if gh["server_group"] == group["name"]:
                     flag = True
             if not flag:
                 return 1, "Please specify an already existing server_group of the host."
@@ -320,7 +320,7 @@ class YamlDB(object):
             return 0, None, {}
         return 0, None, config['hosts']
 
-    def delete_server_group(self, file_name, guid):
+    def delete_server_group(self, file_name, nname):
         """
         Deletes a server group from the list of servers.  Just pass in the ID.
         """
@@ -333,12 +333,12 @@ class YamlDB(object):
 
         # Get the group
         for group in config['server_groups']:
-            if group['id'] == guid:
+            if group['name'] == nname:
                 if "hosts" in config:
                     for host in config['hosts']:
                         if "server_group" in host:
                             if host['server_group'] == group['name']:
-                                return 1, "Can't delete server_group: there is a host tied to it."
+                                return 1, "Can't delete server_group: It is being used by at least: {0}".format(host['name'])
                 config["server_groups"].remove(group)
                 break
         # Now that it is removed, write the config file back out.
@@ -373,14 +373,14 @@ class YamlDB(object):
             return 1, bad_credentials
         return 0, None
     
-    def get_server_group(self, file_name, group_id):
+    def get_server_group(self, file_name, group_name):
         err, msg, groups = self.list_server_group(file_name)
         if err == 1:
             raise KubamError(msg)
         for g in groups: 
-            if g['id'] == group_id:
+            if g['name'] == group_name:
                 return g
-        raise KubamError("Server group id: {0} not found.".format(group_id))
+        raise KubamError("Server group: {0} not found.".format(group_name))
 
     def update_server_group(self, file_name, gh):
         # Check if valid config
@@ -475,7 +475,7 @@ class YamlDB(object):
     def delete_template(self, file_name, req, sg, templates):
         config, sp_temp = self.check_template(file_name, req, template)
         for g in config['server_groups']:
-            if g['id'] == sg:
+            if g['name'] == sg:
                 del g['sp_template']
                 err, msg = self.write_config(config, file_name)
                 if err:
@@ -941,7 +941,7 @@ class YamlDB(object):
 
         return 0, "{0} has been updated".format(gh['name'])
 
-    def delete_aci(self, file_name, guid):
+    def delete_aci(self, file_name, nname):
         """
         Deletes an ACI group from the Database.  Just pass in the ID.
         """
@@ -953,7 +953,7 @@ class YamlDB(object):
             return 1, "no servers created yet"
         # Get the group
         for group in config['aci']:
-            if group['id'] == guid:
+            if group['name'] == nname:
                 config['aci'].remove(group)
                 break
         # Now that it is removed, write the config file back out
@@ -1061,7 +1061,7 @@ class YamlDB(object):
 
         return 0, "{0} has been updated".format(gh['name'])
 
-    def delete_network_group(self, file_name, guid):
+    def delete_network_group(self, file_name, nname):
         """
         Deletes a Network group from the Database.  Just pass in the ID.
         """
@@ -1073,12 +1073,12 @@ class YamlDB(object):
             return 1, "no networks created yet"
         # Get the group
         for group in config["network_groups"]:
-            if group['id'] == guid:
+            if group['name'] == nname:
                 if "hosts" in config:
                     for host in config['hosts']:
                         if "network_group" in host:
                             if host['network_group'] == group['name']:
-                                return 1, "Can't delete network_group: there is a host tied to it."
+                                return 1, "Can't delete network_group: {0} is using it.".format(host['name'])
                 config['network_groups'].remove(group)
                 break
         # Now that it is removed, write the config file back out

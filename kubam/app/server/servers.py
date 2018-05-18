@@ -77,9 +77,9 @@ class Servers(object):
         print req
         if not isinstance(req, dict):
             return {"error": "invalid parameters: {0}".format(req)}, Const.HTTP_BAD_REQUEST
-        uuid = req['id']
+        name = req['name']
         db = YamlDB()
-        err, msg = db.delete_server_group(Const.KUBAM_CFG, uuid)
+        err, msg = db.delete_server_group(Const.KUBAM_CFG, name)
         if err == 1:
             return {"error": msg}, Const.HTTP_BAD_REQUEST
         else:
