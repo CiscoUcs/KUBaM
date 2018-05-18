@@ -603,15 +603,15 @@ class YamlDB(object):
         elif err == 2:
             return 0, None, None
         elif "server_groups" not in config:
-            return 0, None, None
+            return 0, None, []
 
         # get the server group from the server groups
         sg = [x for x in config['server_groups'] if x['id'] == server_group]
         if len(sg) < 1:
-            return 0, None, None
+            return 0, None, []
 
         if "server_pool" not in sg[0]: 
-            return 0, None, None
+            return 0, None, []
         else:
             return 0, None, sg[0]['server_pool']
 

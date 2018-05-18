@@ -191,7 +191,7 @@ def get_servers(server_group):
     err, msg, db_servers = db.get_ucs_servers(Const.KUBAM_CFG, server_group)
     if err != 0:
         return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
-    if isinstance(db_servers, None):
+    if db_servers is None:
         return jsonify({"servers": ucs_servers})
 
     ucs_servers = UCSUtil.servers_to_api(ucs_servers, db_servers)
