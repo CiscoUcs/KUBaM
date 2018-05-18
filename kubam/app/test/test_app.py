@@ -111,6 +111,9 @@ class FlaskTestCase(unittest.TestCase):
     def test_hosts(self):
         tester = app.test_client(self)
         # First get a network
+        response = tester.delete(
+            Const.API_ROOT2 + '/networks', content_type='application/json', data=json.dumps({"name": self.newnet['name']})
+        )
         response = tester.post(
             Const.API_ROOT2+'/networks', content_type='application/json', data=json.dumps(self.newnet)
         )
@@ -127,12 +130,29 @@ class FlaskTestCase(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 201)
         
-        # Delete the network we were using
+        # shouldn't be able to delete this network
         response = tester.delete(
             Const.API_ROOT2 + '/networks', content_type='application/json', data=json.dumps({"name": first_net['name']})
         )
-        print response
+        # should be 400 because the 2 hosts are using this network. 
+        self.assertEqual(response.status_code, 400)
+
+        response = tester.delete(
+            Const.API_ROOT2+'/hosts', content_type='application/json', data=json.dumps({"name": self.newhosts[0]['name']})
+        )
         self.assertEqual(response.status_code, 201)
+
+        response = tester.delete(
+            Const.API_ROOT2+'/hosts', content_type='application/json', data=json.dumps({"name": self.newhosts[1]['name']})
+        )
+        self.assertEqual(response.status_code, 201)
+
+        # hosts are gone, should delete network
+        response = tester.delete(
+            Const.API_ROOT2 + '/networks', content_type='application/json', data=json.dumps({"name": first_net['name']})
+        )
+        self.assertEqual(response.status_code, 201)
+
 
 
 if __name__ == '__main__':

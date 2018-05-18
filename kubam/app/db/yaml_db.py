@@ -1078,7 +1078,7 @@ class YamlDB(object):
                     for host in config['hosts']:
                         if "network_group" in host:
                             if host['network_group'] == nname:
-                                return 1, "Can't delete network_group: {0} is using it.".format(nname)
+                                return 1, "Can't delete network_group: {0} is using it.".format(host['name'])
                 config['network_groups'].remove(group)
                 break
         # Now that it is removed, write the config file back out

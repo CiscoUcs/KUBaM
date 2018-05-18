@@ -52,7 +52,6 @@ class Network(object):
             return {"error": "no parameters given to delete.  Please send the network name to delete"}, Const.HTTP_BAD_REQUEST
         if not "name" in req:
             return {"error": "please send the 'name' of the network to delete"}, Const.HTTP_BAD_REQUEST
-
         name = req['name']
         db = YamlDB()
         err, msg = db.delete_network_group(Const.KUBAM_CFG, name)
