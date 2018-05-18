@@ -131,6 +131,7 @@ class FlaskTestCase(unittest.TestCase):
         response = tester.delete(
             Const.API_ROOT2 + '/networks', content_type='application/json', data=json.dumps({"name": first_net['name']})
         )
+        print response
         self.assertEqual(response.status_code, 201)
 
 

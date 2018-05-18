@@ -59,9 +59,13 @@ class ACI(object):
         """
         Delete the ACI group from the config.
         """
-        uuid = req['id']
+        if not isinstance(req, dict):
+            return {'error': 'no details sent'}, Const.HTTP_BAD_REQUEST
+        if not 'name' in req:
+            return {'error': 'no name given for ACI to delete'}, Const.HTTP_BAD_REQUEST
+        name = req['name']
         db = YamlDB()
-        err, msg = db.delete_aci(Const.KUBAM_CFG, uuid)
+        err, msg = db.delete_aci(Const.KUBAM_CFG, name)
         if err == 1:
             return {'error': msg}, 400
         else:
