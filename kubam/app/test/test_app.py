@@ -82,7 +82,7 @@ class FlaskTestCase(unittest.TestCase):
         if delete_me:
             response = tester.delete(
                 Const.API_ROOT2 + '/networks', content_type='application/json',
-                data=json.dumps({"id": delete_me['id']})
+                data=json.dumps({"name": delete_me['name']})
             )
             self.assertEqual(response.status_code, 201)
         else:
@@ -102,7 +102,7 @@ class FlaskTestCase(unittest.TestCase):
                 d_aci = a
         if d_aci:
             response = tester.delete(
-                Const.API_ROOT2 + '/aci', content_type='application/json', data=json.dumps({"id": d_aci['id']})
+                Const.API_ROOT2 + '/aci', content_type='application/json', data=json.dumps({"name": d_aci['name']})
             )
             self.assertEqual(response.status_code, 201)
         else: 
@@ -129,7 +129,7 @@ class FlaskTestCase(unittest.TestCase):
         
         # Delete the network we were using
         response = tester.delete(
-            Const.API_ROOT2 + '/networks', content_type='application/json', data=json.dumps({"id": first_net['name']})
+            Const.API_ROOT2 + '/networks', content_type='application/json', data=json.dumps({"name": first_net['name']})
         )
         self.assertEqual(response.status_code, 201)
 
