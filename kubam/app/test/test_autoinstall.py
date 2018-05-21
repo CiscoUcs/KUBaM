@@ -11,19 +11,19 @@ class AutoInstallUnitTests(unittest.TestCase):
             # "role" : "k8s master",
             "role": "none",
             "os": "centos7.3",
-            "network_group": "123"
+            "network_group": "ucs net"
             }, {
             "ip": "1.2.3.5",
             "name": "node2",
             "role": "k8s node",
             "os": "centos7.3",
-            "network_group": "123"
+            "network_group": "ucs net"
             }, {
             "ip": "1.2.3.6",
             "name": "node3",
             "role": "k8s node",
             "os": "win2016",
-            "network_group": "123",
+            "network_group": "ucs net",
             "template": "test/t134.tmpl"
             }
         ],
