@@ -48,9 +48,9 @@ class Builder(object):
         ## get network configuration from network group
         if not "network_group" in node:
             return 1, "node does not have a network_group", None, None
-        netinfo = [x for x in config["network_groups"] if node["network_group"] == x["id"]]
+        netinfo = [x for x in config["network_groups"] if node["network_group"] == x["name"]]
         if len(netinfo) < 1:
-            return 1, "network group {0} not found".format(node["network_group"])
+            return 1, "network group {0} not found".format(node["network_group"]), None, None
         netinfo = netinfo[0] # get the first element of the list. 
         vlan = ""
         proxyAddr = ""

@@ -2,7 +2,7 @@ import os
 import re
 import random
 import string
-from subprocess import call
+import subprocess 
 from shutil import rmtree
 from config import Const
 
@@ -39,22 +39,32 @@ class IsoMaker(object):
         return 0, None
 
     @staticmethod
-    def refine_extracted(os, mnt_dir):
+    def refine_extracted(osname, mnt_dir):
         """
         Given an os and an extracted OS directory do any updates that need to be
         done in this directory.  For now this is mostly for RHVH4.1 that needs to be refined.
         specifically: get the correct squashfs file as shown in 5.2.2 step 3 here:
         https://access.redhat.com/documentation/en-us/red_hat_virtualization/4.1/html-single/installation_guide/#part-Installing_Hypervisor_Hosts
         """
-        if not os in ['rhvh4.1']:
+        if not osname in ['rhvh4.1']:
             return 0, None 
         os.chdir(mnt_dir)
-        o = call(["rpm2cpio", "Packages/redhat-virtualization-host-image-update*", "|", "cpio", "-idmv"])
-        if not o == 0:
-            return 1, "Unable to extract virtualization host image from rhvh4.1 iso directory" 
-        o = call(["mv", "usr/share/redhat-virtualization-host/image/*squashfs.img", "."])
+        files = [x for x in os.listdir("Packages") if x.startswith("redhat-virtualization-host-image-update")]
+        if len(files) < 1:
+            return 1, "Unable to find redhat-virtualization-host-image-update package in source" 
+        #o = call(["rpm2cpio", "Packages/" + files[0], "|", "cpio", "-idmv"])
+        ps = subprocess.Popen(('rpm2cpio', 'Packages/' + files[0]), stdout=subprocess.PIPE)
+        output = subprocess.check_output(('cpio', '-idmv'), stdin=ps.stdout)
+        ps.wait()
+        #if not o == 0:
+        #    return 1, "Unable to extract virtualization host image from rhvh4.1 iso directory" 
+        files = [x for x in os.listdir(mnt_dir + "/usr/share/redhat-virtualization-host/image") if x.endswith("squashfs.img")]
+        if len(files) < 1:
+            return 1, "Unable to find squashfs image" 
+        o = subprocess.call(["mv", "usr/share/redhat-virtualization-host/image/" + files[0], mnt_dir + "/squashfs.img"])
         if not o == 0:
             return 1, "Unable to move extracted virtualization host squashfs.img" 
+        return 0, None
         
 
     @staticmethod
@@ -71,7 +81,8 @@ class IsoMaker(object):
         if not os.path.isfile(iso):
             return 1, "iso file {0} not found".format(iso)
         # osirrox -prog kubam -indev ./*.iso -extract . centos7.3
-        o = call(["osirrox", "-acl", "off", "-prog", "kubam", "-indev", iso, "-extract", ".", mnt_dir])
+        
+        o = subprocess.call(["osirrox", "-acl", "off", "-prog", "kubam", "-indev", iso, "-extract", ".", mnt_dir])
         if not o == 0:
             return 1, "error extracting ISO file.  Bad ISO file?"
         return err, "success"
@@ -87,8 +98,8 @@ class IsoMaker(object):
             except OSError as err:
                 # Permission denied error on ISO image.
                 if err.errno == 13:
-                    call(["chmod", "-R", "0755", os_dir])
-                    call(["chmod", "0755", fname])
+                    subprocess.call(["chmod", "-R", "0755", os_dir])
+                    subprocess.call(["chmod", "0755", fname])
                     f = open(fname, "r")
 
             for line in f:
@@ -103,42 +114,42 @@ class IsoMaker(object):
             return 0, "boot iso was already created"
         os_dir = "kubam/" + os_name + version
         stage_dir = "/kubam/tmp/" + str().join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))
-        o = call(["mkdir", "-p", stage_dir])
+        o = subprocess.call(["mkdir", "-p", stage_dir])
         if not o == 0:
             return 1, "Unable to make directory " + stage_dir
-        o = call(["cp", "-a", os_dir + "/isolinux", stage_dir])
+        o = subprocess.call(["cp", "-a", os_dir + "/isolinux", stage_dir])
         if not o == 0:
             return 1, "Unable to copy /isolinux to {0}".format(stage_dir)
-        o = call(["cp", "-a", os_dir + "/.discinfo", stage_dir + "/isolinux/"])
+        o = subprocess.call(["cp", "-a", os_dir + "/.discinfo", stage_dir + "/isolinux/"])
         if not o == 0:
             return 1, "Unable to copy /.discinfo to {0}".format(stage_dir)
-        o = call(["cp", "-a", os_dir + "/LiveOS", stage_dir + "/isolinux/"])
+        o = subprocess.call(["cp", "-a", os_dir + "/LiveOS", stage_dir + "/isolinux/"])
         if not o == 0:
             return 1, "Unable to copy /LiveOS to {0}".format(stage_dir)
-        o = call(["cp", "-a", os_dir + "/images/", stage_dir + "/isolinux/"])
+        o = subprocess.call(["cp", "-a", os_dir + "/images/", stage_dir + "/isolinux/"])
         if not o == 0:
             return 1, "Unable to copy /images/ to {0}".format(stage_dir)
-        o = call(["cp", "-a", "/usr/share/kubam/stage1/"+os_name+version+"/isolinux.cfg", stage_dir + "/isolinux/"])
+        o = subprocess.call(["cp", "-a", "/usr/share/kubam/stage1/"+os_name+version+"/isolinux.cfg", stage_dir + "/isolinux/"])
         if not o == 0:
             return 1, "Unable to copy /isolinux.cfg to {0}".format(stage_dir)
 
         os.chdir("/kubam")
         o = 0
         if os_name == "centos":
-            o = call([
+            o = subprocess.call([
                 "mkisofs", "-o", boot_iso, "-b", "isolinux.bin", "-c", "boot.cat", "-no-emul-boot", "-V",
                 "CentOS 7 x86_64", "-boot-load-size", "4", "-boot-info-table", "-r",
                 "-J", "-v", "-T", stage_dir + "/isolinux"
             ])
         elif os_name == "redhat":
-            o = call([
+            o = subprocess.call([
                 "mkisofs", "-o", boot_iso, "-b", "isolinux.bin", "-c", "boot.cat", "-no-emul-boot", "-V",
                 "RHEL-" + version + " Server.x86_64", "-boot-load-size", "4", "-boot-info-table", "-r",
                 "-J", "-v", "-T", stage_dir + "/isolinux"
             ])
 
         elif os_name == "rhvh":
-            o = call([
+            o = subprocess.call([
                 "mkisofs", "-o", boot_iso, "-b", "isolinux.bin", "-c", "boot.cat", "-no-emul-boot", "-V",
                 "RHVH-" + version + " RHVH.x86_64", "-boot-load-size", "4", "-boot-info-table", "-r",
                 "-J", "-v", "-T", stage_dir + "/isolinux"
@@ -156,13 +167,13 @@ class IsoMaker(object):
             return 0, "boot iso was already created"
         os_dir = "kubam/esxi6.5"
         # Overwrite the boot directory
-        o = call(["cp", "-a", "/usr/share/kubam/stage1/esxi6.5/BOOT.CFG", os_dir])
+        o = subprocess.call(["cp", "-a", "/usr/share/kubam/stage1/esxi6.5/BOOT.CFG", os_dir])
         if not o == 0:
             return 1, "Unable to copy /usr/share/kubam/stage1/esxi6.5/BOOT.CFG to {0}".format(os_dir)
 
         os.chdir("/kubam")
         # https://docs.vmware.com/en/VMware-vSphere/6.5/com.vmware.vsphere.install.doc/GUID-C03EADEA-A192-4AB4-9B71-9256A9CB1F9C.html
-        o = call([
+        o = subprocess.call([
             "mkisofs", "-relaxed-filenames", "-J", "-R", "-o", boot_iso, "-b", "ISOLINUX.BIN", "-c", "boot.cat",
             "-no-emul-boot", "-boot-load-size", "4", "-boot-info-table", "-no-emul-boot", os_dir
         ])
@@ -241,7 +252,7 @@ class IsoMaker(object):
                 except OSError as err:
                     # Permission denied error on ISO image.
                     if err.errno == 13:
-                        call(["chmod", "-R", "0755", tmp_dir])
+                        subprocess.call(["chmod", "-R", "0755", tmp_dir])
                         rmtree(tmp_dir)
             else:
                 print "creating " + o['dir']
@@ -250,7 +261,7 @@ class IsoMaker(object):
                 except OSError as err:
                     # Permission denied error on ISO image.
                     if err.errno == 13:
-                        call(['chmod', '-R', '0755', tmp_dir])
+                        subprocess.call(['chmod', '-R', '0755', tmp_dir])
                         os.rename(tmp_dir, "/kubam/" + o['dir'])
                     else:
                         return 1, err.strerror + ": " + err.filename
