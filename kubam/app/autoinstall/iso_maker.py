@@ -112,7 +112,7 @@ class IsoMaker(object):
         boot_iso = "/kubam/" + os_name + version + "-boot.iso"
         if os.path.isfile(boot_iso):
             return 0, "boot iso was already created"
-        os_dir = "kubam/" + os_name + version
+        os_dir = "/kubam/" + os_name + version
         stage_dir = "/kubam/tmp/" + str().join(random.choice(string.ascii_uppercase + string.digits) for _ in range(5))
         o = subprocess.call(["mkdir", "-p", stage_dir])
         if not o == 0:
