@@ -11,11 +11,19 @@ class UCSCUnitTests(unittest.TestCase):
 
     def test_serverlist(self):
         servers = UCSCEquipment.list_servers(self.handle)
-        print servers
+        #print servers
         assert(servers != "")
 
     def test_templatelist(self):
         templates = UCSCServer.list_templates(self.handle)
-        print templates
+        #print templates
         assert(templates != "")
-         
+
+    def test_sp_crud(self):
+        err, msg = UCSCServer.create_server(self.handle, "org-root/ls-TestTemplate", "test_kubam_sp", "org-root")
+        #print err, msg
+        assert(err == 0)
+        
+        err, msg = UCSCServer.delete_server(self.handle, "test_kubam_sp", "org-root")
+        #print err, msg
+        assert(err == 0)
