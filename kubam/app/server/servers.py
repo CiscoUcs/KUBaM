@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app
 from flask_cors import cross_origin
 from ucs import UCSServer, UCSTemplate, UCSUtil
-from ucsc import UCSCUtil
+from ucsc import UCSCServer, UCSCUtil
 from db import YamlDB
 from config import Const
 from helper import KubamError
@@ -250,23 +250,36 @@ def deploy_servers(server_group):
         return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
     if len(hosts) < 1:
         return jsonify({"error": "No hosts defined in the server group"}), Const.HTTP_BAD_REQUEST
-
-    try:
-        handle = UCSUtil.ucs_login(sg)
-    except KubamError as e:
-        return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+    handle = ""
+    if sg['type'] == 'ucsm':
+        try:
+            handle = UCSUtil.ucs_login(sg)
+        except KubamError as e:
+            return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+    if sg['type'] == 'ucsc':
+        try:
+            handle = UCSCUtil.ucsc_login(sg)
+        except KubamError as e:
+            return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
 
     for h in hosts:
         if "service_profile_template" in h:
             err, msg = UCSServer.make_profile_from_template(handle, org, h)
             if err != 0:
-                UCSUtil.ucs_logout(handle)
+                if sg['type'] == 'ucsm':
+                    UCSUtil.ucs_logout(handle)
+                elif sg['type'] == 'ucsc':
+                    UCSCUtil.ucsc_logout(handle)
                 return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
         else:
             # TODO: Create this part. 
             print "This part is not implemented yet"
 
-    UCSUtil.ucs_logout(handle)
+    if sg['type'] == 'ucsm':
+        UCSUtil.ucs_logout(handle)
+    elif sg['type'] == 'ucsc':
+        UCSCUtil.ucsc_logout(handle)
+
     return jsonify({"status": hosts}), Const.HTTP_CREATED
 
 
@@ -280,3 +293,58 @@ def clone_template(server_group):
     """
     # TODO Create me
     pass
+
+@servers.route(Const.API_ROOT2 + "/servers/<server_group>/vmedia", methods=['POST'])
+@cross_origin()
+def create_vmedia(server_group):
+    """
+    Create the Vmedia policy for a server group
+    """
+    db = YamlDB()
+    # get server group. 
+    try:
+        sg = db.get_server_group(Const.KUBAM_CFG, server_group)
+    except KubamError as e:
+        return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+
+    org = "org-root"
+    if "org" in sg:
+        org = sg["org"]
+    # go through all hosts associated with this server group
+    err, msg, hosts = db.list_hosts(Const.KUBAM_CFG)
+    if err == 1:
+        return jsonify({'error': msg}), Const.HTTP_BAD_REQUEST
+    hosts = [x for x in hosts if 'server_group' in x and x['server_group'] == server_group]
+    if len(hosts) < 1:
+        return jsonify({'error': 'no hosts associated with server group'}), Const.HTTP_OK
+    # get the os image they use
+    oses = list(set([ x["os"] for x in hosts]))
+    # create those vmedia policies
+    err = 0
+    msg = ""
+    err, msg, kubam_ip = db.get_kubam_ip(Const.KUBAM_CFG)
+    if kubam_ip is None:
+        return jsonify({'error': 'Please define the  KUBAM IP first.'} ), Const.HTTP_OK
+    handle = ""
+    if sg['type'] == 'ucsm':
+        try:
+            handle = UCSUtil.ucs_login(sg)
+        except KubamError as e:
+            return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+
+        err, msg = UCSServer.make_vmedias(handle, org, kubam_ip, oses)
+        UCSUtil.ucs_logout(handle)
+
+    elif sg['type'] == 'ucsc':
+        try:
+            handle = UCSCUtil.ucsc_login(sg)
+        except KubamError as e:
+            return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+
+        err, msg = UCSCServer.make_vmedias(handle, org, kubam_ip, oses)
+        UCSCUtil.ucsc_logout(handle)
+
+    if err != 0:
+        return jsonify({'error': msg}), Const.HTTP_BAD_REQUEST
+   
+    return jsonify({"status": oses}), Const.HTTP_CREATED

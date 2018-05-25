@@ -430,14 +430,17 @@ class UCSServer(object):
         return 0, None
 
     @staticmethod
-    def create_virtual_media(handle, org, kubam_ip, hosts):
+    def create_virtual_media(handle, org, kubam_ip, opersys):
         from ucsmsdk.mometa.cimcvmedia.CimcvmediaMountConfigPolicy import CimcvmediaMountConfigPolicy
         from ucsmsdk.mometa.cimcvmedia.CimcvmediaConfigMountEntry import CimcvmediaConfigMountEntry
 
         print "Adding Virtual Media Policy"
         from urlparse import urlparse
         import os.path
-        url = "http://" + kubam_ip + "/kubam/" + hosts[0]['os'] + "-boot.iso"
+        url = "http://" + kubam_ip + "/kubam/" + opersys + "-boot.iso"
+        if opersys.startswith("win"):
+            url = "http://" + kubam_ip + "/kubam/" + "KUBAM_WinPE.iso"
+        
         o = urlparse(url)
         paths = os.path.split(o.path)
         scheme = o.scheme  # HTTP, HTTPS
@@ -449,11 +452,11 @@ class UCSServer(object):
         name = ".".join(paths[-1].split(".")[:-1])
 
         mo = CimcvmediaMountConfigPolicy(
-            name="kubam",
+            name="KUBAM_" + opersys ,
             retry_on_mount_fail="yes",
             parent_mo_or_dn=org,
             policy_owner="local",
-            descr="KUBAM Boot Media"
+            descr="KUBAM vmedia policy for " + opersys
         )
 
         CimcvmediaConfigMountEntry(
@@ -469,7 +472,7 @@ class UCSServer(object):
 
         CimcvmediaConfigMountEntry(
             parent_mo_or_dn=mo,
-            mapping_name="kickstartImage",
+            mapping_name="ServerImage",
             device_type="hdd",
             mount_protocol=scheme,
             remote_ip_address=address,
@@ -725,3 +728,11 @@ class UCSServer(object):
         name = host['name']
         err, msg = UCSServer.create_server(handle, template, name, org)
         return err, msg
+
+    @staticmethod
+    def make_vmedias(handle, org, kubam_ip, oses):
+        for os in oses:
+            err, msg = UCSServer.create_virtual_media(handle, org, kubam_ip, os)
+            if err != 0:
+                return err, msg
+        return 0, ""

@@ -20,14 +20,6 @@ class UCSCServer(object):
         except UcsException as e:
             raise KubamError(e)
 
-    @staticmethod
-    def make_profile_from_template(handle, org, host):
-        if not isinstance(host, dict):
-            return 1, "hosts argument not valid"
-        template = host['service_profile_template']
-        name = host['name']
-        err, msg = UCSCServer.create_server(handle, template, name, org)
-        return err, msg
 
     @staticmethod
     def create_server(handle, template, name, org):
@@ -83,3 +75,86 @@ class UCSCServer(object):
         except UcsException as err:
                 return 1, sp_name + ": " + err.error_descr
         return 0, None
+
+    @staticmethod
+    def create_virtual_media(handle, org, kubam_ip, os):
+        #TODO
+        pass
+
+    @staticmethod
+    def make_profile_from_template(handle, org, host):
+        if not isinstance(host, dict):
+            return 1, "hosts argument not valid"
+        template = host['service_profile_template']
+        name = host['name']
+        err, msg = UCSCServer.create_server(handle, template, name, org)
+        return err, msg
+
+    @staticmethod
+    def create_virtual_media(handle, org, kubam_ip, opersys):
+        from ucscsdk.mometa.cimcvmedia.CimcvmediaMountConfigPolicy import CimcvmediaMountConfigPolicy
+        from ucscsdk.mometa.cimcvmedia.CimcvmediaConfigMountEntry import CimcvmediaConfigMountEntry
+
+        print "Adding Virtual Media Policy"
+        from urlparse import urlparse
+        import os.path
+        url = "http://" + kubam_ip + "/kubam/" + opersys + "-boot.iso"
+        if opersys.startswith("win"):
+            url = "http://" + kubam_ip + "/kubam/" + "KUBAM_WinPE.iso"
+
+        o = urlparse(url)
+        paths = os.path.split(o.path)
+        scheme = o.scheme  # HTTP, HTTPS
+        if scheme == "":
+            scheme = "http"
+        filename = paths[-1]
+        address = o.hostname
+        path = "/".join(paths[:-1])
+        name = ".".join(paths[-1].split(".")[:-1])
+
+        mo = CimcvmediaMountConfigPolicy(
+            name="KUBAM_" + opersys ,
+            retry_on_mount_fail="yes",
+            parent_mo_or_dn=org,
+            #policy_owner="local",
+            descr="KUBAM vmedia policy for " + opersys
+        )
+
+        CimcvmediaConfigMountEntry(
+            parent_mo_or_dn=mo,
+            mapping_name=name,
+            device_type="cdd",
+            mount_protocol=scheme,
+            remote_ip_address=address,
+            image_name_variable="none",
+            image_file_name=filename,
+            image_path=path
+        )
+
+        CimcvmediaConfigMountEntry(
+            parent_mo_or_dn=mo,
+            mapping_name="ServerImage",
+            device_type="hdd",
+            mount_protocol=scheme,
+            remote_ip_address=address,
+            image_name_variable="service-profile-name",
+            image_path=path
+        )
+
+        handle.add_mo(mo, modify_present=True)
+        try:
+            handle.commit()
+        except UcsException as err:
+            if err.error_code == "103":
+                print "\talready exists"
+            else:
+                return 1, err.error_descr
+        return 0, None
+
+    @staticmethod
+    def make_vmedias(handle, org, kubam_ip, oses):
+        for os in oses:
+            err, msg = UCSCServer.create_virtual_media(handle, org, kubam_ip, os)
+            if err != 0:
+                return err, msg
+        return 0, ""

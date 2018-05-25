@@ -35,7 +35,7 @@ class UCSCUtil(object):
 
     # Logout from the the UCSM
     @staticmethod
-    def ucs_logout(handle):
+    def ucsc_logout(handle):
         UCSCSession.logout(handle)
 
     # Check if the login was successful
