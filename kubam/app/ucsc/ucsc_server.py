@@ -19,6 +19,23 @@ class UCSCServer(object):
         except UcsException as e:
             raise KubamError(e)
 
+    @staticmethod
+    def check_org(template, org):
+        """
+        Make sure that the org in which we are creating the service prof
+        has visibility to the actual org where the template is, other
+        wise it won't be correct in UCS. 
+        In other words, the org should be at least the same or a suborg of
+        the template. 
+        """
+        # invalid would be: org: org-root, template: org-root/org-blah
+        # valid would be: org: org-root/org-blah/org-blah1, template: org-root/org-blah
+        import re
+        tempOrg = re.sub('\/ls-.*', '', template)
+        if org.startswith(tempOrg):
+            return 0, None
+        else:
+            return 1, "template: {0} is not visible in org: {1}. Change the server group org to be a subset of the template org.".format(template, org)
 
     @staticmethod
     def create_server(handle, template, name, org):
@@ -26,6 +43,10 @@ class UCSCServer(object):
         Create a new service profile from a template that already exist.
         Must use the dn for the template: org-root/ls-TestTemplate
         """
+        err, msg = UCSCServer.check_org(template, org)
+        if err != 0:
+            return 1, msg
+
         from ucscsdk.ucscmethodfactory import ls_instantiate_n_named_template
         from ucscsdk.ucscbasetype import DnSet, Dn
         dn_set = DnSet()

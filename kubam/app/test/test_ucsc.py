@@ -27,3 +27,10 @@ class UCSCUnitTests(unittest.TestCase):
         err, msg = UCSCServer.delete_server(self.handle, "test_kubam_sp", "org-root")
         #print err, msg
         assert(err == 0)
+    
+    def test_sp_org(self):
+        # 
+        err, msg = UCSCServer.check_org("org-root/org-O-IAAS/org-O-IAAS-PHY/org-O-IAAS-PHY-S1/ls-kubam", "org-root")
+        assert(err == 1)
+        err, msg = UCSCServer.check_org("org-root/ls-kubam", "org-root/org-O-IAAS/org-O-IAAS-PHY/org-O-IAAS-PHY-S1/ls-kubam")
+        assert(err == 0)
