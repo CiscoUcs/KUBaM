@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app
 from flask_cors import cross_origin
 from ucs import UCSServer, UCSTemplate, UCSUtil
-from ucsc import UCSCServer, UCSCUtil
+from ucsc import UCSCServer, UCSCTemplate, UCSCUtil
 from db import YamlDB
 from config import Const
 from helper import KubamError
@@ -93,9 +93,16 @@ class Templates(object):
     def get_templates(server_group):
         db = YamlDB()
         sg = db.get_server_group(Const.KUBAM_CFG, server_group)
-        handle = UCSUtil.ucs_login(sg)
-        ucs_templates = UCSTemplate.list_templates(handle)
-        UCSUtil.ucs_logout(handle)
+        ucs_templates = []
+        if sg['type'] == "ucsc":
+            handle = UCSCUtil.ucsc_login(sg)
+            ucs_templates = UCSCTemplate.list_templates(handle)
+            UCSCUtil.ucsc_logout(handle)
+        elif sg['type'] == "ucs":
+            handle = UCSUtil.ucs_login(sg)
+            ucs_templates = UCSTemplate.list_templates(handle)
+            UCSUtil.ucs_logout(handle)
+
         return ucs_templates
 
     def list_templates(self, server_group):

@@ -11,7 +11,7 @@ class UCSCSession(object):
     # Returns handle or error message
     def login(self, username, password, server):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(10)
+        s.settimeout(20)
         try:
             result = s.connect_ex((server, 443))
             if result != 0:
