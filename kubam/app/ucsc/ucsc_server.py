@@ -13,7 +13,6 @@ class UCSCServer(object):
             templates = list()
 
             for q in query:
-                #print q
                 templates.append({"name": q.name})
             return templates
 
