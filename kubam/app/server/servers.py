@@ -271,7 +271,15 @@ def deploy_servers(server_group):
 
     for h in hosts:
         if "service_profile_template" in h:
-            err, msg = UCSServer.make_profile_from_template(handle, org, h)
+            err = 0
+            msg = ""
+            if sg['type'] == 'ucsc':
+                err, msg = UCSCServer.make_profile_from_template(handle, org, h)
+            elif sg['type'] == 'ucs': 
+                err, msg = UCSServer.make_profile_from_template(handle, org, h)
+            else:
+                return jsonify({"error": "No deploy method for this server group type."}), Const.HTTP_OK
+
             if err != 0:
                 if sg['type'] == 'ucsm':
                     UCSUtil.ucs_logout(handle)
