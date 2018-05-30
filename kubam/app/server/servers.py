@@ -269,16 +269,19 @@ def deploy_servers(server_group):
         except KubamError as e:
             return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
 
+    
     for h in hosts:
         if "service_profile_template" in h:
             err = 0
             msg = ""
+            # make sure template org is higher than in org or
+            # else it won't see it. 
             if sg['type'] == 'ucsc':
                 err, msg = UCSCServer.make_profile_from_template(handle, org, h)
-            elif sg['type'] == 'ucs': 
+            elif sg['type'] == 'ucsm': 
                 err, msg = UCSServer.make_profile_from_template(handle, org, h)
             else:
-                return jsonify({"error": "No deploy method for this server group type."}), Const.HTTP_OK
+                return jsonify({"error": "No deploy method for server group of type: {0}.".format(sg['type']) }), Const.HTTP_OK
 
             if err != 0:
                 if sg['type'] == 'ucsm':
@@ -286,6 +289,12 @@ def deploy_servers(server_group):
                 elif sg['type'] == 'ucsc':
                     UCSCUtil.ucsc_logout(handle)
                 return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
+            # associate the server if it is called out. 
+            if "server" in h:
+                if sg['type'] == 'ucsm':
+                    UCSServer.associate_server(handle,org,h)
+                elif sg['type'] == 'ucsc':
+                    UCSCServer.associate_server(handle,org,h)
         else:
             # TODO: Create this part. 
             print "This part is not implemented yet"
@@ -296,6 +305,9 @@ def deploy_servers(server_group):
         UCSCUtil.ucsc_logout(handle)
 
     return jsonify({"status": hosts}), Const.HTTP_CREATED
+
+
+
 
 
 @servers.route(Const.API_ROOT2 + "/servers/<server_group>/clone", methods=['POST'])
