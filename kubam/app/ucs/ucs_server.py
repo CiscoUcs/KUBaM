@@ -35,7 +35,11 @@ class UCSServer(object):
                     'slot': s.rn.replace("blade-", ""),
                     'model': s.model,
                     'association': s.association,
-                    'service_profile': s.assigned_to_dn
+                    'service_profile': s.assigned_to_dn,
+                    'ram_speed': s.memory_speed,
+                    'num_cpus': s.num_of_cpus,
+                    'num_cores': s.num_of_cores,
+                    'ram': s.total_memory
                 })
             if type(s) is ComputeRackUnit:
                 all_servers.append({
@@ -43,7 +47,11 @@ class UCSServer(object):
                     'label': s.usr_lbl,
                     'rack_id': s.rn.replace("rack-unit-", ""),
                     'model': s.model, 'association': s.association,
-                    'service_profile': s.assigned_to_dn
+                    'service_profile': s.assigned_to_dn,
+                    'ram_speed': s.memory_speed,
+                    'num_cpus': s.num_of_cpus,
+                    'num_cores': s.num_of_cores,
+                    'ram': s.total_memory
                 })
         return all_servers
    
@@ -413,11 +421,10 @@ class UCSServer(object):
         try: 
             handle.process_xml_elem(elem)
         except UcsException as err:
-            #if err.error_code == "105":
-            #    print "\t" + sp_name + " already exists."
-            #else:
-            #    return 1, err.error_descr
-            return 1, err.error_descr
+            if err.error_code == "105":
+                print "\tSP {0} already exists.".format(host_name)
+            else:
+                return 1, err.error_descr
         return 0, None
         
     @staticmethod
@@ -541,6 +548,48 @@ class UCSServer(object):
                 print "\talready exists"
             else:
                 return 1, err.error_descr
+        return 0, None
+
+
+
+    @staticmethod
+    def associate_server(handle, org, h):
+        """
+        handle: connection to ucsc
+        org: org-root or something else
+        h: this is the hash of the host.
+        - 'server' is the server to be bound to.
+        - the service profile is the name of the host with the org:
+        - eg: <org>/ls-<h[name]> => org-root/ls-server
+        - the blade will be something like:
+        - 1006/1/6 or 1
+        """
+
+        # translate physical server name:
+        server = h['server']
+        try:
+            chassis, slot = server.split("/")
+        except Exception as e:
+            return 1, "server value should be <chassis ID>/<serverID>.  Not {0}".format(server)
+
+        #dn = "compute/sys-1009/chassis-{0}/blade-{1}"
+        dn = "sys/chassis-{0}/blade-{1}".format(chassis, slot)
+
+        sp = "{0}/ls-{1}".format(org, h['name'])
+        #TODO more error checking.
+
+        from ucsmsdk.mometa.ls.LsBinding import LsBinding
+        mo = LsBinding(parent_mo_or_dn=sp,
+            #pn_dn="sys/chassis-1/blade-6",
+            pn_dn=dn,
+            restrict_migration="no")
+        handle.add_mo(mo, True)
+        try:
+            handle.commit()
+        except AttributeError:
+            print "\talready associated"
+        except UcsException as err:
+                return 1, sp_name + ": " + err.error_descr
         return 0, None
 
     @staticmethod

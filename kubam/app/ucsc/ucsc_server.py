@@ -1,8 +1,48 @@
 from helper import KubamError
 from ucscsdk.ucscexception import UcscException
-
+import re
 
 class UCSCServer(object):
+
+    @staticmethod
+    def list_servers(handle):
+        from ucscsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
+        from ucscsdk.mometa.compute.ComputeBlade import ComputeBlade
+
+        blades = handle.query_classid(class_id="ComputeBlade")
+        servers = handle.query_classid(class_id="ComputeRackUnit")
+        m = blades + servers
+        all_servers = []
+        for i, s in enumerate(m):
+            if type(s) is ComputeBlade:
+                all_servers.append({
+                    'type': "blade",
+                    'label': s.usr_lbl,
+                    'ram': s.total_memory,
+                    'domain_id': re.search('.*sys-(.+?)/.*', s.dn).group(1),
+                    'ram_speed': s.memory_speed,
+                    'num_cpus': s.num_of_cpus,
+                    'num_cores': s.num_of_cores,
+                    'chassis_id': s.chassis_id,
+                    'slot': s.rn.replace("blade-", ""),
+                    'model': s.model,
+                    'association': s.association,
+                    'service_profile': s.assigned_to_dn
+                })
+            if type(s) is ComputeRackUnit:
+                all_servers.append({
+                    'type': "rack",
+                    'label': s.usr_lbl,
+                    'ram': s.total_memory,
+                    'domain_id': re.search('.*sys-(.+?)/.*', s.dn).group(1),
+                    'ram_speed': s.memory_speed,
+                    'num_cpus': s.num_of_cpus,
+                    'num_cores': s.num_of_cores,
+                    'rack_id': s.rn.replace("rack-unit-", ""),
+                    'model': s.model, 'association': s.association,
+                    'service_profile': s.assigned_to_dn
+                })
+        return all_servers
     
     @staticmethod
     def list_templates(handle):
@@ -16,8 +56,59 @@ class UCSCServer(object):
                 templates.append({"name": q.name})
             return templates
 
-        except UcsException as e:
+        except UcscException as e:
             raise KubamError(e)
+
+    @staticmethod
+    def associate_server(handle, org, h):
+        """
+        handle: connection to ucsc 
+        org: org-root or something else
+        h: this is the hash of the host. 
+        - 'server' is the server to be bound to. 
+        - the service profile is the name of the host with the org:
+        - eg: <org>/ls-<h[name]> => org-root/ls-server 
+        - the blade will be something like: 
+        - 1/6 or 1
+        """
+
+        # translate physical server name: 
+        server = h['server']
+        try:
+            domain, chassis, slot = server.split("/")
+        except Exception as e:
+            return 1, "server value should be <domain ID>/<chassis ID>/<server ID>.  Not {0}".format(server)
+
+        #dn = "compute/sys-1009/chassis-{0}/blade-{1}"
+        dn = "compute/sys-{0}/chassis-{1}/blade-{2}".format(domain, chassis, slot)
+        
+        sp = "{0}/ls-{1}".format(org, h['name'])
+        #TODO more error checking. 
+        
+        from ucscsdk.mometa.ls.LsBinding import LsBinding
+        mo = LsBinding(parent_mo_or_dn=sp,
+            #pn_dn="sys/chassis-1/blade-6",
+            pn_dn=dn,
+            restrict_migration="no")
+        handle.add_mo(mo, True)
+        try:
+            handle.commit()
+        except AttributeError:
+            print "\talready associated."
+        except UcscException as err:
+                return 1, sp_name + ": " + err.error_descr
+        return 0, None
+
+    @staticmethod
+    def disassociate_server(handle, sp):
+        #mo = handle.query_dn("org-root/ls-miner06/pn-req")
+        mo = handle.query_dn(sp)
+        handle.remove_mo(mo)
+        try:
+            handle.commit()
+        except UcscException as err:
+                return 1, sp_name + ": " + err.error_descr
+        
 
     @staticmethod
     def check_org(template, org):
@@ -36,6 +127,7 @@ class UCSCServer(object):
             return 0, None
         else:
             return 1, "template: {0} is not visible in org: {1}. Change the server group org to be a subset of the template org.".format(template, org)
+
 
     @staticmethod
     def create_server(handle, template, name, org):
@@ -67,11 +159,10 @@ class UCSCServer(object):
         try:
             handle.process_xml_elem(elem)
         except UcscException as err:
-            #if err.error_code == "105":
-            #    print "\t" + sp_name + " already exists."
-            #else:
-            #    return 1, err.error_descr
-            return 1, err.error_descr
+            if err.error_code == "105":
+                print "\tSP {0} already exists.".format(name)
+            else:
+                return 1, err.error_descr
         return 0, None
     
     @staticmethod
@@ -92,7 +183,7 @@ class UCSCServer(object):
             handle.commit()
         except AttributeError:
             print "\talready deleted"
-        except UcsException as err:
+        except UcscException as err:
                 return 1, sp_name + ": " + err.error_descr
         return 0, None
 
@@ -164,7 +255,7 @@ class UCSCServer(object):
         handle.add_mo(mo, modify_present=True)
         try:
             handle.commit()
-        except UcsException as err:
+        except UcscException as err:
             if err.error_code == "103":
                 print "\talready exists"
             else:

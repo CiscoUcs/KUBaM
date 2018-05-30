@@ -186,12 +186,20 @@ def get_servers(server_group):
     except KubamError as e:
         return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
 
-    try:
-        handle = UCSUtil.ucs_login(sg)
-    except KubamError as e:
-        return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
-    ucs_servers = UCSServer.list_servers(handle)
-    UCSUtil.ucs_logout(handle)
+    if sg['type'] == "ucsm":
+        try:
+            handle = UCSUtil.ucs_login(sg)
+        except KubamError as e:
+            return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
+        ucs_servers = UCSServer.list_servers(handle)
+        UCSUtil.ucs_logout(handle)
+    elif sg['type'] == 'ucsc':
+        try:
+            handle = UCSCUtil.ucsc_login(sg)
+        except KubamError as e:
+            return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
+        ucs_servers = UCSCServer.list_servers(handle)
+        UCSCUtil.ucsc_logout(handle)
 
     # Gets a hash of severs of form:
     # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}

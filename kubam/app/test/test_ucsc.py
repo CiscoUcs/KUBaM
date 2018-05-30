@@ -34,3 +34,7 @@ class UCSCUnitTests(unittest.TestCase):
         assert(err == 1)
         err, msg = UCSCServer.check_org("org-root/ls-kubam", "org-root/org-O-IAAS/org-O-IAAS-PHY/org-O-IAAS-PHY-S1/ls-kubam")
         assert(err == 0)
+
+    def test_list_servers(self):
+        servers = UCSCServer.list_servers(self.handle)
+        print servers
