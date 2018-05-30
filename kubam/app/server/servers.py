@@ -300,9 +300,9 @@ def deploy_servers(server_group):
             # associate the server if it is called out. 
             if "server" in h:
                 if sg['type'] == 'ucsm':
-                    UCSServer.associate_server(handle,org,h)
+                    err, msg = UCSServer.associate_server(handle,org,h)
                 elif sg['type'] == 'ucsc':
-                    UCSCServer.associate_server(handle,org,h)
+                    err, msg = UCSCServer.associate_server(handle,org,h)
         else:
             # TODO: Create this part. 
             print "This part is not implemented yet"
