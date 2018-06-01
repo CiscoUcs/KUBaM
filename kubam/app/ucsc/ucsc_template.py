@@ -12,7 +12,6 @@ class UCSCTemplate(object):
             templates = list()
             
             for q in query:
-                print q
                 templates.append({"name": q.dn})
             return templates
 
