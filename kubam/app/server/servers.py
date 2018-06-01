@@ -74,7 +74,6 @@ class Servers(object):
         """
         Delete the UCS server group or CIMC from the config.
         """
-        print req
         if not isinstance(req, dict):
             return {"error": "invalid parameters: {0}".format(req)}, Const.HTTP_BAD_REQUEST
         if not "name" in req:
