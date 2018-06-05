@@ -3,7 +3,7 @@ services:
   web:
     image: kubam/web:v2
     envronment:
-      KUBAM_SERVER: kubam
+      KUBAM_API: kubam
     ports:
       - "5000:80"
       - "5443:443"
