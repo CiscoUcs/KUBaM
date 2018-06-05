@@ -44,7 +44,11 @@ class Hosts(object):
         """
         Delete the hosts group from the config.
         """
-        name = req['name']
+        if not isinstance(req, dict):
+            return {"error": "invalid parameters: {0}".format(req)}, Const.HTTP_BAD_REQUEST
+        if not "name" in req:
+            return {"error": "please give the name of the host you wish to delete"}, Const.HTTP_BAD_REQUEST
+        name = req["name"]
         db = YamlDB()
         err, msg = db.delete_hosts(Const.KUBAM_CFG, name)
         if err == 1:
