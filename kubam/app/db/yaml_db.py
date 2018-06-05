@@ -315,9 +315,9 @@ class YamlDB(object):
             return err, msg, None
         # Error code 2 means no entries
         if err == 2:
-            return 0, None, {}
+            return 0, None, []
         if "hosts" not in config:
-            return 0, None, {}
+            return 0, None, [] 
         return 0, None, config['hosts']
 
     def delete_server_group(self, file_name, nname):
