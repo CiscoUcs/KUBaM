@@ -25,8 +25,6 @@ class Hosts(object):
     def create_hosts(req):
         """
         Create a new host entry
-        Format of request should be JSON that looks like:
-        
         """
         db = YamlDB()
         err, msg = db.new_hosts(Const.KUBAM_CFG, req)
@@ -36,8 +34,18 @@ class Hosts(object):
 
     @staticmethod
     def update_hosts(req):
-        # TODO Complete me!
-        return {"status": "ok"}, 200
+        """
+        Given a list of hosts will completely rewrite 
+        the existing hosts entries as long as the values
+        of each entry are correct. 
+        Should be an array of hosts passed in. 
+        Basically does the same thing as a create. 
+        """ 
+        db = YamlDB()
+        err, msg = db.new_hosts(Const.KUBAM_CFG, req)
+        if err == 1:
+            return {'error': msg}, 400
+        return {"status": "hosts updated"}, 201
 
     @staticmethod
     def delete_hosts(req):
