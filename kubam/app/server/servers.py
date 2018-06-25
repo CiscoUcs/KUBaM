@@ -233,7 +233,7 @@ def select_servers(server_group):
     usc_servers = UCSUtil.servers_to_db(ucs_servers)
     if usc_servers:
         db = YamlDB()
-        err, msg = db.update_ucs_servers(Const.KUBAM_CFG, usc_servers, server_group)
+        err, msg = db.update_ucs_servers(Const.KUBAM_CFG, ucs_servers, server_group)
         if err != 0:
             return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
 
@@ -382,3 +382,59 @@ def create_vmedia(server_group):
         return jsonify({'error': msg}), Const.HTTP_BAD_REQUEST
    
     return jsonify({"status": oses}), Const.HTTP_CREATED
+
+def power_server(server_group, req_json, action):
+    """
+    Power actions for a server: off, on, hardreset, softreset
+    """
+    db = YamlDB()
+    # get server group. 
+    try:
+        sg = db.get_server_group(Const.KUBAM_CFG, server_group)
+    except KubamError as e:
+        return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+
+    try:
+        servers = req_json['servers']
+    except KubamError as e:
+        return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+    
+    # find out if server is ucsc or ucs
+    servers = ""
+    err = 0
+    msg = ""
+    if sg['type'] == "ucs":
+        # we expect servers to be a hash of like:
+        # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
+        # translate to db
+        try:
+            handle = UCSUtil.ucs_login(sg)
+        except KubamError as e:
+            return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
+        ucs_servers = UCSServer.list_servers(handle)
+        UCSUtil.ucsc_logout(handle)
+        ucs_servers = UCSUtil.servers_to_api(ucs_servers, servers)
+        return jsonify({"status": ucs_servers}), Const.HTTP_OK
+        #if servers:
+        #    db = YamlDB()
+        #    err, msg = UCSUtil.power_servers(sg, servers, action)
+        #    if err != 0:
+        #        return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
+    elif sg['type'] == "ucsc":
+        return jsonify({"status": "not implemented yet for UCS Central"}), Const.HTTP_OK
+
+    return jsonify({"status": msg}), Const.HTTP_CREATED
+
+
+@servers.route(Const.API_ROOT2 + "/servers/<server_group>/power/<method>", methods=['PUT', 'GET'])
+@cross_origin()
+def power_operation(server_group, method):
+    if not request.json:
+        return jsonify({"error": "no json data was passed in. example might be: ['1/1', '1/2']"}), Const.HTTP_BAD_REQUEST
+    if method in ['hardreset', 'softreset', 'on', 'off']:
+        return power_server(server_group, request.json, method)
+    elif method in ['stat']:
+        return jsonify({"status": "power stat not implemented yet"}), Const.HTTP_OK
+    
+    else:
+        return jsonify({"error": "power method {0} is not supported.".format(method)}), Const.HTTP_BAD_REQUEST

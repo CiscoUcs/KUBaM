@@ -18,6 +18,28 @@ class UCSServer(object):
         return True
 
     @staticmethod
+    def power_server(handle, server, action):
+        """
+        Takes in a service profile and applies the appropriate power
+        action to the service profile. The service profile should be
+        the full organization of the server. e.g:
+        "org-root/ls-miner04"
+        """
+        state = ""
+        if action == "off":
+            state = "admin-down"
+        elif action == "on":
+            state = "admin-up"
+        elif action == "hardreset":
+            state = "cycle-immediate"
+        elif action == "softreset":
+            state = "cycle-wait"
+
+        from ucsmsdk.mometa.ls.LsPower import LsPower
+        mo = LsPower(parent_mo_or_dn="org-root/"+server,
+                     state="admin-down")
+    
+    @staticmethod
     def list_servers(handle):
         from ucsmsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
         from ucsmsdk.mometa.compute.ComputeBlade import ComputeBlade
