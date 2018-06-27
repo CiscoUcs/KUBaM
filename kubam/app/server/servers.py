@@ -383,6 +383,17 @@ def create_vmedia(server_group):
    
     return jsonify({"status": oses}), Const.HTTP_CREATED
 
+def servers_to_objects(handle, servers):
+    """
+    Get the servers from the API and turn them into the UCS objects
+    So we can do operations on them. 
+    """
+    ucs_servers = UCSServer.list_servers(handle)
+    return UCSUtil.servers_to_objects(ucs_servers, servers)
+    
+    
+
+
 def power_server(server_group, req_json, action):
     """
     Power actions for a server: off, on, hardreset, softreset
@@ -403,6 +414,7 @@ def power_server(server_group, req_json, action):
     # find out if server is ucsc or ucs
     err = 0
     msg = ""
+    powerstat = ""
     
     if sg['type'] == "ucsm":
         # we expect servers to be a hash of like:
@@ -411,26 +423,25 @@ def power_server(server_group, req_json, action):
             handle = UCSUtil.ucs_login(sg)
         except KubamError as e:
             return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
-        # get the UCS servers from the server group
-        ucs_servers = UCSServer.list_servers(handle)
         try: 
-            ucs_servers = UCSUtil.servers_to_objects(ucs_servers, servers)
+            ucs_servers = servers_to_objects(handle, servers) 
         except KubamError as e:
             UCSUtil.ucs_logout(handle)
             return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+
         for i in ucs_servers:
             try: 
                 UCSServer.power_server(handle, i, action)
             except KubamError as e:
                 UCSUtil.ucs_logout(handle)
                 return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
-
         UCSUtil.ucs_logout(handle)
+        powerstat = UCSUtil.objects_to_servers(ucs_servers, ["oper_power"])
         
     elif sg['type'] == "ucsc":
         return jsonify({"status": "not implemented yet for UCS Central"}), Const.HTTP_OK
 
-    return jsonify({"status": msg}), Const.HTTP_CREATED
+    return jsonify({"status": powerstat}), Const.HTTP_CREATED
 
 
 @servers.route(Const.API_ROOT2 + "/servers/<server_group>/power/<method>", methods=['PUT'])
@@ -440,29 +451,36 @@ def power_operation(server_group, method):
         return jsonify({"error": "no json data was passed in. example might be: ['1/1', '1/2']"}), Const.HTTP_BAD_REQUEST
     if method in ['hardreset', 'softreset', 'on', 'off']:
         return power_server(server_group, request.json, method)
-    elif method in ['stat']:
-        return jsonify({"status": "power stat not implemented yet"}), Const.HTTP_OK
-    
     else:
-        return jsonify({"error": "power method {0} is not supported.".format(method)}), Const.HTTP_BAD_REQUEST
+        return jsonify({"error": "power method {0} is not supported. Use: on, off, hardreset, softreset".format(method)}), Const.HTTP_BAD_REQUEST
 
 @servers.route(Const.API_ROOT2 + "/servers/<server_group>/powerstat", methods=['GET'])
 @cross_origin()
 def powerstat(server_group):
     powerstat = ""
+    wanted_servers = "all"
     db = YamlDB()
     try:
         sg = db.get_server_group(Const.KUBAM_CFG, server_group)
     except KubamError as e:
         return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+   
+    if request.json and "servers" in request.json:
+        wanted_servers = request.json["servers"]
+    
     if sg['type'] == "ucsm":
         try:
             handle = UCSUtil.ucs_login(sg)
         except KubamError as e:
             return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
         try: 
-            powerstat = UCSServer.powerstat(handle)
+            powerstat = UCSServer.list_servers(handle)
+            if not wanted_servers == "all":
+                powerstat = UCSUtil.servers_to_objects(powerstat, wanted_servers)
+            powerstat = UCSUtil.objects_to_servers(powerstat, ["oper_power"])
         except KubamError as e:
+            UCSUtil.ucs_logout(handle)
             return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
-     
+        UCSUtil.ucs_logout(handle)
+
     return jsonify({"status" : powerstat }), Const.HTTP_OK

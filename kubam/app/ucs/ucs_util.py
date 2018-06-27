@@ -186,6 +186,11 @@ class UCSUtil(object):
 
     @staticmethod
     def servers_to_objects(objects, servers):
+        """
+        takes in a bunch of objects: real UCS objects
+        and servers: stuff we get from the API like {"blades": [1/1, 2/1], "rack_servers": ["1", "2",...]}
+        and filters them
+        """
         r_s = [] 
         if "blades" in servers:
             for s in servers["blades"]:
@@ -212,5 +217,21 @@ class UCSUtil(object):
                 if not found:
                     raise KubamError("server {0} does not exist.".format(s))
         return r_s
-            
-    
+
+    @staticmethod
+    def objects_to_servers(servers, attribs):
+        blades = []
+        rack_mounts = []
+        all_return = {}
+        for s in servers:
+            parts = [x for x in s["dn"] if x.isdigit()]
+            if "chassis" in s["dn"]:
+                blades.append("{0}/{1}: {2}".format(parts[0], parts[1], ",".join([ s[p] for p in attribs] )))
+            else:
+                parts = "".join(parts)
+                rack_mounts.append("{0}: {1}".format(parts, ",".join([ s[p] for p in attribs] )))
+        if blades:
+            all_return["blades"] = blades
+        if rack_mounts:
+            all_return["rack_servers"] = rack_mounts
+        return all_return

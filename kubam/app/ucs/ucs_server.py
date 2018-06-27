@@ -88,7 +88,8 @@ class UCSServer(object):
                     'num_cpus': s.num_of_cpus,
                     'num_cores': s.num_of_cores,
                     'ram': s.total_memory,
-                    'dn': s.dn
+                    'dn': s.dn,
+                    'oper_power': s.oper_power
                 })
             if type(s) is ComputeRackUnit:
                 all_servers.append({
@@ -101,7 +102,8 @@ class UCSServer(object):
                     'num_cpus': s.num_of_cpus,
                     'num_cores': s.num_of_cores,
                     'ram': s.total_memory,
-                    'dn': s.dn
+                    'dn': s.dn,
+                    'oper_power': s.oper_power
                 })
         return all_servers
    
