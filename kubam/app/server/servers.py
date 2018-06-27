@@ -433,7 +433,7 @@ def power_server(server_group, req_json, action):
     return jsonify({"status": msg}), Const.HTTP_CREATED
 
 
-@servers.route(Const.API_ROOT2 + "/servers/<server_group>/power/<method>", methods=['PUT', 'GET'])
+@servers.route(Const.API_ROOT2 + "/servers/<server_group>/power/<method>", methods=['PUT'])
 @cross_origin()
 def power_operation(server_group, method):
     if not request.json:
@@ -445,3 +445,24 @@ def power_operation(server_group, method):
     
     else:
         return jsonify({"error": "power method {0} is not supported.".format(method)}), Const.HTTP_BAD_REQUEST
+
+@servers.route(Const.API_ROOT2 + "/servers/<server_group>/powerstat", methods=['GET'])
+@cross_origin()
+def powerstat(server_group):
+    powerstat = ""
+    db = YamlDB()
+    try:
+        sg = db.get_server_group(Const.KUBAM_CFG, server_group)
+    except KubamError as e:
+        return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+    if sg['type'] == "ucsm":
+        try:
+            handle = UCSUtil.ucs_login(sg)
+        except KubamError as e:
+            return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
+        try: 
+            powerstat = UCSServer.powerstat(handle)
+        except KubamError as e:
+            return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
+     
+    return jsonify({"status" : powerstat }), Const.HTTP_OK

@@ -18,6 +18,20 @@ class UCSServer(object):
             if i < 0 or i > len(array) - 1:
                 return False
         return True
+    @staticmethod
+    def powerstat(handle):
+        """
+        Get's the power status of all nodes.
+        """
+        from ucsmsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
+        from ucsmsdk.mometa.compute.ComputeBlade import ComputeBlade
+        blades = handle.query_classid(class_id="ComputeBlade")
+        servers = handle.query_classid(class_id="ComputeRackUnit")
+        m = blades + servers
+        all_servers = []
+        for s in m:
+            all_servers.append("{0}: {1}".format(s.dn, s.oper_power))
+        return all_servers
 
     @staticmethod
     def power_server(handle, server, action):
