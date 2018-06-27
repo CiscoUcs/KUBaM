@@ -469,18 +469,46 @@ def powerstat(server_group):
         wanted_servers = request.json["servers"]
     
     if sg['type'] == "ucsm":
-        try:
-            handle = UCSUtil.ucs_login(sg)
-        except KubamError as e:
-            return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
-        try: 
-            powerstat = UCSServer.list_servers(handle)
-            if not wanted_servers == "all":
-                powerstat = UCSUtil.servers_to_objects(powerstat, wanted_servers)
-            powerstat = UCSUtil.objects_to_servers(powerstat, ["oper_power"])
-        except KubamError as e:
-            UCSUtil.ucs_logout(handle)
-            return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
-        UCSUtil.ucs_logout(handle)
+        powerstat = powerstat_ucsm(sg, wanted_servers)
+    elif sg['type'] == "ucsc":
+        powerstat = powerstat_ucsc(sg, wanted_servers)
+    else:
+        return jsonify({"error": "powerstat not supported on this type of server"}), Const.HTTP_BAD_REQUEST
 
     return jsonify({"status" : powerstat }), Const.HTTP_OK
+
+def powerstat_ucsm(sg, wanted_servers):
+    """
+    Get the power stat of the UCS Manager servers.
+    """
+    try:
+        handle = UCSUtil.ucs_login(sg)
+    except KubamError as e:
+        return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
+    try: 
+        powerstat = UCSServer.list_servers(handle)
+        if not wanted_servers == "all":
+            powerstat = UCSUtil.servers_to_objects(powerstat, wanted_servers)
+        powerstat = UCSUtil.objects_to_servers(powerstat, ["oper_power"])
+    except KubamError as e:
+        UCSUtil.ucs_logout(handle)
+        return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
+    UCSUtil.ucs_logout(handle)
+    return powerstat
+
+def powerstat_ucsc(sg, wanted_servers):
+    """
+    Get the power status of the UCS Central servers.
+    """
+    try:
+        handle = UCSCUtil.ucsc_login(sg)
+    except KubamError as e:
+        return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
+    try: 
+        powerstat = UCSCServer.list_servers(handle)
+        powerstat = UCSCUtil.objects_to_servers(powerstat, ["oper_power"])
+    except KubamError as e:
+        UCSCUtil.ucsc_logout(handle)
+    
+    UCSCUtil.ucsc_logout(handle)     
+    return powerstat

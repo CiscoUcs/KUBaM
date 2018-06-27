@@ -65,3 +65,24 @@ class UCSCUtil(object):
             raise KubamError(err)
         UCSCSession.logout(h)
 
+    @staticmethod
+    def objects_to_servers(servers, attribs):
+        blades = []
+        rack_mounts = []
+        all_return = {}
+        for s in servers:
+            parts = [x for x in s["dn"] if x.isdigit()]
+            if "chassis" in s["dn"]:
+                b = parts[-1]
+                c = parts[-2]
+                d = "".join(parts[:-2])
+                blades.append("{0}/{1}/{2}: {3}".format(d, c, b, ",".join([ s[p] for p in attribs] )))
+            else:
+                d = "".join(parts[0:4])
+                r = "".join(parts[4:])
+                rack_mounts.append("{0}/{1}: {2}".format(d, r, ",".join([ s[p] for p in attribs] )))
+        if blades:
+            all_return["blades"] = blades
+        if rack_mounts:
+            all_return["rack_servers"] = rack_mounts
+        return all_return

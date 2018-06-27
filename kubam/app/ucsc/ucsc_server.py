@@ -27,7 +27,9 @@ class UCSCServer(object):
                     'slot': s.rn.replace("blade-", ""),
                     'model': s.model,
                     'association': s.association,
-                    'service_profile': s.assigned_to_dn
+                    'service_profile': s.assigned_to_dn,
+                    'dn': s.dn,
+                    'oper_power': s.oper_power
                 })
             if type(s) is ComputeRackUnit:
                 all_servers.append({
@@ -40,7 +42,9 @@ class UCSCServer(object):
                     'num_cores': s.num_of_cores,
                     'rack_id': s.rn.replace("rack-unit-", ""),
                     'model': s.model, 'association': s.association,
-                    'service_profile': s.assigned_to_dn
+                    'service_profile': s.assigned_to_dn,
+                    'dn': s.dn,
+                    'oper_power': s.oper_power
                 })
         return all_servers
     
