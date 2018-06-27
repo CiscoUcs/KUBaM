@@ -417,31 +417,66 @@ def power_server(server_group, req_json, action):
     powerstat = ""
     
     if sg['type'] == "ucsm":
-        # we expect servers to be a hash of like:
-        # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
-        try:
-            handle = UCSUtil.ucs_login(sg)
-        except KubamError as e:
-            return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
+        return power_server_ucsm(sg, servers, action)
+    elif sg['type'] == "ucsc":
+        return power_server_ucsc(sg, servers, action)
+   
+
+
+def power_server_ucsm(sg, servers, action): 
+    """
+    perform power operations (hardreset, off, on..) for UCS Manager. 
+    """
+    # we expect servers to be a hash of like:
+    # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
+    try:
+        handle = UCSUtil.ucs_login(sg)
+    except KubamError as e:
+        return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
+    try: 
+        ucs_servers = servers_to_objects(handle, servers) 
+    except KubamError as e:
+        UCSUtil.ucs_logout(handle)
+        return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+
+    for i in ucs_servers:
         try: 
-            ucs_servers = servers_to_objects(handle, servers) 
+            UCSServer.power_server(handle, i, action)
+        except KubamError as e:
+            UCSUtil.ucs_logout(handle)
+            return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+    UCSUtil.ucs_logout(handle)
+    powerstat = UCSUtil.objects_to_servers(ucs_servers, ["oper_power"])
+    return jsonify({"status": powerstat}), Const.HTTP_CREATED
+
+def power_server_ucsc(sg, servers, action):
+    """
+    perform power operations (hardreset, off, on..) for UCS Central
+    """
+    try:
+        handle = UCSCUtil.ucsc_login(sg)
+    except:
+        return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
+    try:
+        ucsc_servers = UCSCServer.list_servers(handle)
+        ucsc_servers =  UCSCUtil.servers_to_objects(ucsc_servers, servers)
+    except KubamError as e:
+        UCSCUtil.ucsc_logout(handle)
+        return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+
+    for i in ucsc_servers:
+        try:
+            UCSCServer.power_server(handle, i, action)
         except KubamError as e:
             UCSUtil.ucs_logout(handle)
             return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
 
-        for i in ucs_servers:
-            try: 
-                UCSServer.power_server(handle, i, action)
-            except KubamError as e:
-                UCSUtil.ucs_logout(handle)
-                return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
-        UCSUtil.ucs_logout(handle)
-        powerstat = UCSUtil.objects_to_servers(ucs_servers, ["oper_power"])
-        
-    elif sg['type'] == "ucsc":
-        return jsonify({"status": "not implemented yet for UCS Central"}), Const.HTTP_OK
-
+    UCSUtil.ucs_logout(handle)
+    powerstat = UCSCUtil.objects_to_servers(ucsc_servers, ["oper_power"])
     return jsonify({"status": powerstat}), Const.HTTP_CREATED
+    
+
+
 
 
 @servers.route(Const.API_ROOT2 + "/servers/<server_group>/power/<method>", methods=['PUT'])
@@ -457,6 +492,9 @@ def power_operation(server_group, method):
 @servers.route(Const.API_ROOT2 + "/servers/<server_group>/powerstat", methods=['GET'])
 @cross_origin()
 def powerstat(server_group):
+    """
+    Get the power stat for the servers. 
+    """
     powerstat = ""
     wanted_servers = "all"
     db = YamlDB()

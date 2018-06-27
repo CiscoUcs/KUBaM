@@ -86,3 +86,39 @@ class UCSCUtil(object):
         if rack_mounts:
             all_return["rack_servers"] = rack_mounts
         return all_return
+
+    @staticmethod
+    def servers_to_objects(objects, servers):
+        """
+        take in all of the UCS objects and filter out the ones the API 
+        passed into us and return a list with just the servers we wanted. 
+        """
+        r_s = []
+        if "blades" in servers:
+            for s in servers["blades"]:
+                found = False
+                b_parts = s.split("/")
+                for real in objects:
+                    if not "chassis_id" in real:
+                        continue
+                    if (real['domain_id'] == b_parts[0] and
+                        real['chassis_id'] ==  b_parts[1] and
+                       real['slot'] == b_parts[2] ):
+                        found = True
+                        r_s.append(real)
+                if not found:
+                    raise KubamError("server {0} does not exist: {1}".format(s, b_parts))
+        if "rack_servers" in servers:
+            for s in servers["rack_servers"]:
+                found = False
+                r_parts = s.split("/")
+                for real in objects:
+                    if not "rack_id" in real:
+                        continue
+                    if (real['domain_id'] == r_parts[0] and 
+                        real['rack_id'] == r_parts[1]):
+                        found = True
+                        r_s.append(real)
+                if not found:
+                    raise KubamError("server {0} does not exist!".format(s))
+        return r_s

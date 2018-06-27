@@ -5,6 +5,39 @@ import re
 class UCSCServer(object):
 
     @staticmethod
+    def power_server(handle, server, action):
+        """
+        Takes in a server object and applies the appropriate power
+        action to the server
+        """
+        st = ""
+        if action == "off":
+            st = "admin-down"
+        elif action == "on":
+            st = "admin-up"
+        elif action == "hardreset":
+            st = "cycle-immediate"
+        elif action == "softreset":
+            st = "cycle-wait"
+        else:
+            raise KubamError("Power method {0} is not a valid power action.".format(action))
+
+
+        if action in ["on", "off"] and server["service_profile"] == "":
+            raise KubamError("Can not power {0}, no service profile associated with {1}".format(action, server["dn"]))
+        from ucscsdk.mometa.ls.LsPower import LsPower
+        # use the distinguished name since sp may belong somewhere else. 
+        mo = LsPower(parent_mo_or_dn=server["dn"],
+                     state=st)
+        handle.add_mo(mo, True)
+        try:
+            handle.commit()
+        except UcscException as err:
+            raise KubamError("{0}".format(err))        
+
+
+
+    @staticmethod
     def list_servers(handle):
         from ucscsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
         from ucscsdk.mometa.compute.ComputeBlade import ComputeBlade
