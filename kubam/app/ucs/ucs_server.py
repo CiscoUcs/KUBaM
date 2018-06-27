@@ -1,4 +1,6 @@
 from ucsmsdk.ucsexception import UcsException
+from helper import KubamError
+
 
 
 class UCSServer(object):
@@ -25,19 +27,29 @@ class UCSServer(object):
         the full organization of the server. e.g:
         "org-root/ls-miner04"
         """
-        state = ""
+        st = ""
         if action == "off":
-            state = "admin-down"
+            st = "admin-down"
         elif action == "on":
-            state = "admin-up"
+            st = "admin-up"
         elif action == "hardreset":
-            state = "cycle-immediate"
+            st = "cycle-immediate"
         elif action == "softreset":
-            state = "cycle-wait"
+            st = "cycle-wait"
+        else:
+            raise KubamError("Power method {0} is not a valid power action.".format(action))
 
+
+        if action in ["on", "off"] and server["service_profile"] == "":
+            raise KubamError("Can not power {0}, no service profile associated with {1}".format(action, server["dn"]))
         from ucsmsdk.mometa.ls.LsPower import LsPower
-        mo = LsPower(parent_mo_or_dn="org-root/"+server,
-                     state="admin-down")
+        mo = LsPower(parent_mo_or_dn=server["service_profile"],
+                     state=st)
+        handle.add_mo(mo, True)
+        try:
+            handle.commit()
+        except UcsException as err:
+            raise KubamError("{0}".format(err))
     
     @staticmethod
     def list_servers(handle):
@@ -61,7 +73,8 @@ class UCSServer(object):
                     'ram_speed': s.memory_speed,
                     'num_cpus': s.num_of_cpus,
                     'num_cores': s.num_of_cores,
-                    'ram': s.total_memory
+                    'ram': s.total_memory,
+                    'dn': s.dn
                 })
             if type(s) is ComputeRackUnit:
                 all_servers.append({
@@ -73,7 +86,8 @@ class UCSServer(object):
                     'ram_speed': s.memory_speed,
                     'num_cpus': s.num_of_cpus,
                     'num_cores': s.num_of_cores,
-                    'ram': s.total_memory
+                    'ram': s.total_memory,
+                    'dn': s.dn
                 })
         return all_servers
    

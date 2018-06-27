@@ -182,3 +182,35 @@ class UCSUtil(object):
                             real_server['selected'] = True
                             ucs_servers[i] = real_server
         return ucs_servers
+
+
+    @staticmethod
+    def servers_to_objects(objects, servers):
+        r_s = [] 
+        if "blades" in servers:
+            for s in servers["blades"]:
+                found = False
+                b_parts = s.split("/")
+                for real in objects:
+                    if not "chassis_id" in real:
+                        continue
+                    if (real['chassis_id'] ==  b_parts[0] and
+                       real['slot'] == b_parts[1] ):
+                        found = True
+                        r_s.append(real)
+                if not found:
+                    raise KubamError("server {0} does not exist.".format(s))
+        if "rack_servers" in servers:
+            for s in servers["rack_servers"]:
+                found = False
+                for real in objects:
+                    if not "rack_id" in real:
+                        continue
+                    if real['rack_id'] == s:
+                        found = True
+                        r_s.append(real)
+                if not found:
+                    raise KubamError("server {0} does not exist.".format(s))
+        return r_s
+            
+    

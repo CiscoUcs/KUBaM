@@ -389,6 +389,7 @@ def power_server(server_group, req_json, action):
     """
     db = YamlDB()
     # get server group. 
+    servers = ""
     try:
         sg = db.get_server_group(Const.KUBAM_CFG, server_group)
     except KubamError as e:
@@ -400,26 +401,32 @@ def power_server(server_group, req_json, action):
         return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
     
     # find out if server is ucsc or ucs
-    servers = ""
     err = 0
     msg = ""
-    if sg['type'] == "ucs":
+    
+    if sg['type'] == "ucsm":
         # we expect servers to be a hash of like:
         # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
-        # translate to db
         try:
             handle = UCSUtil.ucs_login(sg)
         except KubamError as e:
             return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
+        # get the UCS servers from the server group
         ucs_servers = UCSServer.list_servers(handle)
-        UCSUtil.ucsc_logout(handle)
-        ucs_servers = UCSUtil.servers_to_api(ucs_servers, servers)
-        return jsonify({"status": ucs_servers}), Const.HTTP_OK
-        #if servers:
-        #    db = YamlDB()
-        #    err, msg = UCSUtil.power_servers(sg, servers, action)
-        #    if err != 0:
-        #        return jsonify({"error": msg}), Const.HTTP_BAD_REQUEST
+        try: 
+            ucs_servers = UCSUtil.servers_to_objects(ucs_servers, servers)
+        except KubamError as e:
+            UCSUtil.ucs_logout(handle)
+            return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+        for i in ucs_servers:
+            try: 
+                UCSServer.power_server(handle, i, action)
+            except KubamError as e:
+                UCSUtil.ucs_logout(handle)
+                return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+
+        UCSUtil.ucs_logout(handle)
+        
     elif sg['type'] == "ucsc":
         return jsonify({"status": "not implemented yet for UCS Central"}), Const.HTTP_OK
 
