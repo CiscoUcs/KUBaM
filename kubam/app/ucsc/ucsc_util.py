@@ -144,8 +144,8 @@ class UCSCUtil(object):
             [...]
         }
         """
-        blades = []
-        rack_mounts = []
+        blades = {}
+        rack_mounts = {}
         all_return = {}
         for s in dn_hash.keys():
             parts = [x for x in s if x.isdigit()]
@@ -153,11 +153,12 @@ class UCSCUtil(object):
                 b = parts[-1]
                 c = parts[-2]
                 d = "".join(parts[:-2])
-                blades.append({"{0}/{1}/{2}".format(d, c, b) : dn_hash[s]})
+                blades["{0}/{1}/{2}".format(d, c, b)] = dn_hash[s]
             else:
                 d = "".join(parts[0:4])
                 r = "".join(parts[4:])
-                rack_mounts.append({"{0}/{1}".format(d, r) : dn_hash[s]})
+                rack_mounts["{0}/{1}".format(d, r)] = dn_hash[s]
+                
         if blades:
             all_return["blades"] = blades
         if rack_mounts:

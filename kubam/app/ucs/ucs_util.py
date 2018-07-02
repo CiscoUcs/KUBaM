@@ -256,16 +256,16 @@ class UCSUtil(object):
             [...]
         }
         """
-        blades = []
-        rack_mounts = []
+        blades = {}
+        rack_mounts = {}
         all_return = {}
         for s in dn_hash.keys():
             parts = [x for x in s if x.isdigit()]
             if "chassis" in s:
-                blades.append({"{0}/{1}".format(parts[0], parts[1]) : dn_hash[s]})
+                blades["{0}/{1}".format(parts[0], parts[1])] = dn_hash[s]
             else:
                 parts = "".join(parts)
-                rack_mounts.append({"{0}".format(parts) : dn_hash[s]})
+                rack_mounts["{0}".format(parts)] = dn_hash[s]
         if blades:
             all_return["blades"] = blades
         if rack_mounts:
