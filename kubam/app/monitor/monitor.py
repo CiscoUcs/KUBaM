@@ -51,16 +51,21 @@ def get_server_status_ucsm(sg, wanted):
         all_servers = UCSServer.list_servers(handle)
         if not wanted == "all":
             all_servers = UCSUtil.servers_to_objects(all_servers, wanted)
+        # put in dn name format
+        status = {}
+        for i in all_servers:
+            status[i['dn']] = i
+        out = UCSCUtil.dn_hash_to_out(status)
     except KubamError as e:
         UCSUtil.ucs_logout(handle)
         return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
     
-    try: 
-        status = UCSMonitor.get_status(handle, all_servers)
-        out = UCSUtil.dn_hash_to_out(status)
-    except KubamError as e:
-        UCSUtil.ucs_logout(handle)
-        return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+    #try: 
+    #    status = UCSMonitor.get_status(handle, all_servers)
+    #    out = UCSUtil.dn_hash_to_out(status)
+    #except KubamError as e:
+    #    UCSUtil.ucs_logout(handle)
+    #    return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
 
     UCSUtil.ucs_logout(handle)
     return jsonify({"servers" : out }), Const.HTTP_OK
@@ -75,10 +80,14 @@ def get_server_status_ucsc(sg, wanted):
         all_servers = UCSCServer.list_servers(handle)
         if not wanted == "all":
             all_servers = UCSCUtil.servers_to_objects(all_servers, wanted)
+        # put in dn name format
+        status = {}
+        for i in all_servers:
+            status[i['dn']] = i
+        out = UCSCUtil.dn_hash_to_out(status)
     except KubamError as e:
         UCSCUtil.ucsc_logout(handle)
         return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
-    
     #try: 
     #    status = UCSCMonitor.get_status(handle, all_servers)
     #    out = UCSCUtil.dn_hash_to_out(status)
@@ -87,11 +96,7 @@ def get_server_status_ucsc(sg, wanted):
     #    return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
 
     UCSCUtil.ucsc_logout(handle)
-    return jsonify({"servers" : all_servers }), Const.HTTP_OK
-
-
-
-
+    return jsonify({"servers" : out }), Const.HTTP_OK
 
 # Get the detailed status of the server stages from UCSM FSM
 @monitor.route(Const.API_ROOT2 + "/<server_group>/fsm", methods=["GET"])
