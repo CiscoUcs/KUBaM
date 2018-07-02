@@ -287,3 +287,17 @@ python2 -m unittest test.sg.SGUnitTests
 python2 -m unittest test.test_db.DBUnitTests
 python2 -m unittest test.test_app.FlaskTestCase
 ```
+
+## Misc Dev Testing techniques
+
+### Using the REPL
+
+```
+>>> from ucscsdk.ucschandle import UcscHandle
+>>> from ucscsdk.ucscexception import UcscException
+>>> handle = UcscHandle("10.94.132.71", "admin", "cisco.125")
+>>> handle.login()
+>>> b = handle.query_classid(class_id = "ComputeBlade")
+>>> from ucscsdk.mometa.compute.ComputeBlade import ComputeBlade
+>>> print(b[0])
+```

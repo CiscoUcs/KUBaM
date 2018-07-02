@@ -235,3 +235,39 @@ class UCSUtil(object):
         if rack_mounts:
             all_return["rack_servers"] = rack_mounts
         return all_return
+
+    @staticmethod
+    def dn_hash_to_out(dn_hash):
+        """
+        Takes in hash that looks like:
+        dn : <properties>
+        such as: 
+        /sys/chassis-1/blade-1 : { "foo" : "bar", "baz" : "bat" }
+        returns the dn in a way the API likes to see it:
+        {
+           "blades" : 
+            [ {"1/1" : {
+                "foo" : "bar", 
+                "baz" : "bat"
+                }
+              }
+            ],
+            "rack_servers":
+            [...]
+        }
+        """
+        blades = []
+        rack_mounts = []
+        all_return = {}
+        for s in dn_hash.keys():
+            parts = [x for x in s if x.isdigit()]
+            if "chassis" in s:
+                blades.append({"{0}/{1}".format(parts[0], parts[1]) : dn_hash[s]})
+            else:
+                parts = "".join(parts)
+                rack_mounts.append({"{0}".format(parts) : dn_hash[s]})
+        if blades:
+            all_return["blades"] = blades
+        if rack_mounts:
+            all_return["rack_servers"] = rack_mounts
+        return all_return

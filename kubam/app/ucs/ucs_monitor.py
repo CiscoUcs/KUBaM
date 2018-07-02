@@ -16,17 +16,20 @@ class UCSMonitor(object):
         return server_name
 
     @staticmethod
-    def get_status(handle, server_name):
-        fsm = handle.query_dn(server_name + "/fsm")
-        if not fsm:
-            return None
-        response = dict()
-        response["fsm_status"] = fsm.fsm_status
-        response["sacl"] = fsm.sacl
-        response["current_fsm"] = fsm.current_fsm
-        response["progress"] = fsm.progress
-        response["completion_time"] = fsm.completion_time
-        return response
+    def get_status(handle, servers):
+        all_r = dict()
+        for s in servers:
+            fsm = handle.query_dn(s['dn'] + "/fsm")
+            if not fsm:
+                return None
+            response = dict()
+            response["fsm_status"] = fsm.fsm_status
+            response["sacl"] = fsm.sacl
+            response["current_fsm"] = fsm.current_fsm
+            response["progress"] = fsm.progress
+            response["completion_time"] = fsm.completion_time
+            all_r[s['dn']] = response
+        return all_r
 
     @staticmethod
     def get_fsm(handle, server_name):
