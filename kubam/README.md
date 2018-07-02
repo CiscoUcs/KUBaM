@@ -300,4 +300,6 @@ python2 -m unittest test.test_app.FlaskTestCase
 >>> b = handle.query_classid(class_id = "ComputeBlade")
 >>> from ucscsdk.mometa.compute.ComputeBlade import ComputeBlade
 >>> print(b[0])
+
 ```
+
