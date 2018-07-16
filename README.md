@@ -12,5 +12,3 @@ We started with a [blog on PXEless automated installs](https://communities.cisco
 
 
 Ready to begin?  Then [get started with the official documentation](https://ciscoucs.github.io/kubam/)
-
-My test
