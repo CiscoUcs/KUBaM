@@ -36,7 +36,7 @@ pipeline:
     script: 
       - docker rm -f kubam || true
       - docker pull kubam/kubam:v2
-      - sudo docker run -p 80:80 -d -v /home/vallard/kubam:/kubam --device /dev/fuse --cap-add SYS_ADMIN --name kubam kubam/kubam:v2
+      - sudo docker run -p 80:80 -d -v /share/kubam:/kubam --device /dev/fuse --cap-add SYS_ADMIN --name kubam kubam/kubam:v2
 
   # use Cisco Spark to notify that build was successful. 
   notify:
