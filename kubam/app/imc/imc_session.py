@@ -6,11 +6,22 @@ from urllib2 import HTTPError
 
 
 class IMCSession(object):
+    @staticmethod
+    def get_version(handle):
+        dn = "sys/mgmt/fw-system"
+        firmware = handle.query_dn(dn)
+        return firmware.version
+
+    def ensure_version(self, handle):
+        version = self.get_version(handle)
+        if version.startswith('3'):
+            return None
+        return "Unsupported UCS firmware version: {0}. Please update to at least 3.0".format(version)
     # Get the current firmware version.  Returns something like: 3.1(2b)
     def login(self, username, password, server):
         # Test if the server reachable
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(20)
+        s.settimeout(10)
         try:
             result = s.connect_ex((server, 443))
             if result != 0:
@@ -32,9 +43,9 @@ class IMCSession(object):
             print "Issue logging in. Please check that all parameters are correct"
             print e
             return None, "Issue logging in. Please check that all parameters are correct."
-
-        msg = self.ensure_version(handle)
-        return handle, msg
+        #TODO: get the right version of IMC firmware.  Tested on 3.0(4a)
+        #msg = self.ensure_version(handle)
+        return handle, None
 
     @staticmethod
     def logout(handle):
