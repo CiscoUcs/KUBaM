@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, current_app
 from flask_cors import cross_origin
 from ucs import UCSServer, UCSTemplate, UCSUtil
 from ucsc import UCSCServer, UCSCTemplate, UCSCUtil
-from imc import IMCUtil
+from imc import IMCServer, IMCUtil
 from db import YamlDB
 from config import Const
 from helper import KubamError
@@ -395,6 +395,16 @@ def create_vmedia(server_group):
 
         err, msg = UCSCServer.make_vmedias(handle, org, kubam_ip, oses)
         UCSCUtil.ucsc_logout(handle)
+    elif sg['type'] == 'imc':
+         
+        try:
+            handle = IMCUtil.imc_login(sg)
+        except KubamError as e:
+            return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+
+        err, msg = IMCServer.mount_media(handle, kubam_ip, hosts[0], oses[0])
+        UCSCUtil.ucsc_logout(handle)
+            
 
     if err != 0:
         return jsonify({'error': msg}), Const.HTTP_BAD_REQUEST
