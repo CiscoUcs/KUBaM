@@ -90,29 +90,3 @@ def deploy_image_handler():
     else:
         j, rc = Deployments.list_images()
     return jsonify(j), rc
-
-
-# The grand daddy of them all, it is what deploys everything
-@deploy.route(Const.API_ROOT + "/deploy", methods=['POST'])
-@cross_origin()
-def deploy_server():
-    err, msg = UCSProfile.make_ucs()
-    if err != 0:
-        return jsonify({'error': msg}), 400
-
-    # now call the deployment!
-    return jsonify({"status": "ok"}), 201
-
-
-# Dangerous command, it will undo everything
-@deploy.route(Const.API_ROOT + "/deploy", methods=['DELETE'])
-@cross_origin()
-def destroy_server():
-    current_app.logger.info("Deleting deployment")
-    err, msg = UCSProfile.destroy_ucs()
-    if err != 0:
-        return jsonify({'error:': msg}), 400
-    elif msg == "ok":
-        return jsonify({'status': "ok"}), 201
-    else:
-        return jsonify({'status': msg}), 200

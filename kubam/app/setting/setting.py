@@ -30,9 +30,9 @@ def get_kubam_ip():
 @cross_origin()
 def update_kubam_ip():
     if not request.json:
-        return jsonify({"error": "expected request with kubam_ip "}), Const.HTTP_BAD_REQUEST
+        return jsonify({"error": "no payload sent with request"}), Const.HTTP_BAD_REQUEST
     if "kubam_ip" not in request.json:
-        return jsonify({"error": "expected request with kubam_ip "}), Const.HTTP_BAD_REQUEST
+        return jsonify({"error": "expected request with kubam_ip {0}".format(request)}), Const.HTTP_BAD_REQUEST
 
     kubam_ip = request.json['kubam_ip']
     err, msg = db.update_kubam_ip(Const.KUBAM_CFG, kubam_ip)

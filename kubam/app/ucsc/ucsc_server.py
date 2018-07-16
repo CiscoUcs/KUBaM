@@ -25,16 +25,21 @@ class UCSCServer(object):
 
         if action in ["on", "off"] and server["service_profile"] == "":
             raise KubamError("Can not power {0}, no service profile associated with {1}".format(action, server["dn"]))
-        from ucscsdk.mometa.ls.LsPower import LsPower
-        # use the distinguished name since sp may belong somewhere else. 
-        mo = LsPower(parent_mo_or_dn=server["dn"],
-                     state=st)
+        from ucscsdk.mometa.ls.LsServerOperation import LsServerOperation
+        # UCS central requires a few different ways of doing remote calls to the server.  
+        # an example looks as follows:
+        #  mo = LsServerOperation(parent_mo_or_dn="org-root/org-SLCLAB3/req-SLC-KVM-02/inst-1009",
+        #                state="admin-up") 
+        # notice the 'ls-' is changed to 'req-' and the domain ID is appended to the end. 
+        # also instaed of handle.add_mo set_mo seems to be the way to make this work.
+        mo_name = "{0}/inst-{1}".format(server["service_profile"], server['domain_id'])
+        mo_name = mo_name.replace("/ls-", "/req-")
+        mo = LsServerOperation(parent_mo_or_dn=mo_name,  state=st)
         handle.add_mo(mo, True)
         try:
             handle.commit()
         except UcscException as err:
-            raise KubamError("{0}".format(err))        
-
+            raise KubamError("{0}\n{1}".format(mo, err))        
 
 
     @staticmethod

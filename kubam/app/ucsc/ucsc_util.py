@@ -107,7 +107,7 @@ class UCSCUtil(object):
                         found = True
                         r_s.append(real)
                 if not found:
-                    raise KubamError("server {0} does not exist: {1}".format(s, b_parts))
+                    raise KubamError("server {0} does not exist:".format(s))
         if "rack_servers" in servers:
             for s in servers["rack_servers"]:
                 found = False

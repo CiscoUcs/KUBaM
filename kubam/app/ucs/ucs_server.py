@@ -56,6 +56,7 @@ class UCSServer(object):
 
         if action in ["on", "off"] and server["service_profile"] == "":
             raise KubamError("Can not power {0}, no service profile associated with {1}".format(action, server["dn"]))
+
         from ucsmsdk.mometa.ls.LsPower import LsPower
         mo = LsPower(parent_mo_or_dn=server["service_profile"],
                      state=st)
