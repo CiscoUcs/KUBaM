@@ -7,27 +7,14 @@ from urllib2 import HTTPError
 
 class IMCSession(object):
     # Get the current firmware version.  Returns something like: 3.1(2b)
-    @staticmethod
-    def get_version(handle):
-        dn = "sys/mgmt/fw-system"
-        firmware = handle.query_dn(dn)
-        return firmware.version
-
-    def ensure_version(self, handle):
-        version = self.get_version(handle)
-        if version.startswith('3'):
-            return None
-        return "Unsupported IMC firmware version: {0}. Please update to at least 3.0".format(version)
-
-    # Returns handle or error message
     def login(self, username, password, server):
         # Test if the server reachable
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(2)
+        s.settimeout(20)
         try:
-            result = s.connect_ex((server, 80))
+            result = s.connect_ex((server, 443))
             if result != 0:
-                return None, "{0} is not reachable".format(server)
+                return None, "{0} on port 443 is not reachable".format(server)
             s.close()
         except socket.error as err:
             return None, "IMC Login Error: {0} {1}".format(server, err.strerror)
