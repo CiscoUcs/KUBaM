@@ -10,5 +10,4 @@ No PXE, DHCP, TFTP, or complicated network setup required. You don't even have t
 ## Introduction
 We started with a [blog on PXEless automated installs](https://communities.cisco.com/community/technology/datacenter/compute-and-storage/ucs_management/blog/2017/04/25/pxe-less-automated-installation-of-centosredhat-on-ucs). From there we evolved to an open source tool that could make this process easier.
 
-
 Ready to begin?  Then [get started with the official documentation](https://ciscoucs.github.io/kubam/)
