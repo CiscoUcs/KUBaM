@@ -402,10 +402,13 @@ def create_vmedia(server_group):
         except KubamError as e:
             return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
 
-        err, msg = IMCServer.mount_media(handle, kubam_ip, hosts[0], oses[0])
-        UCSCUtil.ucsc_logout(handle)
+        try:
+            IMCServer.mount_media(handle, kubam_ip, hosts[0]['name'], oses[0])
+        except KubamError as e:
+            IMCUtil.imc_logout(handle)
+            return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
+        IMCUtil.imc_logout(handle)
             
-
     if err != 0:
         return jsonify({'error': msg}), Const.HTTP_BAD_REQUEST
    
