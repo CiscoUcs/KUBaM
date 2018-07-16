@@ -26,6 +26,7 @@ pipeline:
     when: 
       branch: v2.0
 
+
   # bring up our test machine so it has the latest API. 
   ssh:
     image: appleboy/drone-ssh
