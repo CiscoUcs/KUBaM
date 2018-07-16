@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request, current_app
 from flask_cors import cross_origin
 from ucs import UCSServer, UCSTemplate, UCSUtil
 from ucsc import UCSCServer, UCSCTemplate, UCSCUtil
+from imc import IMCUtil
 from db import YamlDB
 from config import Const
 from helper import KubamError
@@ -37,16 +38,25 @@ class Servers(object):
         if err != 0:
             return {"error": msg}, Const.HTTP_BAD_REQUEST
         # Make sure we can log in first.
+        if not 'type' in req:
+            return {"error": "No server type sent as part of request"}, Const.HTTP_UNAUTHORIZED
         if req['type'] == "ucsm":
             try:
                 UCSUtil.check_ucs_login(req)
             except KubamError as e:
                 return {"error": str(e)}, Const.HTTP_UNAUTHORIZED
-        if req["type"] == "ucsc":
+        elif req["type"] == "ucsc":
             try:
                 UCSCUtil.check_ucsc_login(req)
             except KubamError as e: 
                 return {"error":str(e)}, Const.HTTP_UNAUTHORIZED
+        elif req["type"] == "imc":
+            try: 
+                IMCUtil.check_imc_login(req)
+            except KubamError as e: 
+                return {"error":str(e)}, Const.HTTP_UNAUTHORIZED
+        else:
+            return {"error": "type: {0} is not recognized".format(req["type"])}, Const.HTTP_UNAUTHORIZED
 
         db = YamlDB()
         err, msg = db.new_server_group(Const.KUBAM_CFG, req)
