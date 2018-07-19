@@ -17,6 +17,11 @@ os_dict = {
         "key_string": "7.4",
         "dir": "centos7.4"
     },
+    "centos7.5": {
+        "key_file": ".discinfo",
+        "key_string": "7.5",
+        "dir": "centos7.5"
+    },
     "redhat7.2": {
         "key_file": ".discinfo",
         "key_string": "7.2",
@@ -31,6 +36,11 @@ os_dict = {
         "key_file": ".discinfo",
         "key_string": "7.4",
         "dir": "redhat7.4"
+    },
+    "redhat7.5": {
+        "key_file": ".discinfo",
+        "key_string": "7.5",
+        "dir": "redhat7.5"
     },
     "esxi6.5" : {
         "key_file": ".DISCINFO",
@@ -158,12 +168,16 @@ def mkboot(os):
         return mkboot_centos("centos", "7.3")
     elif os == "centos7.4":
         return mkboot_centos("centos", "7.4")
+    elif os == "centos7.5":
+        return mkboot_centos("centos", "7.5")
     elif os == "redhat7.2":
         return mkboot_centos("redhat", "7.2")
     elif os == "redhat7.3":
         return mkboot_centos("redhat", "7.3")
     elif os == "redhat7.4":
         return mkboot_centos("redhat", "7.4")
+    elif os == "redhat7.5":
+        return mkboot_centos("redhat", "7.5")
     return 0, "success"
     
 # determine version of OS and make boot dir. 
