@@ -586,7 +586,7 @@ class YamlDB(object):
         if "server_groups" not in config:
             return 1, "no server groups defined.".format(server_group)
         # get the existing server groups and add them 
-        indexes = [i for i, x in enumerate(config['server_groups']) if x['id'] == server_group]
+        indexes = [i for i, x in enumerate(config['server_groups']) if x['name'] == server_group]
         if len(indexes) < 1:
             return 1, "server group {0} does not exist.".format(server_group)
         config['server_groups'][indexes[0]]['server_pool'] = server_hash
@@ -606,7 +606,7 @@ class YamlDB(object):
             return 0, None, []
 
         # get the server group from the server groups
-        sg = [x for x in config['server_groups'] if x['id'] == server_group]
+        sg = [x for x in config['server_groups'] if x['name'] == server_group]
         if len(sg) < 1:
             return 0, None, []
 

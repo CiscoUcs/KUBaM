@@ -237,11 +237,9 @@ def select_servers(server_group):
     if "servers" not in request.json:
         return jsonify({"error": "expected 'servers' with hash of servers in request"}), Const.HTTP_BAD_REQUEST
     # we expect servers to be a hash of like:
-    # {blades: ["1/1", "1/2",..], rack: ["6", "7"]}
+    # {servers: {blades: ["1/1", "1/2",..], rack: ["6", "7"]}}
     ucs_servers = request.json['servers']
-    # translate to db
-    usc_servers = UCSUtil.servers_to_db(ucs_servers)
-    if usc_servers:
+    if ucs_servers:
         db = YamlDB()
         err, msg = db.update_ucs_servers(Const.KUBAM_CFG, ucs_servers, server_group)
         if err != 0:

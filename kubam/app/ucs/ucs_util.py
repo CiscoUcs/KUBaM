@@ -176,8 +176,8 @@ class UCSUtil(object):
                             real_server['selected'] = True
                             ucs_servers[i] = real_server
             elif real_server['type'] == "rack":
-                if "rack_servers" in db_servers:
-                    for s in db_servers['rack_servers']:
+                if "rack" in db_servers:
+                    for s in db_servers['rack']:
                         if real_server['rack_id'] == s:
                             real_server['selected'] = True
                             ucs_servers[i] = real_server
