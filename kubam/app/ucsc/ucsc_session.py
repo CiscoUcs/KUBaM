@@ -17,8 +17,8 @@ class UCSCSession(object):
             if result != 0:
                 return None, "{0} on port 443 is not reachable.".format(server)
             s.close()
-        except socket.error as err:
-            return None, "UCS Central connection error: {0} {1}".format(server, err.strerror)
+        except Exception as e:
+            return None, "UCS Central connection error: {0} {1}".format(server, e)
             
         handle = UcscHandle(server, username, password)
         try:
