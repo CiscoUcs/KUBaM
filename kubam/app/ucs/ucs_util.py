@@ -145,6 +145,7 @@ class UCSUtil(object):
         return err, msg, full_org
 
     # Translates the JSON we get from the API to selected servers in the database.
+    #TODO: see if we can remove this method. 
     @staticmethod
     def servers_to_db(ucs_servers):
         # Gets a server array list and gets the selected servers and puts them in the database form

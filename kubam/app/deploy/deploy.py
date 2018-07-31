@@ -34,6 +34,8 @@ class Deployments(object):
         err, msg, iso_map = db.get_iso_map(Const.KUBAM_CFG)
         if err != 0:
             return 1, msg, None
+        if iso_map == None:
+            return 1, "Please upload ISO Images first", None
         for i in os_list:
             valid_iso = [x for x in iso_map if x["os"] == i]
             if not i in [x["os"] for x in iso_map]:
