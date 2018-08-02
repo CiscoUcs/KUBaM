@@ -274,13 +274,13 @@ def deploy_servers(server_group):
         return jsonify({"error": "No hosts defined in the server group"}), Const.HTTP_BAD_REQUEST
 
     if sg['type'] == 'ucsc':
-        return deploy_ucsc(hosts, org) 
+        return deploy_ucsc(sg, hosts, org) 
     elif sg['type'] == 'ucs':
-        return deploy_ucs(hosts, org)
+        return deploy_ucs(sg, hosts, org)
 
     return jsonify({"error": "server group type is not supported.".format(sg['type'])}), Const.HTTP_BAD_REQUEST
   
-def deploy_ucs(hosts, org):
+def deploy_ucs(sg, hosts, org):
     """
     Deploy UCS hosts
     """
@@ -305,7 +305,7 @@ def deploy_ucs(hosts, org):
     return jsonify({"status": hosts}), Const.HTTP_CREATED
 
 
-def deploy_ucsc(hosts, org):  
+def deploy_ucsc(sg, hosts, org):  
     """
     Deploy UCSC resources
     """
