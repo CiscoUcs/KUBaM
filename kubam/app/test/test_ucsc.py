@@ -8,8 +8,10 @@ class UCSCUnitTests(unittest.TestCase):
     """
     session = UCSCSession()
     handle, err = session.login("admin", "cisco.123", "10.94.132.71")
+    assert(err == 0) 
 
     def test_serverlist(self):
+        print "handle: ",  self.handle
         servers = UCSCEquipment.list_servers(self.handle)
         #print servers
         assert(servers != "")
