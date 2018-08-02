@@ -216,19 +216,19 @@ class DBUnitTests(unittest.TestCase):
         assert(err == 0)
 
         # see that we can get them if there are none. 
-        err, msg, servers = self.db.get_ucs_servers(test_file, fg['id'])
+        err, msg, servers = self.db.get_ucs_servers(test_file, fg['name'])
         assert(err == 0)
         # see that we can add new blades to the group
         err, msg = self.db.update_ucs_servers(
-            test_file, {"blades": ["1/1", "1/2"], "rack_servers": ["7", "8", "9"]}, fg['id']
+            test_file, {"blades": ["1/1", "1/2"], "rack_servers": ["7", "8", "9"]}, fg['name']
         )
         assert(err == 0)
         # make sure we actually got new servers
-        err, msg, servers = self.db.get_ucs_servers(test_file, fg['id'])
+        err, msg, servers = self.db.get_ucs_servers(test_file, fg['name'])
         assert(err == 0)
         assert("blades" in servers)
 
-        err, msg = self.db.delete_server_group(test_file, fg['id'])
+        err, msg = self.db.delete_server_group(test_file, fg['name'])
         assert(err == 0)
     
     def test_decoderkey(self):
