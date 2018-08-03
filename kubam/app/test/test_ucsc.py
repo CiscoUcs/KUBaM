@@ -7,8 +7,8 @@ class UCSCUnitTests(unittest.TestCase):
     Tests for connecting to UCS Central
     """
     session = UCSCSession()
-    handle, err = session.login("admin", "cisco.123", "10.94.132.71")
-    assert(err == 0) 
+    handle, err = session.login("admin", "Cisco.123", "10.93.140.102")
+    assert(err == None)
 
     def test_serverlist(self):
         print "handle: ",  self.handle
@@ -23,7 +23,7 @@ class UCSCUnitTests(unittest.TestCase):
 
     def test_sp_crud(self):
         err, msg = UCSCServer.create_server(self.handle, "org-root/ls-TestTemplate", "test_kubam_sp", "org-root")
-        #print err, msg
+        print err, msg
         assert(err == 0)
         
         err, msg = UCSCServer.delete_server(self.handle, "test_kubam_sp", "org-root")
