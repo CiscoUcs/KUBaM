@@ -28,16 +28,17 @@ pipeline:
 
 
   # bring up our test machine so it has the latest API. 
-  #ssh:
-  #  image: appleboy/drone-ssh
-  #  host: 10.93.234.95
-  #  username: root
-  #  port: 22
-  #  secrets: [ ssh_password ]
-  #  script: 
-  #    - docker rm -f kubam || true
-  #    - docker pull kubam/kubam:v2
-  #    - sudo docker run -p 80:80 -d -v /share/kubam:/kubam --device /dev/fuse --cap-add SYS_ADMIN --name kubam kubam/kubam:v2
+  ssh:
+    image: appleboy/drone-ssh
+    host: 10.93.140.118
+    username: root
+    port: 22
+    password: Cisco.123
+    #secrets: [ ssh_password ]
+    script: 
+      - docker rm -f kubam || true
+      - docker pull kubam/kubam:v2
+      - sudo docker run -p 80:80 -d -v /share/kubam:/kubam --device /dev/fuse --cap-add SYS_ADMIN --name kubam kubam/kubam:v2
 
   # use Cisco Spark to notify that build was successful. 
   notify:
