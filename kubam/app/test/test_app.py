@@ -7,10 +7,10 @@ from config import Const
 class FlaskTestCase(unittest.TestCase):
     gdata = {
         "credentials": {
-            "ip": "10.93.234.238", "password": "oicu812!", "user": "admin"
+            "ip": "10.93.130.108", "password": "admin", "user": "admin"
         },
         "type": "ucsm",
-        "name": "werners machine"
+        "name": "LL1-UCS-3-FI-VIP"
     }
 
     newnet = {
@@ -48,7 +48,7 @@ class FlaskTestCase(unittest.TestCase):
             Const.API_ROOT2 + '/servers', content_type='application/json',
             data=json.dumps(self.gdata)
         )
-        # print response.data
+        print response.data
         self.assertEqual(response.status_code, 201)
         response = tester.get(Const.API_ROOT2 + '/servers', content_type='application/json')
         # print response.data
