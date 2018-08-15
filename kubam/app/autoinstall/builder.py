@@ -54,10 +54,13 @@ class Builder(object):
         netinfo = netinfo[0] # get the first element of the list. 
         vlan = ""
         proxyAddr = ""
+        keys = []
         if "vlan" in netinfo:
             vlan = netinfo["vlan"]
         if "proxy" in netinfo:
             proxyAddr = netinfo["proxy"]
+        if "public_keys" in config:
+            the_keys = config["public_keys"]
         
         j2_env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True)
         f = j2_env.get_template(template_file).render(
@@ -75,7 +78,7 @@ class Builder(object):
             ntp=netinfo['ntpserver'],
             gateway=netinfo['gateway'],
             vlan=vlan,
-            keys=config['public_keys']
+            keys=the_keys
         )
         j = ""
         if node["os"] in ["win2016", "win2012r2"]:
