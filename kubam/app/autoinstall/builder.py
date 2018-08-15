@@ -54,7 +54,7 @@ class Builder(object):
         netinfo = netinfo[0] # get the first element of the list. 
         vlan = ""
         proxyAddr = ""
-        keys = []
+        the_keys = []
         if "vlan" in netinfo:
             vlan = netinfo["vlan"]
         if "proxy" in netinfo:
