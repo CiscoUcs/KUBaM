@@ -86,6 +86,7 @@ def disk_operation(server_group):
     if request.json and "servers" in request.json:
         wanted = request.json["servers"]
 
+
     ## login to UCS Manager and do the action. 
     if sg["type"] == "ucsm":
         try:
