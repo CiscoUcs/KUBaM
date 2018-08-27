@@ -344,6 +344,7 @@ def clone_template(server_group):
     # TODO Create me
     pass
 
+
 @servers.route(Const.API_ROOT2 + "/servers/<server_group>/vmedia", methods=['POST'])
 @cross_origin()
 def create_vmedia(server_group):

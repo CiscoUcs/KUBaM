@@ -115,12 +115,18 @@ class UCSServer(object):
         server = handle.query_dn(dn)
         return server
     
-    # Takes the server in standard Kubam mode which means it's just a hash, not a ComputeBlade object.
     @staticmethod
     def list_disks(handle, server):
+        """
+        Takes in a server object and gets the drives. 
+        """
+        from ucsmsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
+        from ucsmsdk.mometa.compute.ComputeBlade import ComputeBlade
         # Get each controller of the server.
         all_disks = []
-        chassis, slot = server.server_id.split("/")
+        #chassis, slot = server.server_id.split("/")
+        chassis = server["chassis_id"]
+        slot = server["slot"]
         cquery = "(dn, \"sys/chassis-{0}/blade-{1}/board.*\", type=\"re\")".format(chassis, slot)
         controllers = handle.query_classid("StorageController", cquery)
         # Get the disks of each controller.
@@ -133,13 +139,14 @@ class UCSServer(object):
         return all_disks
 
     # Reset the disks of a specific server to unconfigured good, so they can be used
-    def reset_disks(self, handle, server):
+    @staticmethod
+    def reset_disks(handle, server):
         from ucsmsdk.mometa.storage.StorageLocalDisk import StorageLocalDisk
 
-        compute_blade = self.list_blade(handle, server)
-        if compute_blade.oper_state != "unassociated":
-            return
-        disks = self.list_disks(handle, compute_blade)
+        #compute_blade = self.list_blade(handle, server)
+        #if compute_blade.oper_state != "unassociated":
+        #    return
+        disks = UCSServer.list_disks(handle, server)
         for d in disks:
             if d.disk_state == "jbod":
                 print "setting to unconfigured good."

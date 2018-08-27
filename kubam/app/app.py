@@ -8,10 +8,12 @@ from monitor import monitor
 from network import networks
 from server import servers
 from setting import setting
+from disks import disks
 
 app = Flask(__name__)
 app.register_blueprint(aci)
 app.register_blueprint(deploy)
+app.register_blueprint(disks)
 app.register_blueprint(hosts)
 app.register_blueprint(isos)
 app.register_blueprint(monitor)

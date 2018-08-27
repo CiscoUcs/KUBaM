@@ -192,6 +192,11 @@ class UCSUtil(object):
         and servers: stuff we get from the API like {"blades": [1/1, 2/1], "rack_servers": ["1", "2",...]}
         and filters them
         """
+        # if we don't get an array or hash, then we just return all
+        # of them. 
+        if servers == "all":
+            return objects
+
         r_s = [] 
         if "blades" in servers:
             for s in servers["blades"]:
