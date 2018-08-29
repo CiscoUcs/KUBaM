@@ -13,9 +13,6 @@ ADD kubam/ansible /usr/share/kubam/ansible
 # get our scripts installed. 
 ADD kubam/scripts/* /usr/bin/
 
-# install patches to UCS Central 
-ADD kubam/patches/ucscsdk/ucscmeta.py /usr/lib/python2.7/site-packages/ucscsdk/
-ADD kubam/patches/ucscsdk/ConfigRemoteResolveChildrenMeta.py /usr/lib/python2.7/site-packages/ucscsdk/methodmeta/
 ADD kubam/app /app
 EXPOSE 80
 CMD ["/bin/bash", "/usr/bin/init.sh"]

@@ -22,3 +22,6 @@ RUN curl https://bootstrap.pypa.io/get-pip.py | python - && \
 # make output of nginx logs go to stdout so we see in docker.
 RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
+
+ADD patches/ucscsdk/ucscmeta.py /usr/lib/python2.7/site-packages/ucscsdk/
+ADD patches/ucscsdk/ConfigRemoteResolveChildrenMeta.py /usr/lib/python2.7/site-packages/ucscsdk/methodmeta/
