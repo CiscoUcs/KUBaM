@@ -311,3 +311,28 @@ class UCSCServer(object):
             if err != 0:
                 return err, msg
         return 0, ""
+
+
+    @staticmethod
+    def list_disks(handle, server):
+        """
+        Takes in a server object and gets the drives.
+        """
+        from ucscsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
+        from ucscsdk.mometa.compute.ComputeBlade import ComputeBlade
+        # Get each controller of the server.
+        all_disks = []
+        #chassis, slot = server.server_id.split("/")
+        chassis = server["chassis_id"]
+        slot = server["slot"]
+        cquery = "(dn, \"sys-{0}/chassis-{0}/blade-{1}/board.*\", type=\"re\")".format(chassis, slot)
+        controllers = handle.query_classid("StorageController", cquery)
+        print controllers
+        # Get the disks of each controller.
+        for c in controllers:
+            # Get the disks: c.dn: sys/chassis-1/blade-8/board/storage-SAS-1
+            dquery = "(dn, \"{0}\", type=\"re\")".format(c.dn)
+            disks = handle.query_classid("StorageLocalDisk", dquery)
+            for d in disks:
+                all_disks.append(d)
+        return all_disks

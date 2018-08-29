@@ -293,13 +293,20 @@ python2 -m unittest test.test_app.FlaskTestCase
 ### Using the REPL
 
 ```
->>> from ucscsdk.ucschandle import UcscHandle
->>> from ucscsdk.ucscexception import UcscException
->>> handle = UcscHandle("10.94.132.71", "admin", "cisco.125")
->>> handle.login()
->>> b = handle.query_classid(class_id = "ComputeBlade")
->>> from ucscsdk.mometa.compute.ComputeBlade import ComputeBlade
->>> print(b[0])
+from ucscsdk.ucschandle import UcscHandle
+from ucscsdk.ucscexception import UcscException
+handle = UcscHandle("10.93.140.102", "admin", "Cisco.123")
+handle.login()
+b = handle.query_classid(class_id = "ComputeBlade")
+from ucscsdk.mometa.compute.ComputeBlade import ComputeBlade
+print(b[0])
 
 ```
+
+### Adding to UCS Central
+
+We need to add managed methods. 
+/usr/lib/python2.7/site-packages/ucscsdk
+
+ucscmeta.py
 

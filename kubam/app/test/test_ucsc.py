@@ -40,3 +40,4 @@ class UCSCUnitTests(unittest.TestCase):
     def test_list_servers(self):
         servers = UCSCServer.list_servers(self.handle)
         print servers
+

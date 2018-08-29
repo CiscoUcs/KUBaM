@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
-from ucs import UCSUtil, UCSMonitor, UCSServer
-from ucsc import UCSCUtil, UCSCMonitor, UCSCServer
+from ucs import UCSUtil, UCSServer
+from ucsc import UCSCUtil, UCSCServer
 from db import YamlDB
 from config import Const
 from helper import KubamError
@@ -45,8 +45,31 @@ class Disks(object):
         """
         Get all the drives of the servers listed and print them out. 
         """
-        pass 
-
+        try:
+            all_servers = UCSCServer.list_servers(handle)
+            ucs_servers = UCSCUtil.servers_to_objects(all_servers, wanted)
+        except KubamError as e:
+            UCSCUtil.ucsc_logout(handle)
+            return {"error": str(e)}, Const.HTTP_BAD_REQUEST
+        disks = {} 
+        from ucscsdk.mometa.storage.StorageLocalDisk import StorageLocalDisk
+        for i in ucs_servers:
+            try:
+                server_disks = UCSCServer.list_disks(handle, i)
+                disks[i['dn']] = []
+                for d in server_disks:
+                    # d.__dict__ flattens the object to a dictionary. 
+                    kv = d.__dict__
+                    kv = dict((key, value) for key, value in kv.iteritems() if not key.startswith('_') )
+                    disks[i['dn']].append( kv)
+            except KubamError as e:
+                UCSUtil.ucs_logout(handle)
+                return {"error": str(e)}, Const.HTTP_BAD_REQUEST
+        
+        out = UCSCUtil.dn_hash_to_out(disks)
+        UCSCUtil.ucsc_logout(handle)
+        return out, Const.HTTP_OK
+        
     @staticmethod
     def delete_ucsm(handle, wanted):
         try:
@@ -102,6 +125,10 @@ def disk_operation(server_group):
 
     ## login to UCS Central and do the action
     elif sg["type"] == "ucsc":
+        try:
+            handle = UCSCUtil.ucsc_login(sg)
+        except KubamError as e:
+            return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
         if request.method == "DELETE":
-            return Disks.delete_ucsc(sg, wanted)
-        return Disks.list_ucsc(sg, wanted)
+            return Disks.delete_ucsc(handle, wanted)
+        return Disks.list_ucsc(handle, wanted)

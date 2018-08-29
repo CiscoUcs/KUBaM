@@ -20,7 +20,7 @@ class UCSCSession(object):
         except Exception as e:
             return None, "UCS Central connection error: {0} {1}".format(server, e)
             
-        handle = UcscHandle(server, username, password)
+        handle = EUcscHandle(server, username, password)
         try:
             handle.login()
         except UcscException as err:
@@ -42,3 +42,22 @@ class UCSCSession(object):
             handle.logout()
         except UcscException as e:
             raise KubamError(str(e))
+
+
+class EUcscHandle(UcscHandle):
+    
+    def rawXML(self, xml):
+        from ucscsdk import ucscxmlcodec
+        # send the XML to UCS Central
+
+        response_str = self.post_xml(xml, dme="resource-mgr")
+        try: 
+            dn_dict = {}
+            if response_str:
+                response = ucscxmlcodec.from_xml_str(response_str, self)
+            for out_mo in response.out_configs.child:
+                dn_dict[out_mo.dn] = out_mo    
+            return dn_dict
+        except:
+            raise
+        return None

@@ -15,6 +15,7 @@ pipeline:
       - python -m unittest test.test_sg.SGUnitTests
       - python -m unittest test.test_autoinstall.AutoInstallUnitTests
       - python -m unittest test.test_ucsc.UCSCUnitTests
+      - python -m unittest test.test_monitor.MonitorUnitTests
   
   # publish docker image to docker hub
   docker:

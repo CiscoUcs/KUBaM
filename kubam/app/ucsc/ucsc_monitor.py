@@ -22,10 +22,20 @@ class UCSCMonitor(object):
     @staticmethod
     def get_fsm(handle, server):
         from ucscsdk.mometa.fsm.FsmStatus import FsmStatus
-        fsm = handle.query_dn("compute/sys-{0}/status-sys_chassis-{1}_blade-{2}".format(server['domain_id'], server['chassis_id'], server['slot']))
-        if not fsm:
-            return {"stages": "no information"}
-        stages = handle.query_children(in_mo=fsm)
+        from ucscsdk.mometa.config.ConfigFsmStage import ConfigFsmStage
+        
+        stages = handle.rawXML('''
+<configRemoteResolveChildren
+    cookie="{3}"
+    inDn="sys/chassis-{1}/blade-{2}/fsm"
+    inDomainId="{0}"
+    inHierarchical="true">
+        <inFilter>
+        </inFilter>
+</configRemoteResolveChildren>'''.format(server['domain_id'], server['chassis_id'], server['slot'], handle.cookie)) 
+       
+        # will return a hash of  dn-name -> mo
+        stages =  stages.values()
         # Sorting the list of stages by the order
         stages.sort(key=lambda x: int(x.order))
         tmp = list()
