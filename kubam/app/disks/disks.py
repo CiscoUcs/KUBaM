@@ -78,6 +78,7 @@ class Disks(object):
         except KubamError as e:
             UCSUtil.ucs_logout(handle)
             return {"error": str(e)}, Const.HTTP_BAD_REQUEST
+        return {"status":"ok"}, 201
         from ucsmsdk.mometa.storage.StorageLocalDisk import StorageLocalDisk
         for i in ucs_servers:
             try:
@@ -85,13 +86,29 @@ class Disks(object):
             except KubamError as e: 
                 UCSUtil.ucs_logout(handle)
                 return {"error": str(e)}, Cont.HTTP_BAD_REQUEST
-        UCSUtil.ucs_logout(handle)
         return {"status" : "ok"}, 201
         
 
     @staticmethod
     def delete_ucsc(handle, wanted):
-        pass
+        """
+        sets the JBOD disks to unconfigured good.
+        """
+        try:
+            all_servers = UCSCServer.list_servers(handle)
+            ucs_servers = UCSCUtil.servers_to_objects(all_servers, wanted)
+        except KubamError as e:
+            UCSCUtil.ucsc_logout(handle)
+            return {"error": str(e)}, Const.HTTP_BAD_REQUEST
+        from ucscsdk.mometa.storage.StorageLocalDisk import StorageLocalDisk
+        for i in ucs_servers:
+            try:
+                UCSCServer.reset_disks(handle, i)
+            except KubamError as e: 
+                UCSCUtil.ucsc_logout(handle)
+                return {"error": str(e)}, Cont.HTTP_BAD_REQUEST
+        return {"status" : "ok"}, 201
+        
 
 @disks.route(Const.API_ROOT2 + "/servers/<server_group>/disks", methods=["GET", "DELETE"])
 @cross_origin()
@@ -106,9 +123,9 @@ def disk_operation(server_group):
     except KubamError as e:
         return jsonify({"error": str(e)}), Const.HTTP_BAD_REQUEST
 
+
     if request.json and "servers" in request.json:
         wanted = request.json["servers"]
-
 
     ## login to UCS Manager and do the action. 
     if sg["type"] == "ucsm":
@@ -129,8 +146,9 @@ def disk_operation(server_group):
             handle = UCSCUtil.ucsc_login(sg)
         except KubamError as e:
             return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
+
         if request.method == "DELETE":
-            return Disks.delete_ucsc(handle, wanted)
+            js, rc = Disks.delete_ucsc(handle, wanted)
         js, rc =  Disks.list_ucsc(handle, wanted)
         return jsonify(js), rc
 

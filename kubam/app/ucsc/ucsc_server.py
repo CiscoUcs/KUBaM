@@ -322,15 +322,11 @@ class UCSCServer(object):
         from ucscsdk.mometa.compute.ComputeBlade import ComputeBlade
         # Get each controller of the server.
         all_disks = []
-        #chassis, slot = server.server_id.split("/")
-        print server
         chassis = server["chassis_id"]
         slot = server["slot"]
         domain = server["domain_id"]
         cquery = "(dn, \"compute/sys-{0}/chassis-{1}/blade-{2}/board.*\", type=\"re\")".format(domain, chassis, slot)
-        print cquery
         controllers = handle.query_classid("StorageController", cquery)
-        print "Controllers are: ", controllers
         # Get the disks of each controller.
         for c in controllers:
             # Get the disks: c.dn: sys/chassis-1/blade-8/board/storage-SAS-1
@@ -339,3 +335,26 @@ class UCSCServer(object):
             for d in disks:
                 all_disks.append(d)
         return all_disks
+
+    @staticmethod
+    def reset_disks(handle, server):
+        from ucscsdk.mometa.storage.StorageLocalDisk import StorageLocalDisk
+        
+        disks = UCSCServer.list_disks(handle, server)
+        for d in disks:
+            if d.disk_state == "jbod":
+                parent = "/".join(d.dn.split("/")[:-1])
+                mo = StorageLocalDisk(
+                    parent_mo_or_dn=parent, id=str(d.id),
+                    admin_action="unconfigured-good",
+                    admin_virtual_drive_id="unspecified",
+                    admin_action_trigger="triggered"
+                )
+                handle.add_mo(mo, True)
+                try:
+                    handle.commit()
+                except UcscException as err:
+                    if err.error_code == "103":
+                        print "\talready set to unconfigured-good."
+                    else:
+                        print "error code"
