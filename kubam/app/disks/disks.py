@@ -131,4 +131,6 @@ def disk_operation(server_group):
             return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
         if request.method == "DELETE":
             return Disks.delete_ucsc(handle, wanted)
-        return Disks.list_ucsc(handle, wanted)
+        js, rc =  Disks.list_ucsc(handle, wanted)
+        return jsonify(js), rc
+

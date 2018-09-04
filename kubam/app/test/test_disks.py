@@ -7,7 +7,7 @@ from ucsc import UCSCServer, UCSCSession
 class DiskUnitTests(unittest.TestCase):
     """Tests for `ucs_server.py`."""
     
-    def test_list_disks(self):
+    def est_list_disks(self):
         ucs_session = UCSSession()
         handle, err = ucs_session.login("admin", "admin", "10.93.130.107")
         s = {"blades" : ["1/1"]} 
@@ -15,7 +15,7 @@ class DiskUnitTests(unittest.TestCase):
         assert(rc == 200)
         ucs_session.logout(handle)
     
-    def test_reset_disks(self):
+    def est_reset_disks(self):
         ucs_session = UCSSession()
         handle, err = ucs_session.login("admin", "admin", "10.93.130.107")
         s = {"blades" : ["1/1"]} 
@@ -25,7 +25,7 @@ class DiskUnitTests(unittest.TestCase):
     def test_list_disks_ucsc(self):
         session = UCSCSession()
         handle, err = session.login("admin", "Cisco.123", "10.93.140.102")
-        s = {"blades" : ["1009/1/1"]} 
+        s = {"blades" : ["1009/1/3"]} 
         d, rc = Disks.list_ucsc(handle, s)
         print d
         assert(rc == 200)

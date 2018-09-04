@@ -323,11 +323,14 @@ class UCSCServer(object):
         # Get each controller of the server.
         all_disks = []
         #chassis, slot = server.server_id.split("/")
+        print server
         chassis = server["chassis_id"]
         slot = server["slot"]
-        cquery = "(dn, \"sys-{0}/chassis-{0}/blade-{1}/board.*\", type=\"re\")".format(chassis, slot)
+        domain = server["domain_id"]
+        cquery = "(dn, \"compute/sys-{0}/chassis-{1}/blade-{2}/board.*\", type=\"re\")".format(domain, chassis, slot)
+        print cquery
         controllers = handle.query_classid("StorageController", cquery)
-        print controllers
+        print "Controllers are: ", controllers
         # Get the disks of each controller.
         for c in controllers:
             # Get the disks: c.dn: sys/chassis-1/blade-8/board/storage-SAS-1
