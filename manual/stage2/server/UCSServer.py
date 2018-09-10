@@ -15,7 +15,21 @@ def check_values(array, csv):
             return False
     return True
 
-
+def get_servers(handle):
+    """
+    Return the servers
+    """
+    from ucsmsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
+    from ucsmsdk.mometa.fabric.FabricComputeSlotEp import FabricComputeSlotEp
+    print "Listing Available UCS Servers"
+    filter_string = '(presence, "equipped")'
+    # get blades
+    blades = handle.query_classid("fabricComputeSlotEp", filter_string)
+    # get all connected rack mount servers.
+    servers = handle.query_classid("computeRackUnit")
+    m = blades + servers
+    return m
+    
 # get the available servers to put in the pool. 
 def select_kube_servers(handle):
     from ucsmsdk.mometa.compute.ComputeRackUnit import ComputeRackUnit
