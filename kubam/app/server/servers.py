@@ -542,7 +542,7 @@ def powerstat(server_group):
    
     if request.json and "servers" in request.json:
         wanted_servers = request.json["servers"]
-    
+    current_app.logger.info(wanted_servers) 
     if sg['type'] == "ucsm":
         powerstat = powerstat_ucsm(sg, wanted_servers)
     elif sg['type'] == "ucsc":
@@ -581,6 +581,8 @@ def powerstat_ucsc(sg, wanted_servers):
         return jsonify({"error": str(e)}), Const.HTTP_UNAUTHORIZED
     try: 
         powerstat = UCSCServer.list_servers(handle)
+        if not wanted_servers == "all":
+            powerstat = UCSCUtil.servers_to_objects(powerstat, wanted_servers)
         powerstat = UCSCUtil.objects_to_servers(powerstat, ["oper_power"])
     except KubamError as e:
         UCSCUtil.ucsc_logout(handle)
