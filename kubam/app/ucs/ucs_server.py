@@ -141,7 +141,7 @@ class UCSServer(object):
     # Reset the disks of a specific server to unconfigured good, so they can be used
     @staticmethod
     def reset_disks(handle, server):
-        from ucsmsdk.mometa.storage.StorageLocalDisk import StorageLocalDisk
+        from ucsmsdk.mometa.storage.StorageLocalDiskOperation import StorageLocalDiskOperation
 
         #compute_blade = self.list_blade(handle, server)
         #if compute_blade.oper_state != "unassociated":
@@ -149,12 +149,11 @@ class UCSServer(object):
         disks = UCSServer.list_disks(handle, server)
         for d in disks:
             if d.disk_state == "jbod":
-                print "setting to unconfigured good."
             # Get the first part of the dn which is the storage controller:
                 parent = "/".join(d.dn.split("/")[:-1])
 
-                mo = StorageLocalDisk(
-                    parent_mo_or_dn=parent, id=str(d.id),
+                mo = StorageLocalDiskOperation(
+                    parent_mo_or_dn=dn, id=str(d.id),
                     admin_action="unconfigured-good",
                     admin_virtual_drive_id="unspecified",  # Not available in 2.2(8g)
                     admin_action_trigger="triggered"

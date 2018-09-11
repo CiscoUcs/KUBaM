@@ -338,18 +338,22 @@ class UCSCServer(object):
 
     @staticmethod
     def reset_disks(handle, server):
-        from ucscsdk.mometa.storage.StorageLocalDisk import StorageLocalDisk
-        
+        """
+        Reset the disks to unconfigured good. 
+        """
+        from ucscsdk.mometa.storage.StorageLocalDiskOperation import StorageLocalDiskOperation
         disks = UCSCServer.list_disks(handle, server)
         for d in disks:
+            the_dn = d.dn
             if d.disk_state == "jbod":
-                parent = "/".join(d.dn.split("/")[:-1])
-                mo = StorageLocalDisk(
-                    parent_mo_or_dn=parent, id=str(d.id),
-                    admin_action="unconfigured-good",
-                    admin_virtual_drive_id="unspecified",
-                    admin_action_trigger="triggered"
+                mo = StorageLocalDiskOperation(
+                    parent_mo_or_dn=the_dn,
+
+                    lc="unconfigured-good",
+                    status="created,modified"
+
                 )
+                print mo
                 handle.add_mo(mo, True)
                 try:
                     handle.commit()
