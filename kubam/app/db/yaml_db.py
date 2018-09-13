@@ -725,11 +725,11 @@ class YamlDB(object):
     def get_public_keys(self, file_name):
         err, msg, config = self.open_config(file_name)
         if err == 1:
-            return err, msg, None
+            return err, msg, []
         elif err == 2:
-            return 0, None, None
+            return 0, None, []
         elif "public_keys" not in config:
-            return 0, None, None
+            return 0, None, []
         else:
             return 0, None, config['public_keys']
 
