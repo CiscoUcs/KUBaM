@@ -275,7 +275,7 @@ def deploy_servers(server_group):
 
     if sg['type'] == 'ucsc':
         return deploy_ucsc(sg, hosts, org) 
-    elif sg['type'] == 'ucs':
+    elif sg['type'] == 'ucsm':
         return deploy_ucs(sg, hosts, org)
 
     return jsonify({"error": "server group type is not supported.".format(sg['type'])}), Const.HTTP_BAD_REQUEST
