@@ -1,6 +1,6 @@
 # KUBAM!
 
-![Build Status](http://drone-kubam.ngrok.io/api/badges/CiscoUcs/KUBaM/status.svg?branch=v2.0)
+![Build Status](http://drone-kubam.ngrok.io/api/badges/CiscoUcs/KUBaM/status.svg)
 
 Deploy Solutions on Cisco UCS with a Simple Open Source Light-Weight Bare Metal Installer
 
