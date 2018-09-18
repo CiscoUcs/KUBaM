@@ -11,7 +11,7 @@ pipeline:
       - mkdir -p /kubam
       - cd kubam/app
       - python -m unittest test.test_db.DBUnitTests
-      - python -m unittest test.test_app.FlaskTestCase
+      #- python -m unittest test.test_app.FlaskTestCase
       - python -m unittest test.test_sg.SGUnitTests
       - python -m unittest test.test_autoinstall.AutoInstallUnitTests
       - python -m unittest test.test_ucsc.UCSCUnitTests
