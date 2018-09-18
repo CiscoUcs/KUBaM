@@ -1,0 +1,53 @@
+pipeline:
+  # build our test image and deploy it for testing
+  unittests: 
+    image: kubam/python-test
+#    environment:
+#      - https_proxy=proxy.esl.cisco.com:80
+#      - http_proxy=proxy.esl.cisco.com:80
+#      - noproxy=10.93.234.238
+    commands: 
+      - echo "Building.."
+      - mkdir -p /kubam
+      - cd kubam/app
+      - python -m unittest test.test_db.DBUnitTests
+      - python -m unittest test.test_app.FlaskTestCase
+      - python -m unittest test.test_sg.SGUnitTests
+      - python -m unittest test.test_autoinstall.AutoInstallUnitTests
+      - python -m unittest test.test_ucsc.UCSCUnitTests
+      - python -m unittest test.test_monitor.MonitorUnitTests
+  
+  # publish docker image to docker hub
+  docker:
+    image: plugins/docker
+    repo: kubam/kubam
+    tags: v2
+    user: kubam
+    secrets: [docker_username, docker_password]
+    when: 
+      branch: v2.0
+
+
+  # bring up our test machine so it has the latest API. 
+  ssh:
+    image: appleboy/drone-ssh
+    host: 10.93.140.118
+    username: root
+    port: 22
+    password: Cisco.123
+    #secrets: [ ssh_password ]
+    script: 
+      - docker rm -f kubam || true
+      - docker pull kubam/kubam:v2
+      - sudo docker run -p 80:80 -d -v /root/kubam:/kubam:Z --device /dev/fuse --cap-add SYS_ADMIN --privileged --name kubam kubam/kubam:v2
+
+  # use Cisco Spark to notify that build was successful. 
+  notify:
+    image: vallard/drone-spark
+    room: "KUBAM Feedback"
+    environment:
+      - https_proxy=proxy.esl.cisco.com:80
+      - http_proxy=proxy.esl.cisco.com:80
+    secrets: [ SPARK_TOKEN ]
+    when:
+      status: [success, failure]

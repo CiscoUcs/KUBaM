@@ -1,0 +1,6 @@
+{{ ip }}
+{{ netmask }}
+{{ gateway }}
+{{ masterIP }}
+{{ os }}
+

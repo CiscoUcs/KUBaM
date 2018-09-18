@@ -19,4 +19,4 @@ def login(username, password, server):
     return handle
 
 def logout(handle):
-    handle.logout()
+    handle.ucs_logout()

@@ -25,7 +25,7 @@ def ucs_login(username, password, server):
     return handle
 
 def ucs_logout(handle):
-    handle.logout()
+    handle.ucs_logout()
 
 
 

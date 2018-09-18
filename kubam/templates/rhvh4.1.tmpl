@@ -1,0 +1,33 @@
+
+install
+network --bootproto static --ip={{ ip }} --netmask={{ netmask }} --gateway={{ gateway }} --nameserver={{ nameserver }} --hostname={{ name }}
+liveimg --url=http://{{ masterIP }}/kubam/rhvh4.1/squashfs.img
+
+lang en_US.UTF-8
+#keyboard --vckeymap=es --xlayouts='es'
+keyboard us
+timezone --utc Europe/Madrid
+rootpw Cisco.123 --plaintext
+
+services --disabled=NetworkManager --enabled=network
+services --enabled=ssh
+firewall --service=ssh
+
+zerombr
+bootloader --append=" crashkernel=auto" --location=mbr --timeout=1
+ignoredisk --only-use=sda
+clearpart --all --initlabel
+autopart --type=thinp
+
+text
+reboot
+
+%post --log=/root/ks.post.log --erroronfail
+nodectl init
+/usr/sbin/ntpdate -sub {{ ntp }} 
+/usr/sbin/hwclock --systohc
+sync
+systemctl reboot
+
+%end
+

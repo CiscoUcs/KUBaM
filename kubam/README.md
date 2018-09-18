@@ -1,5 +1,7 @@
 # KUBaM API Server
 
+
+
 The API server aims to consolidate the work on stage1 and stage2 into an automated API. 
 
 ## Running in a Container
@@ -277,3 +279,34 @@ See this [post for help](https://stackoverflow.com/questions/1896918/running-uni
 cd app
 python -m unittest discover
 ```
+
+Or you can do it for individual unit test files
+
+```
+python2 -m unittest test.sg.SGUnitTests
+python2 -m unittest test.test_db.DBUnitTests
+python2 -m unittest test.test_app.FlaskTestCase
+```
+
+## Misc Dev Testing techniques
+
+### Using the REPL
+
+```
+from ucscsdk.ucschandle import UcscHandle
+from ucscsdk.ucscexception import UcscException
+handle = UcscHandle("10.93.140.102", "admin", "Cisco.123")
+handle.login()
+b = handle.query_classid(class_id = "ComputeBlade")
+from ucscsdk.mometa.compute.ComputeBlade import ComputeBlade
+print(b[0])
+
+```
+
+### Adding to UCS Central
+
+We need to add managed methods. 
+/usr/lib/python2.7/site-packages/ucscsdk
+
+ucscmeta.py
+
