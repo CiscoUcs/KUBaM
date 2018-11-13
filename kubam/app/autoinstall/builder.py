@@ -100,7 +100,7 @@ class Builder(object):
     def build_boot_image(node, template, net_template):
         if node['os'] in ["centos7.3", "centos7.4", "redhat7.2", "rhvh4.1", "redhat7.5", "centos7.5"]:
             return Kickstart.build_boot_image(node, template)
-        if node['os'] in ["esxi6.0", "esxi6.5"]:
+        if node['os'] in ["esxi6.0", "esxi6.5", "esxi6.7"]:
             return VMware.build_boot_image(node, template)
         if node['os'] in ["win2012r2", "win2016"]:
             return Windows.build_boot_image(node, template, net_template)
