@@ -27,6 +27,7 @@ class Const(object):
         'rhvh4.1': ["generic"],
         'esxi6.0': ["generic"],
         'esxi6.5': ["generic"],
+        'esxi6.7': ["generic"],
         'win2012r2': ["generic"],
         'win2016': ["generic"]
     }
@@ -70,6 +71,11 @@ class Const(object):
             "key_file": ".discinfo",
             "key_string": "RHVH 4.1",
             "dir": "rhvh4.1"
+        },
+        "esxi6.7": {
+            "key_file": ".discinfo",
+            "key_string": "Version: 6.7.0",
+            "dir": "esxi6.7"
         },
         "esxi6.5": {
             "key_file": ".DISCINFO",
