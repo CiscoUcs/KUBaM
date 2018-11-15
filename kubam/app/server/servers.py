@@ -100,14 +100,14 @@ class Servers(object):
 class Templates(object):
     @staticmethod
     def get_templates(server_group):
+        ucs_templates = []
         db = YamlDB()
         sg = db.get_server_group(Const.KUBAM_CFG, server_group)
-        ucs_templates = []
         if sg['type'] == "ucsc":
             handle = UCSCUtil.ucsc_login(sg)
             ucs_templates = UCSCTemplate.list_templates(handle)
             UCSCUtil.ucsc_logout(handle)
-        elif sg['type'] == "ucs":
+        elif sg['type'] == "ucsm":
             handle = UCSUtil.ucs_login(sg)
             ucs_templates = UCSTemplate.list_templates(handle)
             UCSUtil.ucs_logout(handle)
