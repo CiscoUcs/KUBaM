@@ -1,0 +1,34 @@
+# Accept the VMware End User License Agreement
+vmaccepteula
+# Set the root password for the DCUI and Tech Support Mode
+rootpw Cisco.123
+# The install media is in the CD-ROM drive
+install --firstdisk --overwritevmfs
+# Set the network to static IP address
+network --bootproto=static --device=vmnic0 --ip={{ ip }} --netmask={{ netmask }} --gateway={{ gateway }} --hostname={{ name }} --nameserver={{ nameserver }} 
+reboot
+# A sample post-install script
+%post --interpreter=python --ignorefailure=true
+import time
+stampFile = open('/finished.stamp', mode='w')
+stampFile.write( time.asctime() )
+
+%firstboot --interpreter=busybox
+
+vsan_syslog_key = "KUBAM"
+
+logger $vsan_syslog_key " Enabling and Starting SSH"
+vim-cmd hostsvc/enable_ssh
+vim-cmd hostsvc/start_ssh
+ 
+logger $vsan_syslog_key " Enabling and Starting ESXi Shell"
+vim-cmd hostsvc/enable_esx_shell
+vim-cmd hostsvc/start_esx_shell
+
+logger $vsan_syslog_key " Suppressing ESXi Shell Warning"
+esxcli system settings advanced set -o /UserVars/SuppressShellWarning -i 1
+
+# register with vcenter
+esxcli network firewall ruleset set -e true -r httpClient
+wget -O vcenter.py http://10.93.140.118/kubam/vcenter.py 
+/bin/python vcenter.py
