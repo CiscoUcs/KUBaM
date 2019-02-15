@@ -1,0 +1,5 @@
+default install
+label install
+  menu label ^Install Ubuntu Server
+  kernel linux
+  append netcfg/disable_autoconfig=true netcfg/confirm_static=true netcfg/get_ipaddress={{ ip }} netcfg/get_netmask={{ netmask }} netcfg/get_nameservers={{ nameserver }} netcfg/get_gateway={{ gateway }} url=http://{{ masterIP }}/kubam/ubuntu18.04/preseed/{{ name }}.seed initrd=initrd.gz hostname={{ name}} domain=local mirror/http/hostname={{ masterIP }} mirror/country=manual mirror/http/proxy= protocol=http mirror/http/directory=/kubam/ubuntu18.04 keymap=us locale=en_US --- DEBCONF_DEBUG=5

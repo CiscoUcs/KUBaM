@@ -3,6 +3,7 @@ from subprocess import call
 from os import path, chdir, pardir
 from kickstart import Kickstart
 from vmware import VMware
+from ubuntu import Ubuntu
 from windows import Windows
 from db import YamlDB
 from config import Const
@@ -40,6 +41,7 @@ class Builder(object):
         """
         Given a node and the kubam configuration populate a template file with the appropriate values.
         If the machine is Windows we add the network.txt file and fill in these values as well. 
+        If the machine is Ubuntu we create the kernal params with the preseed file. 
         Returns: error code (0 good, 1 bad), msg (only if an error), template, network.txt if windows.
         """
         err, msg, template_file, template_dir = Builder.find_template(node)
@@ -94,14 +96,32 @@ class Builder(object):
                 gateway=netinfo['gateway'],
                 os=node['os'] 
             )
+        if node["os"] in ["ubuntu18.04"]:
+            # for ubuntu we need to build the txt.cfg for the boot iso.  
+            net_dir = Const.TEMPLATE_DIR
+            j2_env = Environment(loader=FileSystemLoader(net_dir), trim_blocks=True)
+            j = j2_env.get_template("txt.cfg.tmpl").render(
+                masterIP=config['kubam_ip'],
+                ip=node['ip'],
+                netmask=netinfo['netmask'],
+                gateway=netinfo['gateway'],
+                nameserver=netinfo['nameserver'],
+                name=node['name']
+            )
         return err, msg, f, j
 
     @staticmethod
     def build_boot_image(node, template, net_template):
+        """
+        template is the kickstart, answer, preseed file
+        net_template is the network file for windows and the initrd for ubuntu
+        """
         if node['os'] in ["centos7.3", "centos7.4", "redhat7.2", "rhvh4.1", "redhat7.5", "centos7.5"]:
             return Kickstart.build_boot_image(node, template)
         if node['os'] in ["esxi6.0", "esxi6.5", "esxi6.7"]:
             return VMware.build_boot_image(node, template)
+        if node['os'] in ["ubuntu18.04"]:
+            return Ubuntu.build_boot_image(node, template, net_template)
         if node['os'] in ["win2012r2", "win2016"]:
             return Windows.build_boot_image(node, template, net_template)
         return 1,  "no os is built! for os %s and node {0}".format(node['os'], node['name'])
