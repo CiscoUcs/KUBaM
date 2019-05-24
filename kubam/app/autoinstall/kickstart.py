@@ -34,7 +34,7 @@ class Kickstart(object):
             with open(fw, 'w') as f:
                 f.write(template)
         except IOError as err:
-            print err.strerror
+            print(err.strerror)
             return 1, "{0}".format(err.strerror)
 
         # Move this file to ks.cfg

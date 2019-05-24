@@ -22,7 +22,7 @@ class Builder(object):
         template = node['os'] + ".tmpl"
         if "template" in node:
             if path.isfile(node['template']):
-                print path.dirname(path.abspath(node['template']))
+                print(path.dirname(path.abspath(node['template'])))
                 return 0, None, path.basename(node['template']), path.dirname(path.abspath(node['template']))
             else:
                 return 1, "template: {0} not found".format(node['template']), None, None
@@ -116,7 +116,14 @@ class Builder(object):
         template is the kickstart, answer, preseed file
         net_template is the network file for windows and the initrd for ubuntu
         """
-        if node['os'] in ["centos7.3", "centos7.4", "redhat7.2", "rhvh4.1", "redhat7.5", "centos7.5"]:
+        if node['os'] in ["centos7.3", 
+                          "centos7.4", 
+                          "centos7.5",
+                          "redhat7.2", 
+                          "redhat7.3", 
+                          "redhat7.4", 
+                          "redhat7.5", 
+                          "rhvh4.1"]:
             return Kickstart.build_boot_image(node, template)
         if node['os'] in ["esxi6.0", "esxi6.5", "esxi6.7"]:
             return VMware.build_boot_image(node, template)
@@ -162,11 +169,11 @@ class Builder(object):
         for host in hosts:
             err, msg, template, net_template  = Builder.build_template(host, config)
             if err > 0:
-                print err, msg
+                print(err, msg)
                 break
             err, msg = Builder.build_boot_image(host, template, net_template)
             if err == 1:
-                print err, msg
+                print(err, msg)
                 break
 
         return err, msg
