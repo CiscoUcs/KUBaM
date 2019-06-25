@@ -207,6 +207,8 @@ class IsoMaker(object):
             return IsoMaker.mkboot_centos("redhat", "7.4")
         elif oper_sys == "redhat7.5":
             return IsoMaker.mkboot_centos("redhat", "7.5")
+        elif oper_sys == "redhat7.6":
+            return IsoMaker.mkboot_centos("redhat", "7.6")
         elif oper_sys == "rhvh4.1":
             return IsoMaker.mkboot_centos("rhvh", "4.1")
         elif oper_sys in ["win2016", "win2012r2"]:
