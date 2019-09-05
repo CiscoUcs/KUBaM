@@ -46,7 +46,7 @@ class IsoMaker(object):
         specifically: get the correct squashfs file as shown in 5.2.2 step 3 here:
         https://access.redhat.com/documentation/en-us/red_hat_virtualization/4.1/html-single/installation_guide/#part-Installing_Hypervisor_Hosts
         """
-        if not osname in ['rhvh4.1']:
+        if not osname in ['rhvh4.1','rhvh4.3']:
             return 0, None 
         os.chdir(mnt_dir)
         files = [x for x in os.listdir("Packages") if x.startswith("redhat-virtualization-host-image-update")]
@@ -211,6 +211,8 @@ class IsoMaker(object):
             return IsoMaker.mkboot_centos("redhat", "7.6")
         elif oper_sys == "rhvh4.1":
             return IsoMaker.mkboot_centos("rhvh", "4.1")
+        elif oper_sys == "rhvh4.1":
+            return IsoMaker.mkboot_centos("rhvh", "4.3")
         elif oper_sys in ["win2016", "win2012r2"]:
             return IsoMaker.mkboot_winpe()
         return 0, "success"

@@ -26,6 +26,7 @@ class Const(object):
         'redhat7.5': ["generic", "k8s master", "k8s node"],
         'redhat7.6': ["generic", "k8s master", "k8s node"],
         'rhvh4.1': ["generic"],
+        'rhvh4.3': ["generic"],
         'esxi6.0': ["generic"],
         'esxi6.5': ["generic"],
         'win2012r2': ["generic"],
@@ -76,6 +77,11 @@ class Const(object):
             "key_file": ".discinfo",
             "key_string": "RHVH 4.1",
             "dir": "rhvh4.1"
+        },
+        "rhvh4.3": {
+            "key_file": ".discinfo",
+            "key_string": "RHVH 4.3",
+            "dir": "rhvh4.3"
         },
         "esxi6.5": {
             "key_file": ".DISCINFO",

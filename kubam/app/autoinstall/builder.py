@@ -98,7 +98,7 @@ class Builder(object):
 
     @staticmethod
     def build_boot_image(node, template, net_template):
-        if node['os'] in ["centos7.3", "centos7.4", "redhat7.2", "redhat7.4", "rhvh4.1", "redhat7.5", "redhat7.6", "centos7.5"]:
+        if node['os'] in ["centos7.3", "centos7.4", "redhat7.2", "redhat7.4", "rhvh4.1" , "rhvh4.3", "redhat7.5", "redhat7.6", "centos7.5"]:
             return Kickstart.build_boot_image(node, template)
         if node['os'] in ["esxi6.0", "esxi6.5"]:
             return VMware.build_boot_image(node, template)
