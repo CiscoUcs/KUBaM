@@ -213,6 +213,7 @@ class IsoMaker(object):
             return IsoMaker.mkboot_centos("rhvh", "4.1")
         elif oper_sys == "rhvh4.1":
             return IsoMaker.mkboot_centos("rhvh", "4.3")
+        elif oper_sys == "rhvh4.3":
         elif oper_sys in ["win2016", "win2012r2"]:
             return IsoMaker.mkboot_winpe()
         return 0, "success"
