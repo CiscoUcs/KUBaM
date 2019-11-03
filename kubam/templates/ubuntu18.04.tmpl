@@ -1,0 +1,77 @@
+d-i debconf/priority string critical
+d-i auto-install/enable boolean true
+d-i anna/choose_modules apt-cdrom-setup
+
+# use -proposed udebs
+d-i apt-setup/proposed boolean false
+
+# minimal install (the only one not working!)
+ubiquity ubiquity/minimal_install boolean true
+
+# localization
+d-i debian-installer/language string en
+d-i debian-installer/country string US
+d-i debian-installer/locale string en_US.UTF-8
+
+# keyboard
+d-i console-setup/ask_detect boolean false
+d-i keyboard-configuration/xkb-keymap select us
+
+# use static network configuration
+d-i netcfg/get_hostname string unassigned-hostname
+d-i netcfg/get_domain string unassigned-domain
+d-i netcfg/disable_autoconfig boolean true
+d-i netcfg/choose_interface select enp0s3
+d-i netcfg/get_ipaddress string {{ ip }}
+d-i netcfg/get_netmask string {{ netmask }}
+d-i netcfg/get_gateway string {{ gateway }}
+d-i netcfg/get_nameservers string {{ nameserver }}
+d-i netcfg/confirm_static boolean true
+
+
+# user setup
+d-i passwd/user-fullname string {{ name }}
+d-i passwd/username string kubam
+d-i passwd/user-password password Cisco.123
+d-i passwd/user-password-again password Cisco.123
+d-i user-setup/allow-password-weak boolean true
+d-i user-setup/encrypt-home boolean false
+
+# enable shadow passwords
+d-i passwd/shadow boolean true
+
+# Date/Time settings
+d-i clock-setup/utc boolean true
+d-i time/zone string US/Pacific
+d-i clock-setup/ntp boolean true
+
+
+# release to install
+d-i mirror/suite string bionic
+
+# do not enable live installer, use normal instead
+d-i live-installer/enable boolean false
+
+# auto-partition, all files in one partition
+# if there is only one disk this works: 
+#d-i partman-auto/init_automatically_partition select biggest_free
+#d-i partman-auto/method string regular
+#d-i partman-auto/choose_recipe select atomic
+#d-i partman/choose_partition select finish
+#d-i partman/confirm_nooverwrite boolean true
+#d-i partman/confirm boolean true
+
+# auto partition if there are multiple disks. 
+# Here we choose /dev/sdd as the disk to install on. 
+d-i partman-auto/method string regular
+d-i partman-auto/disk string /dev/sdd
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-auto/choose_recipe select atomic
+d-i grub-installer/bootdev string default
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+# reboot at the end
+d-i finish-install/reboot_in_progress note

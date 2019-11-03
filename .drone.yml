@@ -24,8 +24,8 @@ pipeline:
     tags: v2
     user: kubam
     secrets: [docker_username, docker_password]
-    when: 
-      branch: v2.0
+    #when: 
+    #  branch: v2.0
 
 
   # bring up our test machine so it has the latest API. 

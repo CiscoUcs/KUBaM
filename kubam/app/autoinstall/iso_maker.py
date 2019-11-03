@@ -161,15 +161,15 @@ class IsoMaker(object):
         return 0, "success"
 
     @staticmethod
-    def mkboot_esxi():
-        boot_iso = "/kubam/esxi6.5-boot.iso"
+    def mkboot_esxi(os_name, version):
+        boot_iso = "/kubam/" + os_name + version + "-boot.iso"
         if os.path.isfile(boot_iso):
             return 0, "boot iso was already created"
-        os_dir = "kubam/esxi6.5"
+        os_dir = "/kubam/" + os_name + version
         # Overwrite the boot directory
-        o = subprocess.call(["cp", "-a", "/usr/share/kubam/stage1/esxi6.5/BOOT.CFG", os_dir])
+        o = subprocess.call(["cp", "-a", "/usr/share/kubam/stage1/esxi" + version + "/BOOT.CFG", os_dir])
         if not o == 0:
-            return 1, "Unable to copy /usr/share/kubam/stage1/esxi6.5/BOOT.CFG to {0}".format(os_dir)
+            return 1, "Unable to copy /usr/share/kubam/stage1/esxi{0}/BOOT.CFG to {1}".format(version, os_dir)
 
         os.chdir("/kubam")
         # https://docs.vmware.com/en/VMware-vSphere/6.5/com.vmware.vsphere.install.doc/GUID-C03EADEA-A192-4AB4-9B71-9256A9CB1F9C.html

@@ -148,6 +148,7 @@ class UCSServer(object):
         #    return
         disks = UCSServer.list_disks(handle, server)
         for d in disks:
+            print("Disk State: ", d.disk_state)
             if d.disk_state == "jbod":
             # Get the first part of the dn which is the storage controller:
                 parent = "/".join(d.dn.split("/")[:-1])

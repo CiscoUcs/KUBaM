@@ -29,6 +29,8 @@ class Const(object):
         'rhvh4.3': ["generic"],
         'esxi6.0': ["generic"],
         'esxi6.5': ["generic"],
+        'esxi6.7': ["generic"],
+        'ubuntu18.04': ["generic", "k8s master", "k8s node"],
         'win2012r2': ["generic"],
         'win2016': ["generic"]
     }
@@ -83,6 +85,11 @@ class Const(object):
             "key_string": "RHVH 4.3",
             "dir": "rhvh4.3"
         },
+        "esxi6.7": {
+            "key_file": ".discinfo",
+            "key_string": "Version: 6.7.0",
+            "dir": "esxi6.7"
+        },
         "esxi6.5": {
             "key_file": ".DISCINFO",
             "key_string": "Version: 6.5.0",
@@ -92,6 +99,11 @@ class Const(object):
             "key_file": ".DISCINFO",
             "key_string": "Version: 6.0.0",
             "dir": "esxi6.0"
+        },
+        "ubuntu18.04" : {
+            "key_file": ".disk/info",
+            "key_string": "Bionic Beaver",
+            "dir": "ubuntu18.04"
         },
         "win2012r2": {
             "key_file": "sources/idwbinfo.txt",

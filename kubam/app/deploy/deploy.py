@@ -59,20 +59,21 @@ class Deployments(object):
         Create a new deployment
         ["host01", "host02", ... ] or no arguments.  
         """
+        print("Creating images")
         err, msg, hosts = Deployments.get_valid_hosts(req)
         if err != 0:
-            return {'error': msg}, 400
+            return {'error': msg}, 200
        
         # get all the oses that need to be installed. 
         oses = list(set([x["os"] for x in hosts]))
         # check that we have ISO mapped images for each one
         err, msg, isos = Deployments.get_valid_isos(oses)
         if err != 0:
-            return {'error': msg}, 400
+            return {'error': msg}, 200
         # if the iso image isn't already exploded, extract it. 
         err, msg = IsoMaker.extract_isos(isos)
         if err != 0:
-            return {'error': msg}, 400
+            return {'error': msg}, 200
         # if the boot image isn't already created, create it. 
         err, msg = IsoMaker.mkboot_isos(isos) 
         if err != 0:

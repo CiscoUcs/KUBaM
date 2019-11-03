@@ -15,7 +15,7 @@ class UCSSession(object):
 
     def ensure_version(self, handle):
         version = self.get_version(handle)
-        if version.startswith('3'):
+        if version.startswith('3') or version.startswith('4'):
             return None
         return "Unsupported UCS firmware version: {0}. Please update to at least 3.0".format(version)
 
