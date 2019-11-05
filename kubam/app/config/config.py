@@ -74,7 +74,6 @@ class Const(object):
             "key_string": "7.6",
             "dir": "redhat7.6"
         },
-        },
         "redhat7.7": {
             "key_file": ".discinfo",
             "key_string": "7.7",
