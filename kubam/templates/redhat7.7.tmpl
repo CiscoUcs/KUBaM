@@ -4,7 +4,7 @@ auth --useshadow --enablemd5
 # Install OS instead of upgrade
 install
 # Use network installation
-url --url="http://{{ masterIP }}/kubam/redhat7.6/"
+url --url="http://{{ masterIP }}/kubam/redhat7.7/"
 # Use graphical install
 text
 # Firewall configuration
@@ -114,7 +114,7 @@ no_proxy: localhost,127.0.0.1,{{ masterIP }},{{ ip }},{{ k8s_master.ip }}
 {% endif %}
 
 # yum repository
-local_repo: http://{{ masterIP }}/kubam/redhat7.6/
+local_repo: http://{{ masterIP }}/kubam/redhat7.7/
 
 EOF2
 
